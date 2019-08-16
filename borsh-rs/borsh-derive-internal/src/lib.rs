@@ -1,39 +1,12 @@
+mod attribute_helpers;
+
+use crate::attribute_helpers::{contains_initialize_with, contains_skip};
 use proc_macro2::Span;
 use quote::quote;
 use syn::export::TokenStream2;
-use syn::{Attribute, Fields, Ident, Index, ItemEnum, ItemStruct, ItemUnion, Meta, NestedMeta};
+use syn::{Fields, Ident, Index, ItemEnum, ItemStruct, ItemUnion};
 
-pub fn contains_skip(attrs: &[Attribute]) -> bool {
-    for attr in attrs.iter() {
-        if let Ok(Meta::Word(ident)) = attr.parse_meta() {
-            if ident.to_string().as_str() == "borsh_skip" {
-                return true;
-            }
-        }
-    }
-    false
-}
-
-pub fn contains_initialize_with(attrs: &[Attribute]) -> Option<Ident> {
-    for attr in attrs.iter() {
-        if let Ok(Meta::List(meta_list)) = attr.parse_meta() {
-            if meta_list.ident.to_string().as_str() == "borsh_init" {
-                assert_eq!(
-                    meta_list.nested.len(),
-                    1,
-                    "borsh_init requires exactly one initialization method."
-                );
-                let nested_meta = meta_list.nested.iter().next().unwrap();
-                if let NestedMeta::Meta(Meta::Word(ident)) = nested_meta {
-                    return Some(ident.clone());
-                }
-            }
-        }
-    }
-    None
-}
-
-pub fn borsh_struct_ser(input: &ItemStruct) -> TokenStream2 {
+pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let mut body = TokenStream2::new();
     match &input.fields {
@@ -51,7 +24,10 @@ pub fn borsh_struct_ser(input: &ItemStruct) -> TokenStream2 {
         }
         Fields::Unnamed(fields) => {
             for field_idx in 0..fields.unnamed.len() {
-                let field_idx = Index { index: field_idx as u32, span: Span::call_site() };
+                let field_idx = Index {
+                    index: field_idx as u32,
+                    span: Span::call_site(),
+                };
                 let delta = quote! {
                     borsh::Serializable::write(&self.#field_idx, writer)?;
                 };
@@ -60,17 +36,17 @@ pub fn borsh_struct_ser(input: &ItemStruct) -> TokenStream2 {
         }
         Fields::Unit => {}
     }
-    quote! {
+    Ok(quote! {
         impl borsh::ser::Serializable for #name {
             fn write<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
                 #body
                 Ok(())
             }
         }
-    }
+    })
 }
 
-pub fn borsh_enum_ser(input: &ItemEnum) -> TokenStream2 {
+pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let mut body = TokenStream2::new();
     for (variant_idx, variant) in input.variants.iter().enumerate() {
@@ -123,7 +99,7 @@ pub fn borsh_enum_ser(input: &ItemEnum) -> TokenStream2 {
             }
         ))
     }
-    let res = quote! {
+    Ok(quote! {
         impl borsh::ser::Serializable for #name {
             fn write<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
                 match self {
@@ -132,17 +108,16 @@ pub fn borsh_enum_ser(input: &ItemEnum) -> TokenStream2 {
                 Ok(())
             }
         }
-    };
-    res
+    })
 }
 
-pub fn borsh_union_ser(_input: &ItemUnion) -> TokenStream2 {
+pub fn union_ser(_input: &ItemUnion) -> syn::Result<TokenStream2> {
     unimplemented!()
 }
 
-pub fn borsh_struct_de(input: &ItemStruct) -> TokenStream2 {
+pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
     let name = &input.ident;
-    let init_method = contains_initialize_with(&input.attrs);
+    let init_method = contains_initialize_with(&input.attrs)?;
     let return_value = match &input.fields {
         Fields::Named(fields) => {
             let mut body = TokenStream2::new();
@@ -182,7 +157,7 @@ pub fn borsh_struct_de(input: &ItemStruct) -> TokenStream2 {
         }
     };
     if let Some(method_ident) = init_method {
-        quote! {
+        Ok(quote! {
             impl borsh::de::Deserializable for #name {
                 fn read<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
                     let mut return_value = #return_value;
@@ -190,21 +165,21 @@ pub fn borsh_struct_de(input: &ItemStruct) -> TokenStream2 {
                     Ok(return_value)
                 }
             }
-        }
+        })
     } else {
-        quote! {
+        Ok(quote! {
             impl borsh::de::Deserializable for #name {
                 fn read<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
                     Ok(#return_value)
                 }
             }
-        }
+        })
     }
 }
 
-pub fn borsh_enum_de(input: &ItemEnum) -> TokenStream2 {
+pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     let name = &input.ident;
-    let init_method = contains_initialize_with(&input.attrs);
+    let init_method = contains_initialize_with(&input.attrs)?;
     let mut variant_arms = TokenStream2::new();
     for (variant_idx, variant) in input.variants.iter().enumerate() {
         let variant_idx = variant_idx as u8;
@@ -248,7 +223,7 @@ pub fn borsh_enum_de(input: &ItemEnum) -> TokenStream2 {
         let variant_idx = u8::from_le_bytes(variant_idx);
     };
     if let Some(method_ident) = init_method {
-        quote! {
+        Ok(quote! {
             impl borsh::de::Deserializable for #name {
                 fn read<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
                     #variant_idx
@@ -260,9 +235,9 @@ pub fn borsh_enum_de(input: &ItemEnum) -> TokenStream2 {
                     Ok(return_value)
                 }
             }
-        }
+        })
     } else {
-        quote! {
+        Ok(quote! {
             impl borsh::de::Deserializable for #name {
                 fn read<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
                     #variant_idx
@@ -273,10 +248,10 @@ pub fn borsh_enum_de(input: &ItemEnum) -> TokenStream2 {
                     Ok(return_value)
                 }
             }
-        }
+        })
     }
 }
 
-pub fn borsh_union_de(_input: &ItemUnion) -> TokenStream2 {
+pub fn union_de(_input: &ItemUnion) -> syn::Result<TokenStream2> {
     unimplemented!()
 }
