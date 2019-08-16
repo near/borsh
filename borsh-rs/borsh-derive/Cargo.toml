@@ -16,6 +16,6 @@ Binary Object Representation Serializer for Hashing
 proc-macro = true
 
 [dependencies]
-borsh-derive-internal = { path = "../borsh-derive-internal" }
+borsh-derive-internal = "0.1.0"
 syn = {version = "0.15.34", features = ["full", "fold"] }
 
