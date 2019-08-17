@@ -16,3 +16,7 @@ Binary Object Representation Serializer for Hashing
 proc-macro2 = "0.4.30"
 syn = {version = "0.15.34", features = ["full", "fold"] }
 quote = "0.6.12"
+
+[dev-dependencies]
+rustfmt-nightly = {version = "1.4.5", features = ["cargo-fmt"] }
+pretty_assertions = "0.6.1"
