@@ -85,7 +85,9 @@ where
 
 impl Deserializable for String {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
-        let len = u32::read(reader)?;
+        let mut len = [0u8; size_of::<u32>()];
+        reader.read(&mut len)?;
+        let len: u32 = u32::from_le_bytes(len);
         let mut result = vec![0; len as usize];
         reader.read(&mut result)?;
         String::from_utf8(result)
@@ -99,10 +101,15 @@ where
     T: Deserializable,
 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
-        let len = u32::read(reader)?;
+        let mut len = [0u8; size_of::<u32>()];
+        reader.read(&mut len)?;
+        let len: u32 = u32::from_le_bytes(len);
         let mut result = Vec::with_capacity(len as usize);
-        for _ in 0..len {
-            result.push(T::read(reader)?);
+        for i in 0..len {
+            result.push(T::read(reader).map_err(|x| {
+                println!("ind {}", i);
+                x
+            })?);
         }
         Ok(result)
     }
@@ -200,5 +207,13 @@ impl Deserializable for std::net::Ipv6Addr {
         let mut buf = [0u8; 16];
         reader.read(&mut buf)?;
         Ok(std::net::Ipv6Addr::from(buf))
+    }
+}
+
+impl Deserializable for [u8; 32] {
+    fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
+        let mut res = [0u8; 32];
+        reader.read(&mut res)?;
+        Ok(res)
     }
 }

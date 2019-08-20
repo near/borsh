@@ -59,7 +59,9 @@ impl_for_float!(f64);
 
 impl Serializable for bool {
     fn write<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
-        writer.write(if *self { &[0u8] } else { &[1u8] }).map(|_| ())
+        writer
+            .write(if *self { &[1u8] } else { &[0u8] })
+            .map(|_| ())
     }
 }
 
@@ -80,7 +82,7 @@ where
 
 impl Serializable for String {
     fn write<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
-        (self.len() as u32).write(writer)?;
+        writer.write(&(self.len() as u32).to_le_bytes())?;
         writer.write(self.as_bytes())?;
         Ok(())
     }
@@ -92,7 +94,7 @@ where
     T: Serializable,
 {
     fn write<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
-        (self.len() as u32).write(writer)?;
+        writer.write(&(self.len() as u32).to_le_bytes())?;
         for item in self {
             item.write(writer)?;
         }
@@ -193,5 +195,11 @@ impl Serializable for std::net::Ipv4Addr {
 impl Serializable for std::net::Ipv6Addr {
     fn write<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write(&self.octets()).map(|_| ())
+    }
+}
+
+impl Serializable for [u8; 32] {
+    fn write<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+        writer.write(self).map(|_| ())
     }
 }
