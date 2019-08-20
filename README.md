@@ -10,12 +10,17 @@
     <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/v/borsh.svg?style=flat-square" alt="Crates.io version" /></a>
     <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/d/borsh.svg?style=flat-square" alt="Download" /></a>
     <a href="https://discord.gg/gBtUFKR"><img src="https://img.shields.io/discord/490367152054992913.svg" alt="Join the community on Discord" /></a>
+    <a href="https://opensource.org/licenses/Apache-2.0"> <img src="https://img.shields.io/badge/license-Apache2.0-blue.svg" alt="Apache 2.0 License" /></a>
   </p>
   
   <h3>
+        <a href="https://github.com/nearprotocol/borsh#example">Example</a>
+        <span> | </span>
+        <a href="https://github.com/nearprotocol/borsh#features">Features</a>
+        <span> | </span>
         <a href="https://github.com/nearprotocol/borsh#benchmarks">Benchmarks</a>
         <span> | </span>
-        <a href="https://github.com/nearprotocol/borsh#Specification">Specification</a>
+        <a href="https://github.com/nearprotocol/borsh#specification">Specification</a>
       </h3>
 </div>
 
@@ -28,6 +33,64 @@ Why do we need yet another serialization format? Borsh is the first serializer t
 * Speed. In Rust, Borsh achieves high performance by opting out from [Serde](https://serde.rs) which makes it faster
   than [bincode](https://github.com/servo/bincode); which also reduces the code size.
   
+## Example
+
+```rust
+use borsh::{BorshSerialize, BorshDeserialize};
+
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
+struct A {
+    x: u64,
+    y: String,
+}
+
+#[test]
+fn test_simple_struct() {
+    let a = A {
+        x: 3301,
+        y: "liber primus".to_string(),
+    };
+    let encoded_a = a.try_to_vec().unwrap();
+    let decoded_a = A::try_from_slice(&encoded_a).unwrap();
+    assert_eq!(a, decoded_a);
+}
+```
+
+## Features
+
+Opting out from Serde allows borsh to have some features that currently are not available for serde-compatible serializers.
+Currently we support two features: `borsh_init` and `borsh_for` (the former one not available in Serde).
+
+`borsh_init` allows to automatically run an initialization function right after deserialization. This adds a lot of convenience for objects that are architectured to be used as strictly immutable. Usage example:
+```rust
+#[derive(BorshSerialize, BorshDeserialize)]
+#[borsh_init(init)]
+struct Message {
+    message: String,
+    timestamp: u64,
+    public_key: CryptoKey,
+    signature: CryptoSignature
+    hash: CryptoHash
+}
+
+impl Message {
+    pub fn init(&mut self) {
+        self.hash = CryptoHash::new().write_string(self.message).write_u64(self.timestamp);
+        self.signature.verify(self.hash, self.public_key);
+    }
+}
+```
+
+`borsh_skip` allows to skip serializing/deserializing fields, assuming they implement `Default` trait, similary to `#[serde(skip)]`.
+```rust
+#[derive(BorshSerialize, BorshDeserialize)]
+struct A {
+    x: u64,
+    #[borsh_skip]
+    y: f32,
+}
+```
+
 ## Benchmarks
 
 We measured the following benchmarks on objects that blockchain projects care about the most: blocks, block headers,
