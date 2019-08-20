@@ -85,9 +85,7 @@ where
 
 impl BorshDeserialize for String {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
-        let mut len = [0u8; size_of::<u32>()];
-        reader.read(&mut len)?;
-        let len: u32 = u32::from_le_bytes(len);
+        let len = u32::deserialize(reader)?;
         let mut result = vec![0; len as usize];
         reader.read(&mut result)?;
         String::from_utf8(result)
@@ -101,9 +99,7 @@ where
     T: BorshDeserialize,
 {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
-        let mut len = [0u8; size_of::<u32>()];
-        reader.read(&mut len)?;
-        let len: u32 = u32::from_le_bytes(len);
+        let len = u32::deserialize(reader)?;
         let mut result = Vec::with_capacity(len as usize);
         for i in 0..len {
             result.push(T::deserialize(reader).map_err(|x| {
