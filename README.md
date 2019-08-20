@@ -11,7 +11,8 @@
     <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/d/borsh.svg?style=flat-square" alt="Download" /></a>
     <a href="https://discord.gg/gBtUFKR"><img src="https://img.shields.io/discord/490367152054992913.svg" alt="Join the community on Discord" /></a>
   </p>
-  
+</div>
+<div>
   <h2>Specification</h2>
   <p>In short, BORsh is a non self-describing binary serialization format. It is designed to serialize to canonical and determenistic set of bytes any objects.</p>
   <p>General principles:</p>
