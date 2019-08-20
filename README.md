@@ -56,15 +56,15 @@ test ser_block_bincode        ... bench:  22,405,977 ns/iter (+/- 767,936)
 test ser_block_borsh          ... bench:  12,722,433 ns/iter (+/- 1,067,208)
 test ser_block_speedy         ... bench:     767,713 ns/iter (+/- 32,926)
 
-test de_transaction_bincode   ... bench:      13,581 ns/iter (+/- 574)
-test de_transaction_borsh     ... bench:      29,698 ns/iter (+/- 1,370)
-test de_transaction_cbor      ... bench:      18,910 ns/iter (+/- 704)
-test de_transaction_speedy    ... bench:       1,249 ns/iter (+/- 57)
-
 test de_account_cbor          ... bench:         649 ns/iter (+/- 21)
 test de_account_bincode       ... bench:         110 ns/iter (+/- 2)
 test de_account_borsh         ... bench:          46 ns/iter (+/- 5)
 test de_account_speedy        ... bench:          12 ns/iter (+/- 0)
+
+test de_transaction_bincode   ... bench:      13,581 ns/iter (+/- 574)
+test de_transaction_cbor      ... bench:      18,910 ns/iter (+/- 704)
+test de_transaction_borsh     ... bench:      29,698 ns/iter (+/- 1,370)
+test de_transaction_speedy    ... bench:       1,249 ns/iter (+/- 57)
 
 test de_block_header_cbor     ... bench:     647,718 ns/iter (+/- 32,769)
 test de_block_header_bincode  ... bench:     182,284 ns/iter (+/- 14,020)
@@ -87,7 +87,7 @@ General principles:
 * structs are serialized in the order of fields in the struct;
 * enums are serialized with using `u8` for the enum ordinal and then storing data inside the enum value (if present).
     
-More formal specification:
+Formal specification:
 <div>
     <table>
         <tr><td>Informal type</td><td><a href="https://doc.rust-lang.org/grammar.html">Rust EBNF </a> * </td><td>Pseudocode</td></tr>
