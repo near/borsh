@@ -26,7 +26,7 @@
       </h3>
 </div>
 
-Why do we need yet another serialization format? Borsh is the first serializer that prioritizes the following qualities that are crucial for high-security projects:
+Why do we need yet another serialization format? Borsh is the first serializer that prioritizes the following qualities that are crucial for security-critical projects:
 * Consistent and specified binary representation:
    * Consistent means there is a bijective mapping between objects and their binary representations. There is no two binary representations that deserialize
    into the same object. This is extremely useful for applications that use binary representation to compute hash;
