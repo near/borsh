@@ -21,7 +21,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         });
                     } else {
                         variant_header.extend(quote! {
-                            #field_name: borsh::BorshDeserialize::read(reader)?,
+                            #field_name: borsh::BorshDeserialize::deserialize(reader)?,
                         });
                     }
                 }
@@ -32,7 +32,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     if contains_skip(&field.attrs) {
                         variant_header.extend(quote! { Default::default(), });
                     } else {
-                        variant_header.extend(quote! { borsh::BorshDeserialize::read(reader)?, });
+                        variant_header.extend(quote! { borsh::BorshDeserialize::deserialize(reader)?, });
                     }
                 }
                 variant_header = quote! { ( #variant_header )};
@@ -51,7 +51,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     if let Some(method_ident) = init_method {
         Ok(quote! {
             impl borsh::de::BorshDeserialize for #name {
-                fn read<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
+                fn deserialize<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
                     #variant_idx
                     let mut return_value = match variant_idx {
                         #variant_arms
@@ -65,7 +65,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     } else {
         Ok(quote! {
             impl borsh::de::BorshDeserialize for #name {
-                fn read<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
+                fn deserialize<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
                     #variant_idx
                     let return_value = match variant_idx {
                         #variant_arms

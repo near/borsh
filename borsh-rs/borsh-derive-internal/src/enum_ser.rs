@@ -22,7 +22,7 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         variant_header.extend(quote! { #field_name, });
                     }
                     variant_body.extend(quote! {
-                         borsh::BorshSerialize::write(#field_name, writer)?;
+                         borsh::BorshSerialize::serialize(#field_name, writer)?;
                     })
                 }
                 variant_header = quote! { { #variant_header }};
@@ -40,7 +40,7 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
                             Ident::new(format!("id{}", field_idx).as_str(), Span::call_site());
                         variant_header.extend(quote! { #field_ident, });
                         variant_body.extend(quote! {
-                            borsh::BorshSerialize::write(#field_ident, writer)?;
+                            borsh::BorshSerialize::serialize(#field_ident, writer)?;
                         })
                     }
                 }
@@ -58,7 +58,7 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
     }
     Ok(quote! {
         impl borsh::ser::BorshSerialize for #name {
-            fn write<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+            fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
                 match self {
                     #body
                 }
