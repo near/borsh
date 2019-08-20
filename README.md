@@ -28,10 +28,11 @@
    <tr><td>Type</td><td>Type spec</td><td>Representation format</td></tr>
    <tr><td>Integers</td><td>u8 | u16 | u32 | u64 | u128</td><td>write little endian</td></tr>
    <tr><td>Fixed sized arrays</td><td>[u8; T]</td><td>for _ in 0..size write T</td></tr>
-   <tr><td>Dynamic sized array</td><td>Vec\<T\></td><td>len() as u32 || for _ in 0..len() write T</td></tr>
+   <tr><td>Dynamic sized array</td><td>Vec&lt;T&gt;</td><td>len() as u32 || for _ in 0..len() write T</td></tr>
    <tr><td>Struct</td><td>struct { ..feilds }</td><td>for field in fields -> write field</td></tr>
-  <tr><td>Enum</td><td>enum { a {field: T}, b, c(x, y) }</td><td>enum ordinal as u8 || write value of enum if present</td></tr>
-   <tr><td>HashMap</td><td>hashmap<K, V></td><td>len() as u32 || for (k, v) in hashmap.sorted_by_key() { write k || write v } </td></tr>
+  <tr><td>Enum</td><td>enum {</br>&nbsp;&nbsp;a {field: T},</br>&nbsp;&nbsp;b,</br>&nbsp;&nbsp;c(x, y)</br>}</td><td>enum ordinal as u8 || write value of enum if present</td></tr>
+   <tr><td>HashMap</td><td>hashmap&lt;K, V&gt;</td><td>len() as u32 || for (k, v) in hashmap.sorted_by_key() { write k || write v } </td></tr>
+   <tr><td>HashSet</td><td>hashset&lt;V&gt;</td><td>len() as u32 || for v in hashset.sorted_by_value() { write v } </td></tr>
   </table>
   </code>
 </div>
