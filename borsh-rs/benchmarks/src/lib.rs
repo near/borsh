@@ -408,8 +408,8 @@ pub enum Action {
 impl Generate for Action {
     fn generate() -> Self {
         use Action::*;
-        // Deploy contract action is 100 times less frequent than other actions.
-        if u64::generate() % 100 == 0 {
+        // Deploy contract action is 1000 times less frequent than other actions.
+        if u64::generate() % 1000 == 0 {
             DeployContract(DeployContractAction::generate())
         } else {
             match u64::generate() % 7 {
