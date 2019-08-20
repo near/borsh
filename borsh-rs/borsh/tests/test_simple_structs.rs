@@ -1,4 +1,4 @@
-use borsh::{BorshSerialize, BorshDeserialize, Deserializable, Serializable};
+use borsh::{BorshSerialize, BorshDeserialize};
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
 #[borsh_init(init)]

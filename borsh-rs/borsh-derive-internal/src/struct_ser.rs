@@ -14,7 +14,7 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
                 }
                 let field_name = field.ident.as_ref().unwrap();
                 let delta = quote! {
-                    borsh::Serializable::write(&self.#field_name, writer)?;
+                    borsh::BorshSerialize::write(&self.#field_name, writer)?;
                 };
                 body.extend(delta);
             }
@@ -26,7 +26,7 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
                     span: Span::call_site(),
                 };
                 let delta = quote! {
-                    borsh::Serializable::write(&self.#field_idx, writer)?;
+                    borsh::BorshSerialize::write(&self.#field_idx, writer)?;
                 };
                 body.extend(delta);
             }
@@ -34,7 +34,7 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
         Fields::Unit => {}
     }
     Ok(quote! {
-        impl borsh::ser::Serializable for #name {
+        impl borsh::ser::BorshSerialize for #name {
             fn write<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
                 #body
                 Ok(())
@@ -61,10 +61,10 @@ mod tests {
 
         let actual = struct_ser(&item_struct).unwrap();
         let expected = quote!{
-            impl borsh::ser::Serializable for A {
+            impl borsh::ser::BorshSerialize for A {
                 fn write<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
-                    borsh::Serializable::write(&self.x, writer)?;
-                    borsh::Serializable::write(&self.y, writer)?;
+                    borsh::BorshSerialize::write(&self.x, writer)?;
+                    borsh::BorshSerialize::write(&self.y, writer)?;
                     Ok(())
                 }
             }

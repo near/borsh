@@ -1,6 +1,6 @@
 use bencher::{benchmark_main, Bencher, TestDesc, TestDescAndFn, TestFn};
 use benchmarks::{Account, Block, BlockHeader, Generate, SignedTransaction};
-use borsh::{Deserializable, Serializable};
+use borsh::{BorshDeserialize, BorshSerialize};
 use lazy_static::lazy_static;
 use speedy::Endianness;
 use speedy::{Readable, Writable};

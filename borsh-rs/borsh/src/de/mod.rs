@@ -3,7 +3,7 @@ use std::io::{Cursor, Error, Read};
 use std::mem::size_of;
 
 /// A data-structure that can be de-serialized from binary format by NBOR.
-pub trait Deserializable: Sized {
+pub trait BorshDeserialize: Sized {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error>;
 
     /// Deserialize this instance from a slice of bytes.
@@ -15,7 +15,7 @@ pub trait Deserializable: Sized {
 
 macro_rules! impl_for_integer {
     ($type: ident) => {
-        impl Deserializable for $type {
+        impl BorshDeserialize for $type {
             fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
                 let mut data = [0u8; size_of::<$type>()];
                 reader.read_exact(&mut data)?;
@@ -42,7 +42,7 @@ impl_for_integer!(usize);
 // and vice-versa. We disallow NaNs to avoid this issue.
 macro_rules! impl_for_float {
     ($type: ident, $int_type: ident) => {
-        impl Deserializable for $type {
+        impl BorshDeserialize for $type {
             fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
                 let mut data = [0u8; size_of::<$type>()];
                 reader.read_exact(&mut data)?;
@@ -60,7 +60,7 @@ macro_rules! impl_for_float {
 impl_for_float!(f32, u32);
 impl_for_float!(f64, u64);
 
-impl Deserializable for bool {
+impl BorshDeserialize for bool {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut buf = [0u8];
         reader.read(&mut buf)?;
@@ -68,9 +68,9 @@ impl Deserializable for bool {
     }
 }
 
-impl<T> Deserializable for Option<T>
+impl<T> BorshDeserialize for Option<T>
 where
-    T: Deserializable,
+    T: BorshDeserialize,
 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut flag = [0u8];
@@ -83,7 +83,7 @@ where
     }
 }
 
-impl Deserializable for String {
+impl BorshDeserialize for String {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut len = [0u8; size_of::<u32>()];
         reader.read(&mut len)?;
@@ -96,9 +96,9 @@ impl Deserializable for String {
 }
 
 #[cfg(feature = "std")]
-impl<T> Deserializable for Vec<T>
+impl<T> BorshDeserialize for Vec<T>
 where
-    T: Deserializable,
+    T: BorshDeserialize,
 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut len = [0u8; size_of::<u32>()];
@@ -116,9 +116,9 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<T> Deserializable for HashSet<T>
+impl<T> BorshDeserialize for HashSet<T>
 where
-    T: Deserializable + Eq + std::hash::Hash,
+    T: BorshDeserialize + Eq + std::hash::Hash,
 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let vec = <Vec<T>>::read(reader)?;
@@ -127,10 +127,10 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<K, V> Deserializable for HashMap<K, V>
+impl<K, V> BorshDeserialize for HashMap<K, V>
 where
-    K: Deserializable + Eq + std::hash::Hash,
-    V: Deserializable,
+    K: BorshDeserialize + Eq + std::hash::Hash,
+    V: BorshDeserialize,
 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::read(reader)?;
@@ -145,10 +145,10 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<K, V> Deserializable for BTreeMap<K, V>
+impl<K, V> BorshDeserialize for BTreeMap<K, V>
 where
-    K: Deserializable + Ord + std::hash::Hash,
-    V: Deserializable,
+    K: BorshDeserialize + Ord + std::hash::Hash,
+    V: BorshDeserialize,
 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::read(reader)?;
@@ -163,7 +163,7 @@ where
 }
 
 #[cfg(feature = "std")]
-impl Deserializable for std::net::SocketAddr {
+impl BorshDeserialize for std::net::SocketAddr {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let kind = u8::read(reader)?;
         match kind {
@@ -175,7 +175,7 @@ impl Deserializable for std::net::SocketAddr {
 }
 
 #[cfg(feature = "std")]
-impl Deserializable for std::net::SocketAddrV4 {
+impl BorshDeserialize for std::net::SocketAddrV4 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let ip = std::net::Ipv4Addr::read(reader)?;
         let port = u16::read(reader)?;
@@ -184,7 +184,7 @@ impl Deserializable for std::net::SocketAddrV4 {
 }
 
 #[cfg(feature = "std")]
-impl Deserializable for std::net::SocketAddrV6 {
+impl BorshDeserialize for std::net::SocketAddrV6 {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let ip = std::net::Ipv6Addr::read(reader)?;
         let port = u16::read(reader)?;
@@ -193,7 +193,7 @@ impl Deserializable for std::net::SocketAddrV6 {
 }
 
 #[cfg(feature = "std")]
-impl Deserializable for std::net::Ipv4Addr {
+impl BorshDeserialize for std::net::Ipv4Addr {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut buf = [0u8; 4];
         reader.read(&mut buf)?;
@@ -202,7 +202,7 @@ impl Deserializable for std::net::Ipv4Addr {
 }
 
 #[cfg(feature = "std")]
-impl Deserializable for std::net::Ipv6Addr {
+impl BorshDeserialize for std::net::Ipv6Addr {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut buf = [0u8; 16];
         reader.read(&mut buf)?;
@@ -210,7 +210,7 @@ impl Deserializable for std::net::Ipv6Addr {
     }
 }
 
-impl Deserializable for [u8; 32] {
+impl BorshDeserialize for [u8; 32] {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut res = [0u8; 32];
         reader.read(&mut res)?;

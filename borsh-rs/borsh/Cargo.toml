@@ -13,7 +13,8 @@ Binary Object Representation Serializer for Hashing
 """
 
 [dependencies]
-borsh-derive = "0.1.0"
+#borsh-derive = "0.1.0"
+borsh-derive = { path = "../borsh-derive" }
 
 [features]
 default = ["std"]
