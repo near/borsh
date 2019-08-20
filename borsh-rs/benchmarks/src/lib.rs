@@ -408,16 +408,20 @@ pub enum Action {
 impl Generate for Action {
     fn generate() -> Self {
         use Action::*;
-        match u64::generate() % 8 {
-            0 => CreateAccount(CreateAccountAction::generate()),
-            1 => DeployContract(DeployContractAction::generate()),
-            2 => FunctionCall(FunctionCallAction::generate()),
-            3 => Transfer(TransferAction::generate()),
-            4 => Stake(StakeAction::generate()),
-            5 => AddKey(AddKeyAction::generate()),
-            6 => DeleteKey(DeleteKeyAction::generate()),
-            7 => DeleteAccount(DeleteAccountAction::generate()),
-            _ => unimplemented!(),
+        // Deploy contract action is 100 times less frequent than other actions.
+        if u64::generate() % 100 == 0 {
+            DeployContract(DeployContractAction::generate())
+        } else {
+            match u64::generate() % 7 {
+                0 => CreateAccount(CreateAccountAction::generate()),
+                1 => FunctionCall(FunctionCallAction::generate()),
+                2 => Transfer(TransferAction::generate()),
+                3 => Stake(StakeAction::generate()),
+                4 => AddKey(AddKeyAction::generate()),
+                5 => DeleteKey(DeleteKeyAction::generate()),
+                6 => DeleteAccount(DeleteAccountAction::generate()),
+                _ => unimplemented!(),
+            }
         }
     }
 }
