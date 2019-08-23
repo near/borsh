@@ -26,7 +26,7 @@
       </h3>
 </div>
 
-Why do we need yet another serialization format? Borsh is the first serializer that prioritizes the following qualities that are crucial for high-security projects:
+Why do we need yet another serialization format? Borsh is the first serializer that prioritizes the following qualities that are crucial for security-critical projects:
 * Consistent and specified binary representation:
    * Consistent means there is a bijective mapping between objects and their binary representations. There is no two binary representations that deserialize
    into the same object. This is extremely useful for applications that use binary representation to compute hash;
@@ -61,7 +61,7 @@ fn test_simple_struct() {
 ## Features
 
 Opting out from Serde allows borsh to have some features that currently are not available for serde-compatible serializers.
-Currently we support two features: `borsh_init` and `borsh_for` (the former one not available in Serde).
+Currently we support two features: `borsh_init` and `borsh_skip` (the former one not available in Serde).
 
 `borsh_init` allows to automatically run an initialization function right after deserialization. This adds a lot of convenience for objects that are architectured to be used as strictly immutable. Usage example:
 ```rust
