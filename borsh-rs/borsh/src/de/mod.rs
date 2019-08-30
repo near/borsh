@@ -213,3 +213,12 @@ impl BorshDeserialize for [u8; 32] {
         Ok(res)
     }
 }
+
+impl BorshDeserialize for Box<[u8]> {
+    fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+        let len = u32::deserialize(reader)?;
+        let mut res = Vec::with_capacity(len as usize);
+        reader.read(&mut res)?;
+        Ok(res.into_boxed_slice())
+    }
+}

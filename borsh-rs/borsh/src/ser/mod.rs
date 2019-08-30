@@ -203,3 +203,10 @@ impl BorshSerialize for [u8; 32] {
         writer.write(self).map(|_| ())
     }
 }
+
+impl BorshSerialize for Box<[u8]> {
+    fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+        (self.len() as u32).serialize(writer)?;
+        writer.write(self).map(|_| ())
+    }
+}

@@ -1,4 +1,3 @@
-#![recursion_limit = "128"]
 extern crate proc_macro;
 
 use borsh_derive_internal::*;
