@@ -17,7 +17,7 @@ pub trait BorshSerialize {
 
 impl BorshSerialize for u8 {
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
-        writer.write(std::slide::from_ref(self)).map(|_| ())
+        writer.write(std::slice::from_ref(self)).map(|_| ())
     }
 }
 
