@@ -15,6 +15,12 @@ pub trait BorshSerialize {
     }
 }
 
+impl BorshSerialize for u8 {
+    fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+        writer.write(std::slide::from_ref(self)).map(|_| ())
+    }
+}
+
 macro_rules! impl_for_integer {
     ($type: ident) => {
         impl BorshSerialize for $type {
@@ -31,7 +37,6 @@ impl_for_integer!(i32);
 impl_for_integer!(i64);
 impl_for_integer!(i128);
 impl_for_integer!(isize);
-impl_for_integer!(u8);
 impl_for_integer!(u16);
 impl_for_integer!(u32);
 impl_for_integer!(u64);

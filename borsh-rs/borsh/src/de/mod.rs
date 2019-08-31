@@ -13,6 +13,14 @@ pub trait BorshDeserialize: Sized {
     }
 }
 
+impl BorshDeserialize for u8 {
+    fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+        let mut res = 0u8;
+        reader.read_exact(std::slice::from_mut(&mut res))?;
+        Ok(res)
+    }
+}
+
 macro_rules! impl_for_integer {
     ($type: ident) => {
         impl BorshDeserialize for $type {
@@ -31,7 +39,6 @@ impl_for_integer!(i32);
 impl_for_integer!(i64);
 impl_for_integer!(i128);
 impl_for_integer!(isize);
-impl_for_integer!(u8);
 impl_for_integer!(u16);
 impl_for_integer!(u32);
 impl_for_integer!(u64);
