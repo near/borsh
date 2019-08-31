@@ -8,6 +8,8 @@ struct A {
     y: f32,
     z: String,
     v: Vec<String>,
+    w: Box<[u8]>,
+    i: [u8; 32],
     lazy: Option<u64>,
     #[borsh_skip]
     skipped: Option<u64>,
@@ -50,6 +52,8 @@ fn test_simple_struct() {
         y: 4.0,
         z: "123".to_string(),
         v: vec!["qwe".to_string(), "zxc".to_string()],
+        w: vec![0].into_boxed_slice(),
+        i: [4u8; 32],
         lazy: Some(5),
         skipped: Some(6),
     };
@@ -61,6 +65,8 @@ fn test_simple_struct() {
         y: 4.0,
         z: a.z,
         v: a.v,
+        w: a.w,
+        i: a.i,
         lazy: Some(50),
         skipped: None,
     };
