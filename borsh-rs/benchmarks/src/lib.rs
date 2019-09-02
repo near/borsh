@@ -2,7 +2,7 @@
 
 use borsh::{BorshDeserialize, BorshSerialize};
 use rand::distributions::{Alphanumeric, Distribution, Standard};
-use rand::{thread_rng, Rng, RngCore};
+use rand::Rng;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 #[macro_use]
 extern crate speedy_derive;
@@ -156,10 +156,7 @@ pub struct AccountId(String);
 impl Generate for String {
     fn generate<R: rand::Rng>(rng: &mut R) -> Self {
         let len: usize = rng.gen_range(5, 200);
-        let res = rng
-            .sample_iter(&Alphanumeric)
-            .take(len)
-            .collect::<String>();
+        let res = rng.sample_iter(&Alphanumeric).take(len).collect::<String>();
         res
     }
 }
@@ -206,7 +203,7 @@ pub type Weight = u64;
 pub fn generate_vec_primitives<T, R>(rng: &mut R, min_number: usize, max_number: usize) -> Vec<T>
 where
     Standard: Distribution<T>,
-    R: rand::Rng
+    R: rand::Rng,
 {
     let num: usize = rng.gen_range(min_number, max_number + 1);
     let mut res = vec![];
@@ -216,7 +213,11 @@ where
     res
 }
 
-pub fn generate_vec<T: Generate, R: rand::Rng>(rng: &mut R, min_number: usize, max_number: usize) -> Vec<T> {
+pub fn generate_vec<T: Generate, R: rand::Rng>(
+    rng: &mut R,
+    min_number: usize,
+    max_number: usize,
+) -> Vec<T> {
     let num: usize = rng.gen_range(min_number, max_number + 1);
     let mut res = vec![];
     for _ in 0..num {
@@ -441,7 +442,7 @@ impl Generate for Action {
 )]
 pub struct CreateAccountAction {}
 impl Generate for CreateAccountAction {
-    fn generate<R: rand::Rng>(rng: &mut R) -> Self {
+    fn generate<R: rand::Rng>(_rng: &mut R) -> Self {
         Self {}
     }
 }
@@ -728,16 +729,16 @@ impl Generate for FunctionCallPermission {
 }
 
 #[derive(
-BorshSerialize,
-BorshDeserialize,
-Debug,
-Clone,
-Eq,
-PartialEq,
-SerdeSerialize,
-SerdeDeserialize,
-Readable,
-Writable,
+    BorshSerialize,
+    BorshDeserialize,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    SerdeSerialize,
+    SerdeDeserialize,
+    Readable,
+    Writable,
 )]
 pub struct Account {
     pub amount: Balance,
@@ -754,7 +755,7 @@ impl Generate for Account {
             staked: u64::generate(rng),
             code_hash: CryptoHash::generate(rng),
             storage_usage: u64::generate(rng),
-            storage_paid_at: u64::generate(rng)
+            storage_paid_at: u64::generate(rng),
         }
     }
 }
