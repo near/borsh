@@ -14,56 +14,56 @@ export class BinaryWriter {
         this.length = 0;
     }
 
-    maybe_resize() {
+    maybeResize() {
         if (this.buf.length < 16 + this.length) {
             this.buf = Buffer.concat([this.buf, Buffer.alloc(INITIAL_LENGTH)]);
         }
     }
 
-    public write_u8(value: number) {
-        this.maybe_resize();
+    public writeU8(value: number) {
+        this.maybeResize();
         this.buf.writeUInt8(value, this.length);
         this.length += 1;
     }
 
-    public write_u32(value: number) {
-        this.maybe_resize();
+    public writeU32(value: number) {
+        this.maybeResize();
         this.buf.writeUInt32LE(value, this.length);
         this.length += 4;
     }
 
-    public write_u64(value: BN) {
-        this.maybe_resize();
-        this.write_buffer(Buffer.from(new BN(value).toArray('le', 8)));
+    public writeU64(value: BN) {
+        this.maybeResize();
+        this.writeBuffer(Buffer.from(new BN(value).toArray('le', 8)));
     }
 
-    public write_u128(value: BN) {
-        this.maybe_resize();
-        this.write_buffer(Buffer.from(new BN(value).toArray('le', 16)));
+    public writeU128(value: BN) {
+        this.maybeResize();
+        this.writeBuffer(Buffer.from(new BN(value).toArray('le', 16)));
     }
 
-    private write_buffer(buffer: Buffer) {
+    private writeBuffer(buffer: Buffer) {
         // Buffer.from is needed as this.buf.subarray can return plain Uint8Array in browser
         this.buf = Buffer.concat([Buffer.from(this.buf.subarray(0, this.length)), buffer, Buffer.alloc(INITIAL_LENGTH)]);
         this.length += buffer.length;
     }
 
-    public write_string(str: string) {
-        this.maybe_resize();
+    public writeString(str: string) {
+        this.maybeResize();
         const b = Buffer.from(str, 'utf8');
-        this.write_u32(b.length);
-        this.write_buffer(b);
+        this.writeU32(b.length);
+        this.writeBuffer(b);
     }
 
-    public write_fixed_array(array: Uint8Array) {
-        this.write_buffer(Buffer.from(array));
+    public writeFixedArray(array: Uint8Array) {
+        this.writeBuffer(Buffer.from(array));
     }
 
-    public write_array(array: any[], fn: any) {
-        this.maybe_resize();
-        this.write_u32(array.length);
+    public writeArray(array: any[], fn: any) {
+        this.maybeResize();
+        this.writeU32(array.length);
         for (const elem of array) {
-            this.maybe_resize();
+            this.maybeResize();
             fn(elem);
         }
     }
@@ -82,46 +82,46 @@ export class BinaryReader {
         this.offset = 0;
     }
 
-    read_u8(): number {
+    readU8(): number {
         const value = this.buf.readUInt8(this.offset);
         this.offset += 1;
         return value;
     }
 
-    read_u32(): number {
+    readU32(): number {
         const value = this.buf.readUInt32LE(this.offset);
         this.offset += 4;
         return value;
     }
 
-    read_u64(): BN {
-        const buf = this.read_buffer(8);
+    readU64(): BN {
+        const buf = this.readBuffer(8);
         buf.reverse();
         return new BN(`${buf.toString('hex')}`, 16);
     }
 
-    read_u128(): BN {
-        const buf = this.read_buffer(16);
+    readU128(): BN {
+        const buf = this.readBuffer(16);
         return new BN(buf);
     }
 
-    private read_buffer(len: number): Buffer {
+    private readBuffer(len: number): Buffer {
         const result = this.buf.slice(this.offset, this.offset + len);
         this.offset += len;
         return result;
     }
 
-    read_string(): string {
-        const len = this.read_u32();
-        return this.read_buffer(len).toString('utf8');
+    readString(): string {
+        const len = this.readU32();
+        return this.readBuffer(len).toString('utf8');
     }
 
-    read_fixed_array(len: number): Uint8Array {
-        return new Uint8Array(this.read_buffer(len));
+    readFixedArray(len: number): Uint8Array {
+        return new Uint8Array(this.readBuffer(len));
     }
 
-    read_array(fn: any): any[] {
-        const len = this.read_u32();
+    readArray(fn: any): any[] {
+        const len = this.readU32();
         const result = Array<any>();
         for (let i = 0; i < len; ++i) {
             result.push(fn());
@@ -132,20 +132,20 @@ export class BinaryReader {
 
 function serializeField(schema: Schema, value: any, fieldType: any, writer: any) {
     if (typeof fieldType === 'string') {
-        writer[`write_${fieldType}`](value);
+        writer[`write${fieldType}`](value);
     } else if (fieldType instanceof Array) {
         if (typeof fieldType[0] === 'number') {
-            writer.write_fixed_array(value);
+            writer.writeFixedArray(value);
         } else {
-            writer.write_array(value, (item: any) => { serializeField(schema, item, fieldType[0], writer); });
+            writer.writeArray(value, (item: any) => { serializeField(schema, item, fieldType[0], writer); });
         }
     } else if (fieldType.kind !== undefined) {
         switch (fieldType.kind) {
             case 'option': {
                 if (value === null) {
-                    writer.write_u8(0);
+                    writer.writeU8(0);
                 } else {
-                    writer.write_u8(1);
+                    writer.writeU8(1);
                     serializeField(schema, value, fieldType.type, writer);
                 }
                 break;
@@ -171,7 +171,7 @@ function serializeStruct(schema: Schema, obj: any, writer: any) {
         for (let idx = 0; idx < structSchema.values.length; ++idx) {
             const [fieldName, fieldType]: [any, any] = structSchema.values[idx];
             if (fieldName === name) {
-                writer.write_u8(idx);
+                writer.writeU8(idx);
                 serializeField(schema, obj[fieldName], fieldType, writer);
                 break;
             }
@@ -191,12 +191,12 @@ export function serialize(schema: Schema, obj: any): Uint8Array {
 
 function deserializeField(schema: Schema, fieldType: any, reader: any): any {
     if (typeof fieldType === 'string') {
-        return reader[`read_${fieldType}`]();
+        return reader[`read${fieldType}`]();
     } else if (fieldType instanceof Array) {
         if (typeof fieldType[0] === 'number') {
-            return reader.read_fixed_array(fieldType[0]);
+            return reader.readFixedArray(fieldType[0]);
         } else {
-            return reader.read_array(() => deserializeField(schema, fieldType[0], reader));
+            return reader.readArray(() => deserializeField(schema, fieldType[0], reader));
         }
     } else {
         return deserializeStruct(schema, fieldType, reader);
