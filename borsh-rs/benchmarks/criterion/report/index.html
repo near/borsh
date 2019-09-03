@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Index - Criterion.rs</title>
+    <style type="text/css">
+        body {
+            font: 14px Helvetica Neue;
+            text-rendering: optimizelegibility;
+        }
+
+        .body {
+            width: 960px;
+            margin: auto;
+        }
+
+        a:link {
+            color: #1F78B4;
+            text-decoration: none;
+        }
+
+        h2 {
+            font-size: 36px;
+            font-weight: 300;
+        }
+
+        h3 {
+            font-size: 24px;
+            font-weight: 300;
+        }
+
+        #footer {
+            height: 40px;
+            background: #888;
+            color: white;
+            font-size: larger;
+            font-weight: 300;
+        }
+
+        #footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        #footer p {
+            text-align: center
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #888;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="body">
+        <h2>Criterion.rs Benchmark Index</h2>
+        See individual benchmark pages below for more details.
+        <ul>
+            <li><a href="../de_account/report/index.html">de_account</a></li>
+            
+            <ul>
+                <li>
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th><a href="../de_account/bincode/report/index.html">bincode</a></th>
+                            <th><a href="../de_account/borsh/report/index.html">borsh</a></th>
+                            <th><a href="../de_account/cbor/report/index.html">cbor</a></th>
+                            <th><a href="../de_account/speedy/report/index.html">speedy</a></th>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_account/idx=0; size=64/report/index.html">idx=0; size=64</a></th>
+                            <td><a href="../de_account/bincode/idx=0; size=64/report/index.html">de_account/bincode/idx=0; size=64</a></td>
+                            <td><a href="../de_account/borsh/idx=0; size=64/report/index.html">de_account/borsh/idx=0; size=64</a></td>
+                            <td><a href="../de_account/cbor/idx=0; size=64/report/index.html">de_account/cbor/idx=0; size=64</a></td>
+                            <td><a href="../de_account/speedy/idx=0; size=64/report/index.html">de_account/speedy/idx=0; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_account/idx=1; size=64/report/index.html">idx=1; size=64</a></th>
+                            <td><a href="../de_account/bincode/idx=1; size=64/report/index.html">de_account/bincode/idx=1; size=64</a></td>
+                            <td><a href="../de_account/borsh/idx=1; size=64/report/index.html">de_account/borsh/idx=1; size=64</a></td>
+                            <td><a href="../de_account/cbor/idx=1; size=64/report/index.html">de_account/cbor/idx=1; size=64</a></td>
+                            <td><a href="../de_account/speedy/idx=1; size=64/report/index.html">de_account/speedy/idx=1; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_account/idx=2; size=64/report/index.html">idx=2; size=64</a></th>
+                            <td><a href="../de_account/bincode/idx=2; size=64/report/index.html">de_account/bincode/idx=2; size=64</a></td>
+                            <td><a href="../de_account/borsh/idx=2; size=64/report/index.html">de_account/borsh/idx=2; size=64</a></td>
+                            <td><a href="../de_account/cbor/idx=2; size=64/report/index.html">de_account/cbor/idx=2; size=64</a></td>
+                            <td><a href="../de_account/speedy/idx=2; size=64/report/index.html">de_account/speedy/idx=2; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_account/idx=3; size=64/report/index.html">idx=3; size=64</a></th>
+                            <td><a href="../de_account/bincode/idx=3; size=64/report/index.html">de_account/bincode/idx=3; size=64</a></td>
+                            <td><a href="../de_account/borsh/idx=3; size=64/report/index.html">de_account/borsh/idx=3; size=64</a></td>
+                            <td><a href="../de_account/cbor/idx=3; size=64/report/index.html">de_account/cbor/idx=3; size=64</a></td>
+                            <td><a href="../de_account/speedy/idx=3; size=64/report/index.html">de_account/speedy/idx=3; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_account/idx=4; size=64/report/index.html">idx=4; size=64</a></th>
+                            <td><a href="../de_account/bincode/idx=4; size=64/report/index.html">de_account/bincode/idx=4; size=64</a></td>
+                            <td><a href="../de_account/borsh/idx=4; size=64/report/index.html">de_account/borsh/idx=4; size=64</a></td>
+                            <td><a href="../de_account/cbor/idx=4; size=64/report/index.html">de_account/cbor/idx=4; size=64</a></td>
+                            <td><a href="../de_account/speedy/idx=4; size=64/report/index.html">de_account/speedy/idx=4; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_account/idx=5; size=64/report/index.html">idx=5; size=64</a></th>
+                            <td><a href="../de_account/bincode/idx=5; size=64/report/index.html">de_account/bincode/idx=5; size=64</a></td>
+                            <td><a href="../de_account/borsh/idx=5; size=64/report/index.html">de_account/borsh/idx=5; size=64</a></td>
+                            <td><a href="../de_account/cbor/idx=5; size=64/report/index.html">de_account/cbor/idx=5; size=64</a></td>
+                            <td><a href="../de_account/speedy/idx=5; size=64/report/index.html">de_account/speedy/idx=5; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_account/idx=6; size=64/report/index.html">idx=6; size=64</a></th>
+                            <td><a href="../de_account/bincode/idx=6; size=64/report/index.html">de_account/bincode/idx=6; size=64</a></td>
+                            <td><a href="../de_account/borsh/idx=6; size=64/report/index.html">de_account/borsh/idx=6; size=64</a></td>
+                            <td><a href="../de_account/cbor/idx=6; size=64/report/index.html">de_account/cbor/idx=6; size=64</a></td>
+                            <td><a href="../de_account/speedy/idx=6; size=64/report/index.html">de_account/speedy/idx=6; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_account/idx=7; size=64/report/index.html">idx=7; size=64</a></th>
+                            <td><a href="../de_account/bincode/idx=7; size=64/report/index.html">de_account/bincode/idx=7; size=64</a></td>
+                            <td><a href="../de_account/borsh/idx=7; size=64/report/index.html">de_account/borsh/idx=7; size=64</a></td>
+                            <td><a href="../de_account/cbor/idx=7; size=64/report/index.html">de_account/cbor/idx=7; size=64</a></td>
+                            <td><a href="../de_account/speedy/idx=7; size=64/report/index.html">de_account/speedy/idx=7; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_account/idx=8; size=64/report/index.html">idx=8; size=64</a></th>
+                            <td><a href="../de_account/bincode/idx=8; size=64/report/index.html">de_account/bincode/idx=8; size=64</a></td>
+                            <td><a href="../de_account/borsh/idx=8; size=64/report/index.html">de_account/borsh/idx=8; size=64</a></td>
+                            <td><a href="../de_account/cbor/idx=8; size=64/report/index.html">de_account/cbor/idx=8; size=64</a></td>
+                            <td><a href="../de_account/speedy/idx=8; size=64/report/index.html">de_account/speedy/idx=8; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_account/idx=9; size=64/report/index.html">idx=9; size=64</a></th>
+                            <td><a href="../de_account/bincode/idx=9; size=64/report/index.html">de_account/bincode/idx=9; size=64</a></td>
+                            <td><a href="../de_account/borsh/idx=9; size=64/report/index.html">de_account/borsh/idx=9; size=64</a></td>
+                            <td><a href="../de_account/cbor/idx=9; size=64/report/index.html">de_account/cbor/idx=9; size=64</a></td>
+                            <td><a href="../de_account/speedy/idx=9; size=64/report/index.html">de_account/speedy/idx=9; size=64</a></td>
+                        </tr>
+                    </table>
+                </li>
+            </ul>
+            <li><a href="../de_block/report/index.html">de_block</a></li>
+            
+            <ul>
+                <li>
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th><a href="../de_block/bincode/report/index.html">bincode</a></th>
+                            <th><a href="../de_block/borsh/report/index.html">borsh</a></th>
+                            <th><a href="../de_block/cbor/report/index.html">cbor</a></th>
+                            <th><a href="../de_block/speedy/report/index.html">speedy</a></th>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_block/idx=0; size=1056480/report/index.html">idx=0; size=1056480</a></th>
+                            <td><a href="../de_block/bincode/idx=0; size=1056480/report/index.html">de_block/bincode/idx=0; size=1056480</a></td>
+                            <td><a href="../de_block/borsh/idx=0; size=1056480/report/index.html">de_block/borsh/idx=0; size=1056480</a></td>
+                            <td><a href="../de_block/cbor/idx=0; size=1056480/report/index.html">de_block/cbor/idx=0; size=1056480</a></td>
+                            <td><a href="../de_block/speedy/idx=0; size=1056480/report/index.html">de_block/speedy/idx=0; size=1056480</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_block/idx=1; size=579580/report/index.html">idx=1; size=579580</a></th>
+                            <td><a href="../de_block/bincode/idx=1; size=579580/report/index.html">de_block/bincode/idx=1; size=579580</a></td>
+                            <td><a href="../de_block/borsh/idx=1; size=579580/report/index.html">de_block/borsh/idx=1; size=579580</a></td>
+                            <td><a href="../de_block/cbor/idx=1; size=579580/report/index.html">de_block/cbor/idx=1; size=579580</a></td>
+                            <td><a href="../de_block/speedy/idx=1; size=579580/report/index.html">de_block/speedy/idx=1; size=579580</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_block/idx=2; size=3833307/report/index.html">idx=2; size=3833307</a></th>
+                            <td><a href="../de_block/bincode/idx=2; size=3833307/report/index.html">de_block/bincode/idx=2; size=3833307</a></td>
+                            <td><a href="../de_block/borsh/idx=2; size=3833307/report/index.html">de_block/borsh/idx=2; size=3833307</a></td>
+                            <td><a href="../de_block/cbor/idx=2; size=3833307/report/index.html">de_block/cbor/idx=2; size=3833307</a></td>
+                            <td><a href="../de_block/speedy/idx=2; size=3833307/report/index.html">de_block/speedy/idx=2; size=3833307</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_block/idx=3; size=1485739/report/index.html">idx=3; size=1485739</a></th>
+                            <td><a href="../de_block/bincode/idx=3; size=1485739/report/index.html">de_block/bincode/idx=3; size=1485739</a></td>
+                            <td><a href="../de_block/borsh/idx=3; size=1485739/report/index.html">de_block/borsh/idx=3; size=1485739</a></td>
+                            <td><a href="../de_block/cbor/idx=3; size=1485739/report/index.html">de_block/cbor/idx=3; size=1485739</a></td>
+                            <td><a href="../de_block/speedy/idx=3; size=1485739/report/index.html">de_block/speedy/idx=3; size=1485739</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_block/idx=4; size=348484/report/index.html">idx=4; size=348484</a></th>
+                            <td><a href="../de_block/bincode/idx=4; size=348484/report/index.html">de_block/bincode/idx=4; size=348484</a></td>
+                            <td><a href="../de_block/borsh/idx=4; size=348484/report/index.html">de_block/borsh/idx=4; size=348484</a></td>
+                            <td><a href="../de_block/cbor/idx=4; size=348484/report/index.html">de_block/cbor/idx=4; size=348484</a></td>
+                            <td><a href="../de_block/speedy/idx=4; size=348484/report/index.html">de_block/speedy/idx=4; size=348484</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_block/idx=5; size=5028301/report/index.html">idx=5; size=5028301</a></th>
+                            <td><a href="../de_block/bincode/idx=5; size=5028301/report/index.html">de_block/bincode/idx=5; size=5028301</a></td>
+                            <td><a href="../de_block/borsh/idx=5; size=5028301/report/index.html">de_block/borsh/idx=5; size=5028301</a></td>
+                            <td><a href="../de_block/cbor/idx=5; size=5028301/report/index.html">de_block/cbor/idx=5; size=5028301</a></td>
+                            <td><a href="../de_block/speedy/idx=5; size=5028301/report/index.html">de_block/speedy/idx=5; size=5028301</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_block/idx=6; size=2809266/report/index.html">idx=6; size=2809266</a></th>
+                            <td><a href="../de_block/bincode/idx=6; size=2809266/report/index.html">de_block/bincode/idx=6; size=2809266</a></td>
+                            <td><a href="../de_block/borsh/idx=6; size=2809266/report/index.html">de_block/borsh/idx=6; size=2809266</a></td>
+                            <td><a href="../de_block/cbor/idx=6; size=2809266/report/index.html">de_block/cbor/idx=6; size=2809266</a></td>
+                            <td><a href="../de_block/speedy/idx=6; size=2809266/report/index.html">de_block/speedy/idx=6; size=2809266</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_block/idx=7; size=2651114/report/index.html">idx=7; size=2651114</a></th>
+                            <td><a href="../de_block/bincode/idx=7; size=2651114/report/index.html">de_block/bincode/idx=7; size=2651114</a></td>
+                            <td><a href="../de_block/borsh/idx=7; size=2651114/report/index.html">de_block/borsh/idx=7; size=2651114</a></td>
+                            <td><a href="../de_block/cbor/idx=7; size=2651114/report/index.html">de_block/cbor/idx=7; size=2651114</a></td>
+                            <td><a href="../de_block/speedy/idx=7; size=2651114/report/index.html">de_block/speedy/idx=7; size=2651114</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_block/idx=8; size=3422080/report/index.html">idx=8; size=3422080</a></th>
+                            <td><a href="../de_block/bincode/idx=8; size=3422080/report/index.html">de_block/bincode/idx=8; size=3422080</a></td>
+                            <td><a href="../de_block/borsh/idx=8; size=3422080/report/index.html">de_block/borsh/idx=8; size=3422080</a></td>
+                            <td><a href="../de_block/cbor/idx=8; size=3422080/report/index.html">de_block/cbor/idx=8; size=3422080</a></td>
+                            <td><a href="../de_block/speedy/idx=8; size=3422080/report/index.html">de_block/speedy/idx=8; size=3422080</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_block/idx=9; size=4953049/report/index.html">idx=9; size=4953049</a></th>
+                            <td><a href="../de_block/bincode/idx=9; size=4953049/report/index.html">de_block/bincode/idx=9; size=4953049</a></td>
+                            <td><a href="../de_block/borsh/idx=9; size=4953049/report/index.html">de_block/borsh/idx=9; size=4953049</a></td>
+                            <td><a href="../de_block/cbor/idx=9; size=4953049/report/index.html">de_block/cbor/idx=9; size=4953049</a></td>
+                            <td><a href="../de_block/speedy/idx=9; size=4953049/report/index.html">de_block/speedy/idx=9; size=4953049</a></td>
+                        </tr>
+                    </table>
+                </li>
+            </ul>
+            <li><a href="../de_header/report/index.html">de_header</a></li>
+            
+            <ul>
+                <li>
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th><a href="../de_header/bincode/report/index.html">bincode</a></th>
+                            <th><a href="../de_header/borsh/report/index.html">borsh</a></th>
+                            <th><a href="../de_header/cbor/report/index.html">cbor</a></th>
+                            <th><a href="../de_header/speedy/report/index.html">speedy</a></th>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_header/idx=0; size=27866/report/index.html">idx=0; size=27866</a></th>
+                            <td><a href="../de_header/bincode/idx=0; size=27866/report/index.html">de_header/bincode/idx=0; size=27866</a></td>
+                            <td><a href="../de_header/borsh/idx=0; size=27866/report/index.html">de_header/borsh/idx=0; size=27866</a></td>
+                            <td><a href="../de_header/cbor/idx=0; size=27866/report/index.html">de_header/cbor/idx=0; size=27866</a></td>
+                            <td><a href="../de_header/speedy/idx=0; size=27866/report/index.html">de_header/speedy/idx=0; size=27866</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_header/idx=1; size=90706/report/index.html">idx=1; size=90706</a></th>
+                            <td><a href="../de_header/bincode/idx=1; size=90706/report/index.html">de_header/bincode/idx=1; size=90706</a></td>
+                            <td><a href="../de_header/borsh/idx=1; size=90706/report/index.html">de_header/borsh/idx=1; size=90706</a></td>
+                            <td><a href="../de_header/cbor/idx=1; size=90706/report/index.html">de_header/cbor/idx=1; size=90706</a></td>
+                            <td><a href="../de_header/speedy/idx=1; size=90706/report/index.html">de_header/speedy/idx=1; size=90706</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_header/idx=2; size=145612/report/index.html">idx=2; size=145612</a></th>
+                            <td><a href="../de_header/bincode/idx=2; size=145612/report/index.html">de_header/bincode/idx=2; size=145612</a></td>
+                            <td><a href="../de_header/borsh/idx=2; size=145612/report/index.html">de_header/borsh/idx=2; size=145612</a></td>
+                            <td><a href="../de_header/cbor/idx=2; size=145612/report/index.html">de_header/cbor/idx=2; size=145612</a></td>
+                            <td><a href="../de_header/speedy/idx=2; size=145612/report/index.html">de_header/speedy/idx=2; size=145612</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_header/idx=3; size=108473/report/index.html">idx=3; size=108473</a></th>
+                            <td><a href="../de_header/bincode/idx=3; size=108473/report/index.html">de_header/bincode/idx=3; size=108473</a></td>
+                            <td><a href="../de_header/borsh/idx=3; size=108473/report/index.html">de_header/borsh/idx=3; size=108473</a></td>
+                            <td><a href="../de_header/cbor/idx=3; size=108473/report/index.html">de_header/cbor/idx=3; size=108473</a></td>
+                            <td><a href="../de_header/speedy/idx=3; size=108473/report/index.html">de_header/speedy/idx=3; size=108473</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_header/idx=4; size=87633/report/index.html">idx=4; size=87633</a></th>
+                            <td><a href="../de_header/bincode/idx=4; size=87633/report/index.html">de_header/bincode/idx=4; size=87633</a></td>
+                            <td><a href="../de_header/borsh/idx=4; size=87633/report/index.html">de_header/borsh/idx=4; size=87633</a></td>
+                            <td><a href="../de_header/cbor/idx=4; size=87633/report/index.html">de_header/cbor/idx=4; size=87633</a></td>
+                            <td><a href="../de_header/speedy/idx=4; size=87633/report/index.html">de_header/speedy/idx=4; size=87633</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_header/idx=5; size=37392/report/index.html">idx=5; size=37392</a></th>
+                            <td><a href="../de_header/bincode/idx=5; size=37392/report/index.html">de_header/bincode/idx=5; size=37392</a></td>
+                            <td><a href="../de_header/borsh/idx=5; size=37392/report/index.html">de_header/borsh/idx=5; size=37392</a></td>
+                            <td><a href="../de_header/cbor/idx=5; size=37392/report/index.html">de_header/cbor/idx=5; size=37392</a></td>
+                            <td><a href="../de_header/speedy/idx=5; size=37392/report/index.html">de_header/speedy/idx=5; size=37392</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_header/idx=6; size=56478/report/index.html">idx=6; size=56478</a></th>
+                            <td><a href="../de_header/bincode/idx=6; size=56478/report/index.html">de_header/bincode/idx=6; size=56478</a></td>
+                            <td><a href="../de_header/borsh/idx=6; size=56478/report/index.html">de_header/borsh/idx=6; size=56478</a></td>
+                            <td><a href="../de_header/cbor/idx=6; size=56478/report/index.html">de_header/cbor/idx=6; size=56478</a></td>
+                            <td><a href="../de_header/speedy/idx=6; size=56478/report/index.html">de_header/speedy/idx=6; size=56478</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_header/idx=7; size=35038/report/index.html">idx=7; size=35038</a></th>
+                            <td><a href="../de_header/bincode/idx=7; size=35038/report/index.html">de_header/bincode/idx=7; size=35038</a></td>
+                            <td><a href="../de_header/borsh/idx=7; size=35038/report/index.html">de_header/borsh/idx=7; size=35038</a></td>
+                            <td><a href="../de_header/cbor/idx=7; size=35038/report/index.html">de_header/cbor/idx=7; size=35038</a></td>
+                            <td><a href="../de_header/speedy/idx=7; size=35038/report/index.html">de_header/speedy/idx=7; size=35038</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_header/idx=8; size=141955/report/index.html">idx=8; size=141955</a></th>
+                            <td><a href="../de_header/bincode/idx=8; size=141955/report/index.html">de_header/bincode/idx=8; size=141955</a></td>
+                            <td><a href="../de_header/borsh/idx=8; size=141955/report/index.html">de_header/borsh/idx=8; size=141955</a></td>
+                            <td><a href="../de_header/cbor/idx=8; size=141955/report/index.html">de_header/cbor/idx=8; size=141955</a></td>
+                            <td><a href="../de_header/speedy/idx=8; size=141955/report/index.html">de_header/speedy/idx=8; size=141955</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_header/idx=9; size=90459/report/index.html">idx=9; size=90459</a></th>
+                            <td><a href="../de_header/bincode/idx=9; size=90459/report/index.html">de_header/bincode/idx=9; size=90459</a></td>
+                            <td><a href="../de_header/borsh/idx=9; size=90459/report/index.html">de_header/borsh/idx=9; size=90459</a></td>
+                            <td><a href="../de_header/cbor/idx=9; size=90459/report/index.html">de_header/cbor/idx=9; size=90459</a></td>
+                            <td><a href="../de_header/speedy/idx=9; size=90459/report/index.html">de_header/speedy/idx=9; size=90459</a></td>
+                        </tr>
+                    </table>
+                </li>
+            </ul>
+            <li><a href="../de_transaction/report/index.html">de_transaction</a></li>
+            
+            <ul>
+                <li>
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th><a href="../de_transaction/bincode/report/index.html">bincode</a></th>
+                            <th><a href="../de_transaction/borsh/report/index.html">borsh</a></th>
+                            <th><a href="../de_transaction/cbor/report/index.html">cbor</a></th>
+                            <th><a href="../de_transaction/speedy/report/index.html">speedy</a></th>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_transaction/idx=0; size=1774/report/index.html">idx=0; size=1774</a></th>
+                            <td><a href="../de_transaction/bincode/idx=0; size=1774/report/index.html">de_transaction/bincode/idx=0; size=1774</a></td>
+                            <td><a href="../de_transaction/borsh/idx=0; size=1774/report/index.html">de_transaction/borsh/idx=0; size=1774</a></td>
+                            <td><a href="../de_transaction/cbor/idx=0; size=1774/report/index.html">de_transaction/cbor/idx=0; size=1774</a></td>
+                            <td><a href="../de_transaction/speedy/idx=0; size=1774/report/index.html">de_transaction/speedy/idx=0; size=1774</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_transaction/idx=1; size=398/report/index.html">idx=1; size=398</a></th>
+                            <td><a href="../de_transaction/bincode/idx=1; size=398/report/index.html">de_transaction/bincode/idx=1; size=398</a></td>
+                            <td><a href="../de_transaction/borsh/idx=1; size=398/report/index.html">de_transaction/borsh/idx=1; size=398</a></td>
+                            <td><a href="../de_transaction/cbor/idx=1; size=398/report/index.html">de_transaction/cbor/idx=1; size=398</a></td>
+                            <td><a href="../de_transaction/speedy/idx=1; size=398/report/index.html">de_transaction/speedy/idx=1; size=398</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_transaction/idx=2; size=2784/report/index.html">idx=2; size=2784</a></th>
+                            <td><a href="../de_transaction/bincode/idx=2; size=2784/report/index.html">de_transaction/bincode/idx=2; size=2784</a></td>
+                            <td><a href="../de_transaction/borsh/idx=2; size=2784/report/index.html">de_transaction/borsh/idx=2; size=2784</a></td>
+                            <td><a href="../de_transaction/cbor/idx=2; size=2784/report/index.html">de_transaction/cbor/idx=2; size=2784</a></td>
+                            <td><a href="../de_transaction/speedy/idx=2; size=2784/report/index.html">de_transaction/speedy/idx=2; size=2784</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_transaction/idx=3; size=3093/report/index.html">idx=3; size=3093</a></th>
+                            <td><a href="../de_transaction/bincode/idx=3; size=3093/report/index.html">de_transaction/bincode/idx=3; size=3093</a></td>
+                            <td><a href="../de_transaction/borsh/idx=3; size=3093/report/index.html">de_transaction/borsh/idx=3; size=3093</a></td>
+                            <td><a href="../de_transaction/cbor/idx=3; size=3093/report/index.html">de_transaction/cbor/idx=3; size=3093</a></td>
+                            <td><a href="../de_transaction/speedy/idx=3; size=3093/report/index.html">de_transaction/speedy/idx=3; size=3093</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_transaction/idx=4; size=1644/report/index.html">idx=4; size=1644</a></th>
+                            <td><a href="../de_transaction/bincode/idx=4; size=1644/report/index.html">de_transaction/bincode/idx=4; size=1644</a></td>
+                            <td><a href="../de_transaction/borsh/idx=4; size=1644/report/index.html">de_transaction/borsh/idx=4; size=1644</a></td>
+                            <td><a href="../de_transaction/cbor/idx=4; size=1644/report/index.html">de_transaction/cbor/idx=4; size=1644</a></td>
+                            <td><a href="../de_transaction/speedy/idx=4; size=1644/report/index.html">de_transaction/speedy/idx=4; size=1644</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_transaction/idx=5; size=385/report/index.html">idx=5; size=385</a></th>
+                            <td><a href="../de_transaction/bincode/idx=5; size=385/report/index.html">de_transaction/bincode/idx=5; size=385</a></td>
+                            <td><a href="../de_transaction/borsh/idx=5; size=385/report/index.html">de_transaction/borsh/idx=5; size=385</a></td>
+                            <td><a href="../de_transaction/cbor/idx=5; size=385/report/index.html">de_transaction/cbor/idx=5; size=385</a></td>
+                            <td><a href="../de_transaction/speedy/idx=5; size=385/report/index.html">de_transaction/speedy/idx=5; size=385</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_transaction/idx=6; size=546/report/index.html">idx=6; size=546</a></th>
+                            <td><a href="../de_transaction/bincode/idx=6; size=546/report/index.html">de_transaction/bincode/idx=6; size=546</a></td>
+                            <td><a href="../de_transaction/borsh/idx=6; size=546/report/index.html">de_transaction/borsh/idx=6; size=546</a></td>
+                            <td><a href="../de_transaction/cbor/idx=6; size=546/report/index.html">de_transaction/cbor/idx=6; size=546</a></td>
+                            <td><a href="../de_transaction/speedy/idx=6; size=546/report/index.html">de_transaction/speedy/idx=6; size=546</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_transaction/idx=7; size=371/report/index.html">idx=7; size=371</a></th>
+                            <td><a href="../de_transaction/bincode/idx=7; size=371/report/index.html">de_transaction/bincode/idx=7; size=371</a></td>
+                            <td><a href="../de_transaction/borsh/idx=7; size=371/report/index.html">de_transaction/borsh/idx=7; size=371</a></td>
+                            <td><a href="../de_transaction/cbor/idx=7; size=371/report/index.html">de_transaction/cbor/idx=7; size=371</a></td>
+                            <td><a href="../de_transaction/speedy/idx=7; size=371/report/index.html">de_transaction/speedy/idx=7; size=371</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_transaction/idx=8; size=2430/report/index.html">idx=8; size=2430</a></th>
+                            <td><a href="../de_transaction/bincode/idx=8; size=2430/report/index.html">de_transaction/bincode/idx=8; size=2430</a></td>
+                            <td><a href="../de_transaction/borsh/idx=8; size=2430/report/index.html">de_transaction/borsh/idx=8; size=2430</a></td>
+                            <td><a href="../de_transaction/cbor/idx=8; size=2430/report/index.html">de_transaction/cbor/idx=8; size=2430</a></td>
+                            <td><a href="../de_transaction/speedy/idx=8; size=2430/report/index.html">de_transaction/speedy/idx=8; size=2430</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../de_transaction/idx=9; size=372/report/index.html">idx=9; size=372</a></th>
+                            <td><a href="../de_transaction/bincode/idx=9; size=372/report/index.html">de_transaction/bincode/idx=9; size=372</a></td>
+                            <td><a href="../de_transaction/borsh/idx=9; size=372/report/index.html">de_transaction/borsh/idx=9; size=372</a></td>
+                            <td><a href="../de_transaction/cbor/idx=9; size=372/report/index.html">de_transaction/cbor/idx=9; size=372</a></td>
+                            <td><a href="../de_transaction/speedy/idx=9; size=372/report/index.html">de_transaction/speedy/idx=9; size=372</a></td>
+                        </tr>
+                    </table>
+                </li>
+            </ul>
+            <li><a href="../ser_account/report/index.html">ser_account</a></li>
+            
+            <ul>
+                <li>
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th><a href="../ser_account/bincode/report/index.html">bincode</a></th>
+                            <th><a href="../ser_account/borsh/report/index.html">borsh</a></th>
+                            <th><a href="../ser_account/cbor/report/index.html">cbor</a></th>
+                            <th><a href="../ser_account/speedy/report/index.html">speedy</a></th>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_account/idx=0; size=64/report/index.html">idx=0; size=64</a></th>
+                            <td><a href="../ser_account/bincode/idx=0; size=64/report/index.html">ser_account/bincode/idx=0; size=64</a></td>
+                            <td><a href="../ser_account/borsh/idx=0; size=64/report/index.html">ser_account/borsh/idx=0; size=64</a></td>
+                            <td><a href="../ser_account/cbor/idx=0; size=64/report/index.html">ser_account/cbor/idx=0; size=64</a></td>
+                            <td><a href="../ser_account/speedy/idx=0; size=64/report/index.html">ser_account/speedy/idx=0; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_account/idx=1; size=64/report/index.html">idx=1; size=64</a></th>
+                            <td><a href="../ser_account/bincode/idx=1; size=64/report/index.html">ser_account/bincode/idx=1; size=64</a></td>
+                            <td><a href="../ser_account/borsh/idx=1; size=64/report/index.html">ser_account/borsh/idx=1; size=64</a></td>
+                            <td><a href="../ser_account/cbor/idx=1; size=64/report/index.html">ser_account/cbor/idx=1; size=64</a></td>
+                            <td><a href="../ser_account/speedy/idx=1; size=64/report/index.html">ser_account/speedy/idx=1; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_account/idx=2; size=64/report/index.html">idx=2; size=64</a></th>
+                            <td><a href="../ser_account/bincode/idx=2; size=64/report/index.html">ser_account/bincode/idx=2; size=64</a></td>
+                            <td><a href="../ser_account/borsh/idx=2; size=64/report/index.html">ser_account/borsh/idx=2; size=64</a></td>
+                            <td><a href="../ser_account/cbor/idx=2; size=64/report/index.html">ser_account/cbor/idx=2; size=64</a></td>
+                            <td><a href="../ser_account/speedy/idx=2; size=64/report/index.html">ser_account/speedy/idx=2; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_account/idx=3; size=64/report/index.html">idx=3; size=64</a></th>
+                            <td><a href="../ser_account/bincode/idx=3; size=64/report/index.html">ser_account/bincode/idx=3; size=64</a></td>
+                            <td><a href="../ser_account/borsh/idx=3; size=64/report/index.html">ser_account/borsh/idx=3; size=64</a></td>
+                            <td><a href="../ser_account/cbor/idx=3; size=64/report/index.html">ser_account/cbor/idx=3; size=64</a></td>
+                            <td><a href="../ser_account/speedy/idx=3; size=64/report/index.html">ser_account/speedy/idx=3; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_account/idx=4; size=64/report/index.html">idx=4; size=64</a></th>
+                            <td><a href="../ser_account/bincode/idx=4; size=64/report/index.html">ser_account/bincode/idx=4; size=64</a></td>
+                            <td><a href="../ser_account/borsh/idx=4; size=64/report/index.html">ser_account/borsh/idx=4; size=64</a></td>
+                            <td><a href="../ser_account/cbor/idx=4; size=64/report/index.html">ser_account/cbor/idx=4; size=64</a></td>
+                            <td><a href="../ser_account/speedy/idx=4; size=64/report/index.html">ser_account/speedy/idx=4; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_account/idx=5; size=64/report/index.html">idx=5; size=64</a></th>
+                            <td><a href="../ser_account/bincode/idx=5; size=64/report/index.html">ser_account/bincode/idx=5; size=64</a></td>
+                            <td><a href="../ser_account/borsh/idx=5; size=64/report/index.html">ser_account/borsh/idx=5; size=64</a></td>
+                            <td><a href="../ser_account/cbor/idx=5; size=64/report/index.html">ser_account/cbor/idx=5; size=64</a></td>
+                            <td><a href="../ser_account/speedy/idx=5; size=64/report/index.html">ser_account/speedy/idx=5; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_account/idx=6; size=64/report/index.html">idx=6; size=64</a></th>
+                            <td><a href="../ser_account/bincode/idx=6; size=64/report/index.html">ser_account/bincode/idx=6; size=64</a></td>
+                            <td><a href="../ser_account/borsh/idx=6; size=64/report/index.html">ser_account/borsh/idx=6; size=64</a></td>
+                            <td><a href="../ser_account/cbor/idx=6; size=64/report/index.html">ser_account/cbor/idx=6; size=64</a></td>
+                            <td><a href="../ser_account/speedy/idx=6; size=64/report/index.html">ser_account/speedy/idx=6; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_account/idx=7; size=64/report/index.html">idx=7; size=64</a></th>
+                            <td><a href="../ser_account/bincode/idx=7; size=64/report/index.html">ser_account/bincode/idx=7; size=64</a></td>
+                            <td><a href="../ser_account/borsh/idx=7; size=64/report/index.html">ser_account/borsh/idx=7; size=64</a></td>
+                            <td><a href="../ser_account/cbor/idx=7; size=64/report/index.html">ser_account/cbor/idx=7; size=64</a></td>
+                            <td><a href="../ser_account/speedy/idx=7; size=64/report/index.html">ser_account/speedy/idx=7; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_account/idx=8; size=64/report/index.html">idx=8; size=64</a></th>
+                            <td><a href="../ser_account/bincode/idx=8; size=64/report/index.html">ser_account/bincode/idx=8; size=64</a></td>
+                            <td><a href="../ser_account/borsh/idx=8; size=64/report/index.html">ser_account/borsh/idx=8; size=64</a></td>
+                            <td><a href="../ser_account/cbor/idx=8; size=64/report/index.html">ser_account/cbor/idx=8; size=64</a></td>
+                            <td><a href="../ser_account/speedy/idx=8; size=64/report/index.html">ser_account/speedy/idx=8; size=64</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_account/idx=9; size=64/report/index.html">idx=9; size=64</a></th>
+                            <td><a href="../ser_account/bincode/idx=9; size=64/report/index.html">ser_account/bincode/idx=9; size=64</a></td>
+                            <td><a href="../ser_account/borsh/idx=9; size=64/report/index.html">ser_account/borsh/idx=9; size=64</a></td>
+                            <td><a href="../ser_account/cbor/idx=9; size=64/report/index.html">ser_account/cbor/idx=9; size=64</a></td>
+                            <td><a href="../ser_account/speedy/idx=9; size=64/report/index.html">ser_account/speedy/idx=9; size=64</a></td>
+                        </tr>
+                    </table>
+                </li>
+            </ul>
+            <li><a href="../ser_block/report/index.html">ser_block</a></li>
+            
+            <ul>
+                <li>
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th><a href="../ser_block/bincode/report/index.html">bincode</a></th>
+                            <th><a href="../ser_block/borsh/report/index.html">borsh</a></th>
+                            <th><a href="../ser_block/cbor/report/index.html">cbor</a></th>
+                            <th><a href="../ser_block/speedy/report/index.html">speedy</a></th>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_block/idx=0; size=1056480/report/index.html">idx=0; size=1056480</a></th>
+                            <td><a href="../ser_block/bincode/idx=0; size=1056480/report/index.html">ser_block/bincode/idx=0; size=1056480</a></td>
+                            <td><a href="../ser_block/borsh/idx=0; size=1056480/report/index.html">ser_block/borsh/idx=0; size=1056480</a></td>
+                            <td><a href="../ser_block/cbor/idx=0; size=1056480/report/index.html">ser_block/cbor/idx=0; size=1056480</a></td>
+                            <td><a href="../ser_block/speedy/idx=0; size=1056480/report/index.html">ser_block/speedy/idx=0; size=1056480</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_block/idx=1; size=579580/report/index.html">idx=1; size=579580</a></th>
+                            <td><a href="../ser_block/bincode/idx=1; size=579580/report/index.html">ser_block/bincode/idx=1; size=579580</a></td>
+                            <td><a href="../ser_block/borsh/idx=1; size=579580/report/index.html">ser_block/borsh/idx=1; size=579580</a></td>
+                            <td><a href="../ser_block/cbor/idx=1; size=579580/report/index.html">ser_block/cbor/idx=1; size=579580</a></td>
+                            <td><a href="../ser_block/speedy/idx=1; size=579580/report/index.html">ser_block/speedy/idx=1; size=579580</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_block/idx=2; size=3833307/report/index.html">idx=2; size=3833307</a></th>
+                            <td><a href="../ser_block/bincode/idx=2; size=3833307/report/index.html">ser_block/bincode/idx=2; size=3833307</a></td>
+                            <td><a href="../ser_block/borsh/idx=2; size=3833307/report/index.html">ser_block/borsh/idx=2; size=3833307</a></td>
+                            <td><a href="../ser_block/cbor/idx=2; size=3833307/report/index.html">ser_block/cbor/idx=2; size=3833307</a></td>
+                            <td><a href="../ser_block/speedy/idx=2; size=3833307/report/index.html">ser_block/speedy/idx=2; size=3833307</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_block/idx=3; size=1485739/report/index.html">idx=3; size=1485739</a></th>
+                            <td><a href="../ser_block/bincode/idx=3; size=1485739/report/index.html">ser_block/bincode/idx=3; size=1485739</a></td>
+                            <td><a href="../ser_block/borsh/idx=3; size=1485739/report/index.html">ser_block/borsh/idx=3; size=1485739</a></td>
+                            <td><a href="../ser_block/cbor/idx=3; size=1485739/report/index.html">ser_block/cbor/idx=3; size=1485739</a></td>
+                            <td><a href="../ser_block/speedy/idx=3; size=1485739/report/index.html">ser_block/speedy/idx=3; size=1485739</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_block/idx=4; size=348484/report/index.html">idx=4; size=348484</a></th>
+                            <td><a href="../ser_block/bincode/idx=4; size=348484/report/index.html">ser_block/bincode/idx=4; size=348484</a></td>
+                            <td><a href="../ser_block/borsh/idx=4; size=348484/report/index.html">ser_block/borsh/idx=4; size=348484</a></td>
+                            <td><a href="../ser_block/cbor/idx=4; size=348484/report/index.html">ser_block/cbor/idx=4; size=348484</a></td>
+                            <td><a href="../ser_block/speedy/idx=4; size=348484/report/index.html">ser_block/speedy/idx=4; size=348484</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_block/idx=5; size=5028301/report/index.html">idx=5; size=5028301</a></th>
+                            <td><a href="../ser_block/bincode/idx=5; size=5028301/report/index.html">ser_block/bincode/idx=5; size=5028301</a></td>
+                            <td><a href="../ser_block/borsh/idx=5; size=5028301/report/index.html">ser_block/borsh/idx=5; size=5028301</a></td>
+                            <td><a href="../ser_block/cbor/idx=5; size=5028301/report/index.html">ser_block/cbor/idx=5; size=5028301</a></td>
+                            <td><a href="../ser_block/speedy/idx=5; size=5028301/report/index.html">ser_block/speedy/idx=5; size=5028301</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_block/idx=6; size=2809266/report/index.html">idx=6; size=2809266</a></th>
+                            <td><a href="../ser_block/bincode/idx=6; size=2809266/report/index.html">ser_block/bincode/idx=6; size=2809266</a></td>
+                            <td><a href="../ser_block/borsh/idx=6; size=2809266/report/index.html">ser_block/borsh/idx=6; size=2809266</a></td>
+                            <td><a href="../ser_block/cbor/idx=6; size=2809266/report/index.html">ser_block/cbor/idx=6; size=2809266</a></td>
+                            <td><a href="../ser_block/speedy/idx=6; size=2809266/report/index.html">ser_block/speedy/idx=6; size=2809266</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_block/idx=7; size=2651114/report/index.html">idx=7; size=2651114</a></th>
+                            <td><a href="../ser_block/bincode/idx=7; size=2651114/report/index.html">ser_block/bincode/idx=7; size=2651114</a></td>
+                            <td><a href="../ser_block/borsh/idx=7; size=2651114/report/index.html">ser_block/borsh/idx=7; size=2651114</a></td>
+                            <td><a href="../ser_block/cbor/idx=7; size=2651114/report/index.html">ser_block/cbor/idx=7; size=2651114</a></td>
+                            <td><a href="../ser_block/speedy/idx=7; size=2651114/report/index.html">ser_block/speedy/idx=7; size=2651114</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_block/idx=8; size=3422080/report/index.html">idx=8; size=3422080</a></th>
+                            <td><a href="../ser_block/bincode/idx=8; size=3422080/report/index.html">ser_block/bincode/idx=8; size=3422080</a></td>
+                            <td><a href="../ser_block/borsh/idx=8; size=3422080/report/index.html">ser_block/borsh/idx=8; size=3422080</a></td>
+                            <td><a href="../ser_block/cbor/idx=8; size=3422080/report/index.html">ser_block/cbor/idx=8; size=3422080</a></td>
+                            <td><a href="../ser_block/speedy/idx=8; size=3422080/report/index.html">ser_block/speedy/idx=8; size=3422080</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_block/idx=9; size=4953049/report/index.html">idx=9; size=4953049</a></th>
+                            <td><a href="../ser_block/bincode/idx=9; size=4953049/report/index.html">ser_block/bincode/idx=9; size=4953049</a></td>
+                            <td><a href="../ser_block/borsh/idx=9; size=4953049/report/index.html">ser_block/borsh/idx=9; size=4953049</a></td>
+                            <td><a href="../ser_block/cbor/idx=9; size=4953049/report/index.html">ser_block/cbor/idx=9; size=4953049</a></td>
+                            <td><a href="../ser_block/speedy/idx=9; size=4953049/report/index.html">ser_block/speedy/idx=9; size=4953049</a></td>
+                        </tr>
+                    </table>
+                </li>
+            </ul>
+            <li><a href="../ser_header/report/index.html">ser_header</a></li>
+            
+            <ul>
+                <li>
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th><a href="../ser_header/bincode/report/index.html">bincode</a></th>
+                            <th><a href="../ser_header/borsh/report/index.html">borsh</a></th>
+                            <th><a href="../ser_header/cbor/report/index.html">cbor</a></th>
+                            <th><a href="../ser_header/speedy/report/index.html">speedy</a></th>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_header/idx=0; size=27866/report/index.html">idx=0; size=27866</a></th>
+                            <td><a href="../ser_header/bincode/idx=0; size=27866/report/index.html">ser_header/bincode/idx=0; size=27866</a></td>
+                            <td><a href="../ser_header/borsh/idx=0; size=27866/report/index.html">ser_header/borsh/idx=0; size=27866</a></td>
+                            <td><a href="../ser_header/cbor/idx=0; size=27866/report/index.html">ser_header/cbor/idx=0; size=27866</a></td>
+                            <td><a href="../ser_header/speedy/idx=0; size=27866/report/index.html">ser_header/speedy/idx=0; size=27866</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_header/idx=1; size=90706/report/index.html">idx=1; size=90706</a></th>
+                            <td><a href="../ser_header/bincode/idx=1; size=90706/report/index.html">ser_header/bincode/idx=1; size=90706</a></td>
+                            <td><a href="../ser_header/borsh/idx=1; size=90706/report/index.html">ser_header/borsh/idx=1; size=90706</a></td>
+                            <td><a href="../ser_header/cbor/idx=1; size=90706/report/index.html">ser_header/cbor/idx=1; size=90706</a></td>
+                            <td><a href="../ser_header/speedy/idx=1; size=90706/report/index.html">ser_header/speedy/idx=1; size=90706</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_header/idx=2; size=145612/report/index.html">idx=2; size=145612</a></th>
+                            <td><a href="../ser_header/bincode/idx=2; size=145612/report/index.html">ser_header/bincode/idx=2; size=145612</a></td>
+                            <td><a href="../ser_header/borsh/idx=2; size=145612/report/index.html">ser_header/borsh/idx=2; size=145612</a></td>
+                            <td><a href="../ser_header/cbor/idx=2; size=145612/report/index.html">ser_header/cbor/idx=2; size=145612</a></td>
+                            <td><a href="../ser_header/speedy/idx=2; size=145612/report/index.html">ser_header/speedy/idx=2; size=145612</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_header/idx=3; size=108473/report/index.html">idx=3; size=108473</a></th>
+                            <td><a href="../ser_header/bincode/idx=3; size=108473/report/index.html">ser_header/bincode/idx=3; size=108473</a></td>
+                            <td><a href="../ser_header/borsh/idx=3; size=108473/report/index.html">ser_header/borsh/idx=3; size=108473</a></td>
+                            <td><a href="../ser_header/cbor/idx=3; size=108473/report/index.html">ser_header/cbor/idx=3; size=108473</a></td>
+                            <td><a href="../ser_header/speedy/idx=3; size=108473/report/index.html">ser_header/speedy/idx=3; size=108473</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_header/idx=4; size=87633/report/index.html">idx=4; size=87633</a></th>
+                            <td><a href="../ser_header/bincode/idx=4; size=87633/report/index.html">ser_header/bincode/idx=4; size=87633</a></td>
+                            <td><a href="../ser_header/borsh/idx=4; size=87633/report/index.html">ser_header/borsh/idx=4; size=87633</a></td>
+                            <td><a href="../ser_header/cbor/idx=4; size=87633/report/index.html">ser_header/cbor/idx=4; size=87633</a></td>
+                            <td><a href="../ser_header/speedy/idx=4; size=87633/report/index.html">ser_header/speedy/idx=4; size=87633</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_header/idx=5; size=37392/report/index.html">idx=5; size=37392</a></th>
+                            <td><a href="../ser_header/bincode/idx=5; size=37392/report/index.html">ser_header/bincode/idx=5; size=37392</a></td>
+                            <td><a href="../ser_header/borsh/idx=5; size=37392/report/index.html">ser_header/borsh/idx=5; size=37392</a></td>
+                            <td><a href="../ser_header/cbor/idx=5; size=37392/report/index.html">ser_header/cbor/idx=5; size=37392</a></td>
+                            <td><a href="../ser_header/speedy/idx=5; size=37392/report/index.html">ser_header/speedy/idx=5; size=37392</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_header/idx=6; size=56478/report/index.html">idx=6; size=56478</a></th>
+                            <td><a href="../ser_header/bincode/idx=6; size=56478/report/index.html">ser_header/bincode/idx=6; size=56478</a></td>
+                            <td><a href="../ser_header/borsh/idx=6; size=56478/report/index.html">ser_header/borsh/idx=6; size=56478</a></td>
+                            <td><a href="../ser_header/cbor/idx=6; size=56478/report/index.html">ser_header/cbor/idx=6; size=56478</a></td>
+                            <td><a href="../ser_header/speedy/idx=6; size=56478/report/index.html">ser_header/speedy/idx=6; size=56478</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_header/idx=7; size=35038/report/index.html">idx=7; size=35038</a></th>
+                            <td><a href="../ser_header/bincode/idx=7; size=35038/report/index.html">ser_header/bincode/idx=7; size=35038</a></td>
+                            <td><a href="../ser_header/borsh/idx=7; size=35038/report/index.html">ser_header/borsh/idx=7; size=35038</a></td>
+                            <td><a href="../ser_header/cbor/idx=7; size=35038/report/index.html">ser_header/cbor/idx=7; size=35038</a></td>
+                            <td><a href="../ser_header/speedy/idx=7; size=35038/report/index.html">ser_header/speedy/idx=7; size=35038</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_header/idx=8; size=141955/report/index.html">idx=8; size=141955</a></th>
+                            <td><a href="../ser_header/bincode/idx=8; size=141955/report/index.html">ser_header/bincode/idx=8; size=141955</a></td>
+                            <td><a href="../ser_header/borsh/idx=8; size=141955/report/index.html">ser_header/borsh/idx=8; size=141955</a></td>
+                            <td><a href="../ser_header/cbor/idx=8; size=141955/report/index.html">ser_header/cbor/idx=8; size=141955</a></td>
+                            <td><a href="../ser_header/speedy/idx=8; size=141955/report/index.html">ser_header/speedy/idx=8; size=141955</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_header/idx=9; size=90459/report/index.html">idx=9; size=90459</a></th>
+                            <td><a href="../ser_header/bincode/idx=9; size=90459/report/index.html">ser_header/bincode/idx=9; size=90459</a></td>
+                            <td><a href="../ser_header/borsh/idx=9; size=90459/report/index.html">ser_header/borsh/idx=9; size=90459</a></td>
+                            <td><a href="../ser_header/cbor/idx=9; size=90459/report/index.html">ser_header/cbor/idx=9; size=90459</a></td>
+                            <td><a href="../ser_header/speedy/idx=9; size=90459/report/index.html">ser_header/speedy/idx=9; size=90459</a></td>
+                        </tr>
+                    </table>
+                </li>
+            </ul>
+            <li><a href="../ser_transaction/report/index.html">ser_transaction</a></li>
+            
+            <ul>
+                <li>
+                    <table>
+                        <tr>
+                            <th></th>
+                            <th><a href="../ser_transaction/bincode/report/index.html">bincode</a></th>
+                            <th><a href="../ser_transaction/borsh/report/index.html">borsh</a></th>
+                            <th><a href="../ser_transaction/cbor/report/index.html">cbor</a></th>
+                            <th><a href="../ser_transaction/speedy/report/index.html">speedy</a></th>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_transaction/idx=0; size=1774/report/index.html">idx=0; size=1774</a></th>
+                            <td><a href="../ser_transaction/bincode/idx=0; size=1774/report/index.html">ser_transaction/bincode/idx=0; size=1774</a></td>
+                            <td><a href="../ser_transaction/borsh/idx=0; size=1774/report/index.html">ser_transaction/borsh/idx=0; size=1774</a></td>
+                            <td><a href="../ser_transaction/cbor/idx=0; size=1774/report/index.html">ser_transaction/cbor/idx=0; size=1774</a></td>
+                            <td><a href="../ser_transaction/speedy/idx=0; size=1774/report/index.html">ser_transaction/speedy/idx=0; size=1774</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_transaction/idx=1; size=398/report/index.html">idx=1; size=398</a></th>
+                            <td><a href="../ser_transaction/bincode/idx=1; size=398/report/index.html">ser_transaction/bincode/idx=1; size=398</a></td>
+                            <td><a href="../ser_transaction/borsh/idx=1; size=398/report/index.html">ser_transaction/borsh/idx=1; size=398</a></td>
+                            <td><a href="../ser_transaction/cbor/idx=1; size=398/report/index.html">ser_transaction/cbor/idx=1; size=398</a></td>
+                            <td><a href="../ser_transaction/speedy/idx=1; size=398/report/index.html">ser_transaction/speedy/idx=1; size=398</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_transaction/idx=2; size=2784/report/index.html">idx=2; size=2784</a></th>
+                            <td><a href="../ser_transaction/bincode/idx=2; size=2784/report/index.html">ser_transaction/bincode/idx=2; size=2784</a></td>
+                            <td><a href="../ser_transaction/borsh/idx=2; size=2784/report/index.html">ser_transaction/borsh/idx=2; size=2784</a></td>
+                            <td><a href="../ser_transaction/cbor/idx=2; size=2784/report/index.html">ser_transaction/cbor/idx=2; size=2784</a></td>
+                            <td><a href="../ser_transaction/speedy/idx=2; size=2784/report/index.html">ser_transaction/speedy/idx=2; size=2784</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_transaction/idx=3; size=3093/report/index.html">idx=3; size=3093</a></th>
+                            <td><a href="../ser_transaction/bincode/idx=3; size=3093/report/index.html">ser_transaction/bincode/idx=3; size=3093</a></td>
+                            <td><a href="../ser_transaction/borsh/idx=3; size=3093/report/index.html">ser_transaction/borsh/idx=3; size=3093</a></td>
+                            <td><a href="../ser_transaction/cbor/idx=3; size=3093/report/index.html">ser_transaction/cbor/idx=3; size=3093</a></td>
+                            <td><a href="../ser_transaction/speedy/idx=3; size=3093/report/index.html">ser_transaction/speedy/idx=3; size=3093</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_transaction/idx=4; size=1644/report/index.html">idx=4; size=1644</a></th>
+                            <td><a href="../ser_transaction/bincode/idx=4; size=1644/report/index.html">ser_transaction/bincode/idx=4; size=1644</a></td>
+                            <td><a href="../ser_transaction/borsh/idx=4; size=1644/report/index.html">ser_transaction/borsh/idx=4; size=1644</a></td>
+                            <td><a href="../ser_transaction/cbor/idx=4; size=1644/report/index.html">ser_transaction/cbor/idx=4; size=1644</a></td>
+                            <td><a href="../ser_transaction/speedy/idx=4; size=1644/report/index.html">ser_transaction/speedy/idx=4; size=1644</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_transaction/idx=5; size=385/report/index.html">idx=5; size=385</a></th>
+                            <td><a href="../ser_transaction/bincode/idx=5; size=385/report/index.html">ser_transaction/bincode/idx=5; size=385</a></td>
+                            <td><a href="../ser_transaction/borsh/idx=5; size=385/report/index.html">ser_transaction/borsh/idx=5; size=385</a></td>
+                            <td><a href="../ser_transaction/cbor/idx=5; size=385/report/index.html">ser_transaction/cbor/idx=5; size=385</a></td>
+                            <td><a href="../ser_transaction/speedy/idx=5; size=385/report/index.html">ser_transaction/speedy/idx=5; size=385</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_transaction/idx=6; size=546/report/index.html">idx=6; size=546</a></th>
+                            <td><a href="../ser_transaction/bincode/idx=6; size=546/report/index.html">ser_transaction/bincode/idx=6; size=546</a></td>
+                            <td><a href="../ser_transaction/borsh/idx=6; size=546/report/index.html">ser_transaction/borsh/idx=6; size=546</a></td>
+                            <td><a href="../ser_transaction/cbor/idx=6; size=546/report/index.html">ser_transaction/cbor/idx=6; size=546</a></td>
+                            <td><a href="../ser_transaction/speedy/idx=6; size=546/report/index.html">ser_transaction/speedy/idx=6; size=546</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_transaction/idx=7; size=371/report/index.html">idx=7; size=371</a></th>
+                            <td><a href="../ser_transaction/bincode/idx=7; size=371/report/index.html">ser_transaction/bincode/idx=7; size=371</a></td>
+                            <td><a href="../ser_transaction/borsh/idx=7; size=371/report/index.html">ser_transaction/borsh/idx=7; size=371</a></td>
+                            <td><a href="../ser_transaction/cbor/idx=7; size=371/report/index.html">ser_transaction/cbor/idx=7; size=371</a></td>
+                            <td><a href="../ser_transaction/speedy/idx=7; size=371/report/index.html">ser_transaction/speedy/idx=7; size=371</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_transaction/idx=8; size=2430/report/index.html">idx=8; size=2430</a></th>
+                            <td><a href="../ser_transaction/bincode/idx=8; size=2430/report/index.html">ser_transaction/bincode/idx=8; size=2430</a></td>
+                            <td><a href="../ser_transaction/borsh/idx=8; size=2430/report/index.html">ser_transaction/borsh/idx=8; size=2430</a></td>
+                            <td><a href="../ser_transaction/cbor/idx=8; size=2430/report/index.html">ser_transaction/cbor/idx=8; size=2430</a></td>
+                            <td><a href="../ser_transaction/speedy/idx=8; size=2430/report/index.html">ser_transaction/speedy/idx=8; size=2430</a></td>
+                        </tr>
+                        <tr>
+                            <th><a href="../ser_transaction/idx=9; size=372/report/index.html">idx=9; size=372</a></th>
+                            <td><a href="../ser_transaction/bincode/idx=9; size=372/report/index.html">ser_transaction/bincode/idx=9; size=372</a></td>
+                            <td><a href="../ser_transaction/borsh/idx=9; size=372/report/index.html">ser_transaction/borsh/idx=9; size=372</a></td>
+                            <td><a href="../ser_transaction/cbor/idx=9; size=372/report/index.html">ser_transaction/cbor/idx=9; size=372</a></td>
+                            <td><a href="../ser_transaction/speedy/idx=9; size=372/report/index.html">ser_transaction/speedy/idx=9; size=372</a></td>
+                        </tr>
+                    </table>
+                </li>
+            </ul>
+        </ul>
+    </div>
+    <div id="footer">
+        <p>This report was generated by
+            <a href="https://github.com/bheisler/criterion.rs">Criterion.rs</a>, a statistics-driven benchmarking
+            library in Rust.</p>
+    </div>
+</body>
+</html>

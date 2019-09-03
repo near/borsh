@@ -1,197 +1,180 @@
-use bencher::{benchmark_main, Bencher, TestDesc, TestDescAndFn, TestFn};
 use benchmarks::{Account, Block, BlockHeader, Generate, SignedTransaction};
 use borsh::{BorshDeserialize, BorshSerialize};
-use lazy_static::lazy_static;
+use rand::SeedableRng;
+use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
 use speedy::Endianness;
 use speedy::{Readable, Writable};
 
-fn generator<T: Generate>(num: usize) -> Vec<T> {
-    let mut res = vec![];
-    for _ in 0..num {
-        res.push(T::generate());
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+
+fn ser_obj<T>(group_name: &str, num_samples: usize, c: &mut Criterion)
+where
+    for<'a> T: Generate
+        + BorshSerialize
+        + BorshDeserialize
+        + SerdeSerialize
+        + SerdeDeserialize<'a>
+        + Readable<'a, speedy::Endianness>
+        + Writable<speedy::Endianness>
+        + 'static,
+{
+    let mut rng = rand_xorshift::XorShiftRng::from_seed([0u8; 16]);
+    let mut group = c.benchmark_group(group_name);
+
+    let objects: Vec<_> = (0..num_samples).map(|_| T::generate(&mut rng)).collect();
+    let borsh_datas: Vec<Vec<u8>> = objects.iter().map(|t| t.try_to_vec().unwrap()).collect();
+    let borsh_sizes: Vec<_> = borsh_datas.iter().map(|d| d.len()).collect();
+
+    for i in 0..objects.len() {
+        let size = borsh_sizes[i];
+        let obj = &objects[i];
+
+        let benchmark_param_display = format!("idx={}; size={}", i, size);
+
+        group.throughput(Throughput::Bytes(size as u64));
+        group.bench_with_input(
+            BenchmarkId::new("cbor", benchmark_param_display.clone()),
+            obj,
+            |b, d| {
+                b.iter(|| serde_cbor::to_vec(d).unwrap());
+            },
+        );
+        group.bench_with_input(
+            BenchmarkId::new("bincode", benchmark_param_display.clone()),
+            obj,
+            |b, d| {
+                b.iter(|| bincode::serialize(d).unwrap());
+            },
+        );
+        group.bench_with_input(
+            BenchmarkId::new("borsh", benchmark_param_display.clone()),
+            obj,
+            |b, d| {
+                b.iter(|| d.try_to_vec().unwrap());
+            },
+        );
+        group.bench_with_input(
+            BenchmarkId::new("speedy", benchmark_param_display),
+            obj,
+            |b, d| {
+                b.iter(|| d.write_to_vec(Endianness::LittleEndian).unwrap());
+            },
+        );
     }
-    res
+    group.finish();
 }
 
-macro_rules! generic_bench {
-    ( $SER_INPUT:ident, $DE_INPUT:ident, $type:tt, $group_name:ident) => {
-        mod $group_name {
-            use super::*;
+fn de_obj<T>(group_name: &str, num_samples: usize, c: &mut Criterion)
+where
+    for<'a> T: Generate
+        + BorshSerialize
+        + BorshDeserialize
+        + SerdeSerialize
+        + SerdeDeserialize<'a>
+        + Readable<'a, speedy::Endianness>
+        + Writable<speedy::Endianness>
+        + 'static,
+{
+    let mut rng = rand_xorshift::XorShiftRng::from_seed([0u8; 16]);
+    let mut group = c.benchmark_group(group_name);
 
-            lazy_static! {
-                static ref $SER_INPUT: Vec<$type> = { generator::<$type>(1000) };
-            }
+    let objects: Vec<_> = (0..num_samples).map(|_| T::generate(&mut rng)).collect();
+    let cbor_datas: Vec<Vec<u8>> = objects
+        .iter()
+        .map(|t| serde_cbor::to_vec(t).unwrap())
+        .collect();
+    let bincode_datas: Vec<Vec<u8>> = objects
+        .iter()
+        .map(|t| bincode::serialize(t).unwrap())
+        .collect();
+    let borsh_datas: Vec<Vec<u8>> = objects.iter().map(|t| t.try_to_vec().unwrap()).collect();
+    let speedy_datas: Vec<Vec<u8>> = objects
+        .iter()
+        .map(|t| t.write_to_vec(Endianness::LittleEndian).unwrap())
+        .collect();
 
-            pub fn ser_borsh(bench: &mut Bencher) {
-                let mut next = 0usize;
-                bench.iter(move || {
-                    let value = &$SER_INPUT[next];
-                    next += 1;
-                    next %= $SER_INPUT.len();
-                    value.try_to_vec().unwrap();
-                });
-            }
+    let borsh_sizes: Vec<_> = borsh_datas.iter().map(|d| d.len()).collect();
 
-            pub fn ser_bincode(bench: &mut Bencher) {
-                let mut next = 0usize;
-                bench.iter(move || {
-                    let value = &$SER_INPUT[next];
-                    next += 1;
-                    next %= $SER_INPUT.len();
-                    bincode::serialize(&value).unwrap();
-                });
-            }
+    for i in 0..objects.len() {
+        let size = borsh_sizes[i];
+        let cbor_data = &cbor_datas[i];
+        let bincode_data = &bincode_datas[i];
+        let borsh_data = &borsh_datas[i];
+        let speedy_data = &speedy_datas[i];
 
-            pub fn ser_cbor(bench: &mut Bencher) {
-                let mut next = 0usize;
-                bench.iter(move || {
-                    let value = &$SER_INPUT[next];
-                    next += 1;
-                    next %= $SER_INPUT.len();
-                    serde_cbor::to_vec(&value).unwrap();
-                });
-            }
+        let benchmark_param_display = format!("idx={}; size={}", i, size);
 
-            pub fn ser_speedy(bench: &mut Bencher) {
-                let mut next = 0usize;
-                bench.iter(move || {
-                    let value = &$SER_INPUT[next];
-                    next += 1;
-                    next %= $SER_INPUT.len();
-                    value.write_to_vec(Endianness::LittleEndian).unwrap();
-                });
-            }
-
-            pub fn de_borsh(bench: &mut Bencher) {
-                let $DE_INPUT: Vec<_> = $SER_INPUT
-                    .iter()
-                    .map(|value| value.try_to_vec().unwrap())
-                    .collect();
-                let mut next = 0usize;
-                bench.iter(move || {
-                    let value = &$DE_INPUT[next];
-                    next += 1;
-                    next %= $DE_INPUT.len();
-                    $type::try_from_slice(&value).unwrap();
-                });
-            }
-
-            pub fn de_bincode(bench: &mut Bencher) {
-                let $DE_INPUT: Vec<_> = $SER_INPUT
-                    .iter()
-                    .map(|value| bincode::serialize(&value).unwrap())
-                    .collect();
-                let mut next = 0usize;
-                bench.iter(move || {
-                    let value = &$DE_INPUT[next];
-                    next += 1;
-                    next %= $DE_INPUT.len();
-                    bincode::deserialize::<$type>(&value).unwrap();
-                });
-            }
-
-            pub fn de_cbor(bench: &mut Bencher) {
-                let $DE_INPUT: Vec<_> = $SER_INPUT
-                    .iter()
-                    .map(|value| serde_cbor::to_vec(&value).unwrap())
-                    .collect();
-                let mut next = 0usize;
-                bench.iter(move || {
-                    let value = &$DE_INPUT[next];
-                    next += 1;
-                    next %= $DE_INPUT.len();
-                    serde_cbor::from_slice::<$type>(value).unwrap();
-                });
-            }
-
-            pub fn de_speedy(bench: &mut Bencher) {
-                let $DE_INPUT: Vec<_> = $SER_INPUT
-                    .iter()
-                    .map(|value| value.write_to_vec(Endianness::LittleEndian).unwrap())
-                    .collect();
-                let mut next = 0usize;
-                bench.iter(move || {
-                    let value = &$DE_INPUT[next];
-                    next += 1;
-                    next %= $DE_INPUT.len();
-                    $type::read_from_buffer(Endianness::LittleEndian, value).unwrap();
-                });
-            }
-        }
-        pub fn $group_name() -> ::std::vec::Vec<$crate::TestDescAndFn> {
-            use std::borrow::Cow;
-            let mut benches = ::std::vec::Vec::new();
-            benches.push(TestDescAndFn {
-                desc: TestDesc {
-                    name: Cow::from(format!("ser_{}_borsh", stringify!($group_name))),
-                    ignore: false,
-                },
-                testfn: TestFn::StaticBenchFn($group_name::ser_borsh),
-            });
-
-            benches.push(TestDescAndFn {
-                desc: TestDesc {
-                    name: Cow::from(format!("ser_{}_bincode", stringify!($group_name))),
-                    ignore: false,
-                },
-                testfn: TestFn::StaticBenchFn($group_name::ser_bincode),
-            });
-
-            benches.push(TestDescAndFn {
-                desc: TestDesc {
-                    name: Cow::from(format!("ser_{}_cbor", stringify!($group_name))),
-                    ignore: false,
-                },
-                testfn: TestFn::StaticBenchFn($group_name::ser_cbor),
-            });
-
-            benches.push(TestDescAndFn {
-                desc: TestDesc {
-                    name: Cow::from(format!("ser_{}_speedy", stringify!($group_name))),
-                    ignore: false,
-                },
-                testfn: TestFn::StaticBenchFn($group_name::ser_speedy),
-            });
-
-            benches.push(TestDescAndFn {
-                desc: TestDesc {
-                    name: Cow::from(format!("de_{}_borsh", stringify!($group_name))),
-                    ignore: false,
-                },
-                testfn: TestFn::StaticBenchFn($group_name::de_borsh),
-            });
-
-            benches.push(TestDescAndFn {
-                desc: TestDesc {
-                    name: Cow::from(format!("de_{}_bincode", stringify!($group_name))),
-                    ignore: false,
-                },
-                testfn: TestFn::StaticBenchFn($group_name::de_bincode),
-            });
-
-            benches.push(TestDescAndFn {
-                desc: TestDesc {
-                    name: Cow::from(format!("de_{}_cbor", stringify!($group_name))),
-                    ignore: false,
-                },
-                testfn: TestFn::StaticBenchFn($group_name::de_cbor),
-            });
-
-            benches.push(TestDescAndFn {
-                desc: TestDesc {
-                    name: Cow::from(format!("de_{}_speedy", stringify!($group_name))),
-                    ignore: false,
-                },
-                testfn: TestFn::StaticBenchFn($group_name::de_speedy),
-            });
-            benches
-        }
-    };
+        group.throughput(Throughput::Bytes(size as u64));
+        group.bench_with_input(
+            BenchmarkId::new("cbor", benchmark_param_display.clone()),
+            cbor_data,
+            |b, d| {
+                b.iter(|| serde_cbor::from_slice::<T>(&d).unwrap());
+            },
+        );
+        group.bench_with_input(
+            BenchmarkId::new("bincode", benchmark_param_display.clone()),
+            bincode_data,
+            |b, d| {
+                b.iter(|| bincode::deserialize::<T>(&d).unwrap());
+            },
+        );
+        group.bench_with_input(
+            BenchmarkId::new("borsh", benchmark_param_display.clone()),
+            borsh_data,
+            |b, d| {
+                b.iter(|| T::try_from_slice(&d).unwrap());
+            },
+        );
+        group.bench_with_input(
+            BenchmarkId::new("speedy", benchmark_param_display),
+            speedy_data,
+            |b, d| {
+                b.iter(|| T::read_from_buffer(Endianness::LittleEndian, &d).unwrap());
+            },
+        );
+    }
+    group.finish();
 }
 
-generic_bench!(ACCOUNTS, accounts, Account, account);
-generic_bench!(TRANSACTIONS, transactions, SignedTransaction, transaction);
-generic_bench!(HEADERS, headers, BlockHeader, block_header);
-generic_bench!(BLOCKS, blocks, Block, block);
+fn ser_account(c: &mut Criterion) {
+    ser_obj::<Account>("ser_account", 10, c);
+}
 
-benchmark_main!(account, transaction, block_header, block);
+fn ser_transaction(c: &mut Criterion) {
+    ser_obj::<SignedTransaction>("ser_transaction", 10, c);
+}
+
+fn ser_header(c: &mut Criterion) {
+    ser_obj::<BlockHeader>("ser_header", 10, c);
+}
+
+fn ser_block(c: &mut Criterion) {
+    ser_obj::<Block>("ser_block", 10, c);
+}
+
+fn de_account(c: &mut Criterion) {
+    de_obj::<Account>("de_account", 10, c);
+}
+
+fn de_transaction(c: &mut Criterion) {
+    de_obj::<SignedTransaction>("de_transaction", 10, c);
+}
+
+fn de_header(c: &mut Criterion) {
+    de_obj::<BlockHeader>("de_header", 10, c);
+}
+
+fn de_block(c: &mut Criterion) {
+    de_obj::<Block>("de_block", 10, c);
+}
+
+criterion_group!(
+    ser_benches,
+    ser_account,
+    ser_transaction,
+    ser_header,
+    ser_block
+);
+criterion_group!(de_benches, de_account, de_transaction, de_header, de_block);
+criterion_main!(ser_benches, de_benches);

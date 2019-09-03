@@ -15,9 +15,17 @@ pub trait BorshSerialize {
     }
 }
 
+impl BorshSerialize for u8 {
+    #[inline]
+    fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+        writer.write(std::slice::from_ref(self)).map(|_| ())
+    }
+}
+
 macro_rules! impl_for_integer {
     ($type: ident) => {
         impl BorshSerialize for $type {
+            #[inline]
             fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
                 writer.write(&self.to_le_bytes()).map(|_| ())
             }
@@ -31,7 +39,6 @@ impl_for_integer!(i32);
 impl_for_integer!(i64);
 impl_for_integer!(i128);
 impl_for_integer!(isize);
-impl_for_integer!(u8);
 impl_for_integer!(u16);
 impl_for_integer!(u32);
 impl_for_integer!(u64);
@@ -43,6 +50,7 @@ impl_for_integer!(usize);
 macro_rules! impl_for_float {
     ($type: ident) => {
         impl BorshSerialize for $type {
+            #[inline]
             fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
                 assert!(
                     !self.is_nan(),
@@ -58,6 +66,7 @@ impl_for_float!(f32);
 impl_for_float!(f64);
 
 impl BorshSerialize for bool {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer
             .write(if *self { &[1u8] } else { &[0u8] })
@@ -69,6 +78,7 @@ impl<T> BorshSerialize for Option<T>
 where
     T: BorshSerialize,
 {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         match self {
             None => 0u8.serialize(writer).map(|_| ()),
@@ -81,6 +91,7 @@ where
 }
 
 impl BorshSerialize for String {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write(&(self.len() as u32).to_le_bytes())?;
         writer.write(self.as_bytes())?;
@@ -93,6 +104,7 @@ impl<T> BorshSerialize for Vec<T>
 where
     T: BorshSerialize,
 {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write(&(self.len() as u32).to_le_bytes())?;
         for item in self {
@@ -107,6 +119,7 @@ impl<T> BorshSerialize for HashSet<T>
 where
     T: BorshSerialize + PartialOrd,
 {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         let mut vec = self.iter().collect::<Vec<_>>();
         vec.sort_by(|a, b| a.partial_cmp(b).unwrap());
@@ -124,6 +137,7 @@ where
     K: BorshSerialize + PartialOrd,
     V: BorshSerialize,
 {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         let mut vec = self.iter().collect::<Vec<_>>();
         vec.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
@@ -142,6 +156,7 @@ where
     K: BorshSerialize + PartialOrd,
     V: BorshSerialize,
 {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         (self.len() as u32).serialize(writer)?;
         for (key, value) in self.iter() {
@@ -154,6 +169,7 @@ where
 
 #[cfg(feature = "std")]
 impl BorshSerialize for std::net::SocketAddr {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         match *self {
             std::net::SocketAddr::V4(ref addr) => {
@@ -170,6 +186,7 @@ impl BorshSerialize for std::net::SocketAddr {
 
 #[cfg(feature = "std")]
 impl BorshSerialize for std::net::SocketAddrV4 {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         self.ip().serialize(writer)?;
         self.port().serialize(writer).map(|_| ())
@@ -178,6 +195,7 @@ impl BorshSerialize for std::net::SocketAddrV4 {
 
 #[cfg(feature = "std")]
 impl BorshSerialize for std::net::SocketAddrV6 {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         self.ip().serialize(writer)?;
         self.port().serialize(writer).map(|_| ())
@@ -186,6 +204,7 @@ impl BorshSerialize for std::net::SocketAddrV6 {
 
 #[cfg(feature = "std")]
 impl BorshSerialize for std::net::Ipv4Addr {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write(&self.octets()).map(|_| ())
     }
@@ -193,6 +212,7 @@ impl BorshSerialize for std::net::Ipv4Addr {
 
 #[cfg(feature = "std")]
 impl BorshSerialize for std::net::Ipv6Addr {
+    #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write(&self.octets()).map(|_| ())
     }
@@ -201,6 +221,7 @@ impl BorshSerialize for std::net::Ipv6Addr {
 macro_rules! impl_for_fixed_len_array {
     ($len: expr) => {
         impl BorshSerialize for [u8; $len] {
+            #[inline]
             fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
                 writer.write(self).map(|_| ())
             }
@@ -218,3 +239,4 @@ impl BorshSerialize for Box<[u8]> {
         writer.write(self).map(|_| ())
     }
 }
+

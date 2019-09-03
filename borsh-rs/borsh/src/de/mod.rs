@@ -13,9 +13,19 @@ pub trait BorshDeserialize: Sized {
     }
 }
 
+impl BorshDeserialize for u8 {
+    #[inline]
+    fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+        let mut res = 0u8;
+        reader.read_exact(std::slice::from_mut(&mut res))?;
+        Ok(res)
+    }
+}
+
 macro_rules! impl_for_integer {
     ($type: ident) => {
         impl BorshDeserialize for $type {
+            #[inline]
             fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
                 let mut data = [0u8; size_of::<$type>()];
                 reader.read_exact(&mut data)?;
@@ -31,7 +41,6 @@ impl_for_integer!(i32);
 impl_for_integer!(i64);
 impl_for_integer!(i128);
 impl_for_integer!(isize);
-impl_for_integer!(u8);
 impl_for_integer!(u16);
 impl_for_integer!(u32);
 impl_for_integer!(u64);
@@ -61,6 +70,7 @@ impl_for_float!(f32, u32);
 impl_for_float!(f64, u64);
 
 impl BorshDeserialize for bool {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut buf = [0u8];
         reader.read(&mut buf)?;
@@ -72,6 +82,7 @@ impl<T> BorshDeserialize for Option<T>
 where
     T: BorshDeserialize,
 {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut flag = [0u8];
         reader.read_exact(&mut flag)?;
@@ -84,6 +95,7 @@ where
 }
 
 impl BorshDeserialize for String {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         let mut result = vec![0; len as usize];
@@ -98,6 +110,7 @@ impl<T> BorshDeserialize for Vec<T>
 where
     T: BorshDeserialize,
 {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         let mut result = Vec::with_capacity(len as usize);
@@ -116,6 +129,7 @@ impl<T> BorshDeserialize for HashSet<T>
 where
     T: BorshDeserialize + Eq + std::hash::Hash,
 {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let vec = <Vec<T>>::deserialize(reader)?;
         Ok(vec.into_iter().collect::<HashSet<T>>())
@@ -128,6 +142,7 @@ where
     K: BorshDeserialize + Eq + std::hash::Hash,
     V: BorshDeserialize,
 {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         let mut result = HashMap::with_capacity(len as usize);
@@ -146,6 +161,7 @@ where
     K: BorshDeserialize + Ord + std::hash::Hash,
     V: BorshDeserialize,
 {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         let mut result = BTreeMap::new();
@@ -160,6 +176,7 @@ where
 
 #[cfg(feature = "std")]
 impl BorshDeserialize for std::net::SocketAddr {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let kind = u8::deserialize(reader)?;
         match kind {
@@ -172,6 +189,7 @@ impl BorshDeserialize for std::net::SocketAddr {
 
 #[cfg(feature = "std")]
 impl BorshDeserialize for std::net::SocketAddrV4 {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let ip = std::net::Ipv4Addr::deserialize(reader)?;
         let port = u16::deserialize(reader)?;
@@ -181,6 +199,7 @@ impl BorshDeserialize for std::net::SocketAddrV4 {
 
 #[cfg(feature = "std")]
 impl BorshDeserialize for std::net::SocketAddrV6 {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let ip = std::net::Ipv6Addr::deserialize(reader)?;
         let port = u16::deserialize(reader)?;
@@ -190,6 +209,7 @@ impl BorshDeserialize for std::net::SocketAddrV6 {
 
 #[cfg(feature = "std")]
 impl BorshDeserialize for std::net::Ipv4Addr {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut buf = [0u8; 4];
         reader.read(&mut buf)?;
@@ -199,6 +219,7 @@ impl BorshDeserialize for std::net::Ipv4Addr {
 
 #[cfg(feature = "std")]
 impl BorshDeserialize for std::net::Ipv6Addr {
+    #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut buf = [0u8; 16];
         reader.read(&mut buf)?;
@@ -209,6 +230,7 @@ impl BorshDeserialize for std::net::Ipv6Addr {
 macro_rules! impl_for_fixed_len_array {
     ($len: expr) => {
         impl BorshDeserialize for [u8; $len] {
+            #[inline]
             fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
                 let mut data = [0u8; $len];
                 reader.read(&mut data)?;
@@ -230,3 +252,4 @@ impl BorshDeserialize for Box<[u8]> {
         Ok(res.into_boxed_slice())
     }
 }
+
