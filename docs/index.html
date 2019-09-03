@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>Hello, world!</title>
+    <style>
+        body {
+            padding-top: 5.5rem;
+        }
+
+        .nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+            background-color: #8C0B18;
+        }
+
+        a {
+            color: #8C0B18;
+        }
+        a:hover {
+            color: #8C0B18;
+        }
+    </style>
+    <link rel="stylesheet" href="./highlight/styles/default.css">
+    <script src="./highlight/highlight.pack.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+</head>
+<body>
+<nav class="navbar navbar-light fixed-top bg-white justify-content-center">
+    <div class="col-md-6">
+        <ul class="nav nav-pills mb-3 nav-fill" id="pills-tab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="pills-overview-tab" data-toggle="pill" href="#pills-overview" role="tab"
+                   aria-controls="pills-overview" aria-selected="true">Overview</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="pills-example-tab" data-toggle="pill" href="#pills-example" role="tab"
+                   aria-controls="pills-example" aria-selected="false">Example</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="pills-benchmarks-tab" data-toggle="pill" href="#pills-benchmarks" role="tab"
+                   aria-controls="pills-benchmarks" aria-selected="false">Benchmarks</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="pills-specification-tab" data-toggle="pill" href="#pills-specification"
+                   role="tab"
+                   aria-controls="pills-specification" aria-selected="false">Specification</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="pills-borsch-tab" data-toggle="pill" href="#pills-borsch" role="tab"
+                   aria-controls="pills-borsch" aria-selected="false">Borsch</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+
+<main role="main" class="flex-shrink-0">
+
+    <div class="tab-content" id="pills-tabContent">
+        <div class="tab-pane fade show active" id="pills-overview" role="tabpanel" aria-labelledby="pills-overview-tab">
+
+            <div class="container">
+                <div class="container text-center">
+                    <div class="row justify-content-center">
+                        <div class="col-md-10">
+                            <h1 class="display-2">Borsh</h1>
+                            <h4>Binary serializer for security-critical projects</h4>
+                            <p>Borsh stands for Binary Object Representation Serializer for Hashing. It is meant to be
+                                used in security-critical projects
+                                as it prioritizes consistency, safety, speed; and comes with a strict specification. It
+                                optimizes for the following qualities
+                                in the decreasing priority:
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <dl class="row">
+                            <dt class="col-sm-3">Consistency</dt>
+                            <dd class="col-sm-9">Consistency means there is a bijective mapping between objects and
+                                their binary representations.
+                                There is no two binary representations that deserialize into the same object.
+                                This is extremely useful for applications that use binary representation to compute
+                                hash;
+                            </dd>
+
+                            <dt class="col-sm-3">Safety</dt>
+                            <dd class="col-sm-9">
+                                Borsh implementations use safe coding practices. In Rust, Borsh uses only safe code;
+                            </dd>
+
+                            <dt class="col-sm-3">Specification</dt>
+                            <dd class="col-sm-9">
+                                Borsh comes with a full specification that can be used for implementations in other
+                                languages;
+                            </dd>
+                            <dt class="col-sm-3">Speed</dt>
+                            <dd class="col-sm-9">
+                                In Rust, Borsh achieves high performance by opting out from <a href="https://serde.rs">Serde</a>
+                                which makes it faster
+                                than <a href="https://github.com/servo/bincode">bincode</a>; which also reduces the code
+                                size;
+                            </dd>
+                        </dl>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="pills-example" role="tabpanel" aria-labelledby="pills-example-tab">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-8">
+                        <h4 class="display-4">Example</h4>
+
+                    </div>
+
+                    <div class="col-md-8">
+                         <pre><code
+                                 class="rust">
+use borsh::{BorshSerialize, BorshDeserialize};
+
+#[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
+struct A {
+    x: u64,
+    y: String,
+}
+
+#[test]
+fn test_simple_struct() {
+    let a = A {
+        x: 3301,
+        y: "liber primus".to_string(),
+    };
+    let encoded_a = a.try_to_vec().unwrap();
+    let decoded_a = A::try_from_slice(&encoded_a).unwrap();
+    assert_eq!(a, decoded_a);
+}
+</code></pre>
+                    </div>
+                    <div class="col-md-8">
+                                            <p>Opting out from Serde allows borsh to have some features that currently are not available for serde-compatible serializers.
+                            Currently we support two features: <code>borsh_init</code> and <code>borsh_skip</code> (the former one not available in Serde). See
+                           <a href="https://github.com/nearprotocol/borsh">https://github.com/nearprotocol/borsh</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="pills-benchmarks" role="tabpanel" aria-labelledby="pills-benchmarks-tab">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-10">
+                        <h4 class="display-4">Benchmarks</h4>
+                        <p>We measured the following benchmarks on objects that blockchain projects care about the most:
+                            blocks, block headers,
+                            transactions, accounts. We took object structure from the <a
+                                    href="https://nearprotocol.com">nearprotocol</a> blockchain.
+                            The benchmarks were run on Google Cloud n1-highmem-16 (16 vCPUs, 104 GB memory), with
+                            Intel(R) Xeon(R) CPU @ 2.20GHz, 56320 KB cache processors.
+                            Using one core for the actual benchmark execution. Version used for benchmarks: 0.2.0.</p>
+                    </div>
+
+                    <div class="col-md-8">
+                        <p class="text-monospace">
+                            test ser_account_cbor ... bench: 536 ns/iter (+/- 8)<br/>
+                            test ser_account_bincode ... bench: 150 ns/iter (+/- 7)<br/>
+                            test ser_account_borsh ... bench: 42 ns/iter (+/- 4)<br/>
+                            test ser_account_speedy ... bench: 40 ns/iter (+/- 7)<br/><br/>
+
+                            test ser_transaction_cbor ... bench: 35,374 ns/iter (+/- 815)<br/>
+                            test ser_transaction_bincode ... bench: 26,749 ns/iter (+/- 1,375)<br/>
+                            test ser_transaction_borsh ... bench: 14,160 ns/iter (+/- 614)<br/>
+                            test ser_transaction_speedy ... bench: 840 ns/iter (+/- 46)<br/><br/>
+
+                            test ser_block_header_cbor ... bench: 211,129 ns/iter (+/- 4,477)<br/>
+                            test ser_block_header_bincode ... bench: 186,559 ns/iter (+/- 14,868)<br/>
+                            test ser_block_header_borsh ... bench: 26,196 ns/iter (+/- 1,224)<br/>
+                            test ser_block_header_speedy ... bench: 25,540 ns/iter (+/- 2,172)<br/><br/>
+
+                            test ser_block_cbor ... bench: 31,438,399 ns/iter (+/- 4,456,689)<br/>
+                            test ser_block_bincode ... bench: 22,405,977 ns/iter (+/- 767,936)<br/>
+                            test ser_block_borsh ... bench: 12,722,433 ns/iter (+/- 1,067,208)<br/>
+                            test ser_block_speedy ... bench: 767,713 ns/iter (+/- 32,926)<br/><br/>
+
+                            test de_account_cbor ... bench: 649 ns/iter (+/- 21)<br/>
+                            test de_account_bincode ... bench: 110 ns/iter (+/- 2)<br/>
+                            test de_account_borsh ... bench: 46 ns/iter (+/- 5)<br/>
+                            test de_account_speedy ... bench: 12 ns/iter (+/- 0)<br/><br/>
+
+                            test de_transaction_bincode ... bench: 13,581 ns/iter (+/- 574)<br/>
+                            test de_transaction_cbor ... bench: 18,910 ns/iter (+/- 704)<br/>
+                            test de_transaction_borsh ... bench: 29,698 ns/iter (+/- 1,370)<br/>
+                            test de_transaction_speedy ... bench: 1,249 ns/iter (+/- 57)<br/><br/>
+
+                            test de_block_header_cbor ... bench: 647,718 ns/iter (+/- 32,769)<br/>
+                            test de_block_header_bincode ... bench: 182,284 ns/iter (+/- 14,020)<br/>
+                            test de_block_header_borsh ... bench: 91,914 ns/iter (+/- 16,850)<br/>
+                            test de_block_header_speedy ... bench: 84,948 ns/iter (+/- 14,968)<br/><br/>
+
+                            test de_block_cbor ... bench: 40,483,706 ns/iter (+/- 2,271,670)<br/>
+                            test de_block_bincode ... bench: 10,804,396 ns/iter (+/- 407,032)<br/>
+                            test de_block_borsh ... bench: 27,766,896 ns/iter (+/- 2,318,010)<br/>
+                            test de_block_speedy ... bench: 2,199,706 ns/iter (+/- 649,436)
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="pills-specification" role="tabpanel" aria-labelledby="pills-specification-tab">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-10">
+                        <h4 class="display-4">Specification</h4>
+                        <p>In short, Borsh is a non self-describing binary serialization format. It is designed to
+                            serialize any objects to canonical and deterministic set of bytes.</p>
+                        General principles:
+                        <ul>
+                            <li>integers are little endian;</li>
+                            <li>sizes of dynamic containers are written before values as u32;</li>
+                            <li>all unordered containers (hashmap/hashset) are ordered in lexicographic order by key (in
+                                tie breaker case on value);
+                            </li>
+                            <li>structs are serialized in the order of fields in the struct;</li>
+                            <li>enums are serialized with using u8 for the enum ordinal and then storing data inside the
+                                enum value (if present).
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="col-md-10">
+                        <table class="table table-hover">
+                            <thead>
+                            <th>
+                            <th>Informal type</th>
+                            <th><a href="https://doc.rust-lang.org/grammar.html">Rust EBNF </a> *</th>
+                            <th>Pseudocode</th>
+                            </tr></thead>
+                            <tr>
+                                <td>Integers</td>
+                                <td>integer_type: ["u8" | "u16" | "u32" | "u64" | "u128" | "i8" | "i16" | "i32" | "i64"
+                                    | "i128" ]
+                                </td>
+                                <td>little_endian(x)</td>
+                            </tr>
+                            <tr>
+                                <td>Floats</td>
+                                <td>float_type: ["f32" | "f64" ]</td>
+                                <td>err_if_nan(x)<br/>little_endian(x as integer_type)</td>
+                            </tr>
+                            <tr>
+                                <td>Unit</td>
+                                <td>unit_type: "()"</td>
+                                <td>We do not write anything</td>
+                            </tr>
+                            <tr>
+                                <td>Fixed sized arrays</td>
+                                <td>array_type: '[' ident ';' literal ']'</td>
+                                <td>for el in x <br/>&nbsp; repr(el as ident)</td>
+                            </tr>
+                            <tr>
+                                <td>Dynamic sized array</td>
+                                <td>vec_type: "Vec&lt;" ident '&gt;'</td>
+                                <td>repr(len() as u32)<br/>
+                                    for el in x <br/>
+                                    &nbsp; repr(el as ident)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Struct</td>
+                                <td>struct_type: "struct" ident fields</td>
+                                <td>repr(fields)</td>
+                            </tr>
+                            <tr>
+                                <td>Fields</td>
+                                <td>fields: [named_fields | unnamed_fields]</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Named fields</td>
+                                <td>named_fields: '{' ident_field0 ':' ident_type0 ',' ident_field1 ':' ident_type1 ','
+                                    ... '}'
+                                </td>
+                                <td>repr(ident_field0 as ident_type0)<br/>
+                                    repr(ident_field1 as ident_type1)<br/>
+                                    ...
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Unnamed fields</td>
+                                <td>unnamed_fields: '(' ident_type0 ',' ident_type1 ',' ... ')'</td>
+                                <td>repr(x.0 as type0)<br/>repr(x.1 as type1)<br/>...</td>
+                            </tr>
+                            <tr>
+                                <td>Enum</td>
+                                <td>enum: 'enum' ident '{' variant0 ',' variant1 ',' ... '}'<br/>
+                                    variant: ident [ fields ] ?
+                                </td>
+                                <td>Suppose X is the number of the variant that the enum takes.<br/>
+                                    repr(X as u8)<br/>
+                                    repr(x.X as fieldsX)
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>HashMap</td>
+                                <td>hashmap: "HashMap&lt;" ident0, ident1 "&gt;"</td>
+                                <td>
+                                    repr(x.len() as u32)<br/>
+                                    for (k, v) in x.sorted_by_key() {<br/>
+                                    &nbsp; repr(k as ident0) <br/>
+                                    &nbsp; repr(v as ident1) <br/>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>HashSet</td>
+                                <td>hashset: "HashSet&lt;" ident "&gt;"</td>
+                                <td>
+                                    repr(x.len() as u32)<br/>
+                                    for el in x.sorted() {<br/>
+                                    &nbsp;repr(el as ident) <br/>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Option</td>
+                                <td>option_type: "Option&lt;" ident '&gt;'</td>
+                                <td> if x.is_some() { <br/>
+                                    &nbsp; repr(1 as u8) <br/>
+                                    &nbsp; repr(x.unwrap() as ident) <br/>
+                                    } else { <br/>
+                                    &nbsp; repr(0 as u8) <br/>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>String</td>
+                                <td>string_type: "String"</td>
+                                <td> encoded = utf8_encoding(x) as Vec&lt;u8&gt; <br/>
+                                    repr(encoded.len() as u32) <br/>
+                                    repr(encoded as Vec&lt;u8&gt;)
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="pills-borsch" role="tabpanel" aria-labelledby="pills-borsch-tab">
+
+
+                        <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-5">
+                        <p><a href="https://en.wikipedia.org/wiki/Borscht">Borsch or Borscht</a> is an extremely tasty sour soup common in Eastern Europe and Northern Asia.
+                            The primary ingredients are beetroots or tomatoes that give the dish its distinctive red color.</p>
+
+                            <p>The similarity between the name of the serializer and the fact that many members of the development team
+                            are extreme fans of this savory dish is entirely coincidental.</p>
+                    </div>
+
+                </div>
+                    <div class="row justify-content-center">
+                    <div class="col-md-5 text-center">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Borscht_served.jpg/1280px-Borscht_served.jpg" class="rounded" alt="Ukrainian Borscht" style="max-height: 100%; max-width: 100%"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-4 text-center">
+                <div class="container">
+                    <a href="https://github.com/nearprotocol/borsh" class="text-reset">
+                        <h5><span class="icon icon-36 "><svg height="36" viewBox="0 0 36 36" width="36"
+                                                             xmlns="http://www.w3.org/2000/svg"><path
+                                d="m17.9991429 0c-9.93942861 0-17.9991429 8.058-17.9991429 18.0008571 0 7.9517143 5.15742857 14.6982858 12.3102857 17.0794286.9.1645714 1.2291429-.3908571 1.2291429-.8682857 0-.4268571-.0162857-1.5591429-.0248572-3.0608571-5.0065714 1.0868571-6.06342854-2.4137143-6.06342854-2.4137143-.81857143-2.0785715-1.99885715-2.6322857-1.99885715-2.6322857-1.63371428-1.1177143.12428572-1.0937143.12428572-1.0937143 1.806.1268571 2.75742857 1.8548571 2.75742857 1.8548571 1.60542857 2.7505714 4.2128571 1.956 5.238 1.4948572.1628571-1.1631429.6282857-1.956 1.1425714-2.406-3.9968571-.4542858-8.1985714-1.9988572-8.1985714-8.8962858 0-1.9654285.70114286-3.5717142 1.85228571-4.83-.18514285-.456-.80314285-2.28514281.17657143-4.76399996 0 0 1.51114286-.48342857 4.94999996 1.84542857 1.4357143-.39942857 2.9751429-.59914285 4.506-.606 1.5282858.00685715 3.0685715.20657143 4.5068572.606 3.4362857-2.32885714 4.944-1.84542857 4.944-1.84542857.9831428 2.47885715.3651428 4.30799996.1791428 4.76399996 1.1545715 1.2582858 1.8505715 2.8645715 1.8505715 4.83 0 6.9154286-4.2085715 8.436-8.2182857 8.8825715.6462857.5554285 1.2214285 1.6534285 1.2214285 3.3325714 0 2.4068571-.0214285 4.3482857-.0214285 4.938 0 .4817143.324 1.0414286 1.2377142.8657143 7.146-2.3845714 12.2991429-9.1277143 12.2991429-17.0768572 0-9.9428571-8.0597143-18.0008571-18.0008571-18.0008571"></path></svg></span>
+                            nearprotocol/borsh
+                        </h5>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<footer class="container text-right text-reset">
+    <p>Community: <a href="https://discord.gg/gBtUFKR">Discord</a></p>
+</footer>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+</body>
+</html>
