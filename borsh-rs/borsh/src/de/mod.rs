@@ -227,11 +227,29 @@ impl BorshDeserialize for std::net::Ipv6Addr {
     }
 }
 
-impl BorshDeserialize for [u8; 32] {
-    #[inline]
+macro_rules! impl_for_fixed_len_array {
+    ($len: expr) => {
+        impl BorshDeserialize for [u8; $len] {
+            #[inline]
+            fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+                let mut data = [0u8; $len];
+                reader.read(&mut data)?;
+                Ok(data)
+            }
+        }
+    };
+}
+
+impl_for_fixed_len_array!(32);
+impl_for_fixed_len_array!(64);
+impl_for_fixed_len_array!(65);
+
+impl BorshDeserialize for Box<[u8]> {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
-        let mut res = [0u8; 32];
+        let len = u32::deserialize(reader)?;
+        let mut res = vec![0; len as usize];
         reader.read(&mut res)?;
-        Ok(res)
+        Ok(res.into_boxed_slice())
     }
 }
+

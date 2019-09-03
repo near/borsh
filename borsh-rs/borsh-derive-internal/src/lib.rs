@@ -1,3 +1,5 @@
+#![recursion_limit = "128"]
+
 mod attribute_helpers;
 mod enum_de;
 mod enum_ser;

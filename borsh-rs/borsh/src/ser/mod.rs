@@ -218,9 +218,25 @@ impl BorshSerialize for std::net::Ipv6Addr {
     }
 }
 
-impl BorshSerialize for [u8; 32] {
-    #[inline]
+macro_rules! impl_for_fixed_len_array {
+    ($len: expr) => {
+        impl BorshSerialize for [u8; $len] {
+            #[inline]
+            fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+                writer.write(self).map(|_| ())
+            }
+        }
+    };
+}
+
+impl_for_fixed_len_array!(32);
+impl_for_fixed_len_array!(64);
+impl_for_fixed_len_array!(65);
+
+impl BorshSerialize for Box<[u8]> {
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+        (self.len() as u32).serialize(writer)?;
         writer.write(self).map(|_| ())
     }
 }
+
