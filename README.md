@@ -97,50 +97,28 @@ struct A {
 
 We measured the following benchmarks on objects that blockchain projects care about the most: blocks, block headers,
 transactions, accounts. We took object structure from the [nearprotocol](https://nearprotocol.com) blockchain.
-The benchmarks were run on Google Cloud [n1-highmem-16 (16 vCPUs, 104 GB memory)](https://cloud.google.com/compute/docs/machine-types), with Intel(R) Xeon(R) CPU @ 2.20GHz, 56320 KB cache processors.
-Using one core for the actual benchmark execution. Version used for benchmarks: `0.2.0`.
+We used [Criterion](https://bheisler.github.io/criterion.rs/book/index.html) for building the following graphs.
 
-```
-test ser_account_cbor         ... bench:         536 ns/iter (+/- 8)
-test ser_account_bincode      ... bench:         150 ns/iter (+/- 7)
-test ser_account_borsh        ... bench:          42 ns/iter (+/- 4)
-test ser_account_speedy       ... bench:          40 ns/iter (+/- 7)
 
-test ser_transaction_cbor     ... bench:      35,374 ns/iter (+/- 815)
-test ser_transaction_bincode  ... bench:      26,749 ns/iter (+/- 1,375)
-test ser_transaction_borsh    ... bench:      14,160 ns/iter (+/- 614)
-test ser_transaction_speedy   ... bench:         840 ns/iter (+/- 46)
+The benchmarks were run on Google Cloud [n1-standard-2 (2 vCPUs, 7.5 GB memory)](https://cloud.google.com/compute/docs/machine-types).
 
-test ser_block_header_cbor    ... bench:     211,129 ns/iter (+/- 4,477)
-test ser_block_header_bincode ... bench:     186,559 ns/iter (+/- 14,868)
-test ser_block_header_borsh   ... bench:      26,196 ns/iter (+/- 1,224)
-test ser_block_header_speedy  ... bench:      25,540 ns/iter (+/- 2,172)
+Block header serialization speed vs block header size in bytes (size only roughly corresponds to the serialization complexity which causes non-smoothness of the graph):
 
-test ser_block_cbor           ... bench:  31,438,399 ns/iter (+/- 4,456,689)
-test ser_block_bincode        ... bench:  22,405,977 ns/iter (+/- 767,936)
-test ser_block_borsh          ... bench:  12,722,433 ns/iter (+/- 1,067,208)
-test ser_block_speedy         ... bench:     767,713 ns/iter (+/- 32,926)
+![ser_header](/borsh-rs/benchmarks/criterion/ser_header/report/lines.svg)
 
-test de_account_cbor          ... bench:         649 ns/iter (+/- 21)
-test de_account_bincode       ... bench:         110 ns/iter (+/- 2)
-test de_account_borsh         ... bench:          46 ns/iter (+/- 5)
-test de_account_speedy        ... bench:          12 ns/iter (+/- 0)
+Block header de-serialization speed vs block header size in bytes:
 
-test de_transaction_bincode   ... bench:      13,581 ns/iter (+/- 574)
-test de_transaction_cbor      ... bench:      18,910 ns/iter (+/- 704)
-test de_transaction_borsh     ... bench:      29,698 ns/iter (+/- 1,370)
-test de_transaction_speedy    ... bench:       1,249 ns/iter (+/- 57)
+![ser_header](/borsh-rs/benchmarks/criterion/de_header/report/lines.svg)
 
-test de_block_header_cbor     ... bench:     647,718 ns/iter (+/- 32,769)
-test de_block_header_bincode  ... bench:     182,284 ns/iter (+/- 14,020)
-test de_block_header_borsh    ... bench:      91,914 ns/iter (+/- 16,850)
-test de_block_header_speedy   ... bench:      84,948 ns/iter (+/- 14,968)
+Block serialization speed vs block size in bytes:
 
-test de_block_cbor            ... bench:  40,483,706 ns/iter (+/- 2,271,670)
-test de_block_bincode         ... bench:  10,804,396 ns/iter (+/- 407,032)
-test de_block_borsh           ... bench:  27,766,896 ns/iter (+/- 2,318,010)
-test de_block_speedy          ... bench:   2,199,706 ns/iter (+/- 649,436)
-```
+![ser_header](/borsh-rs/benchmarks/criterion/ser_block/report/lines.svg)
+
+Block de-serialization speed vs block size in bytes:
+
+![ser_header](/borsh-rs/benchmarks/criterion/de_block/report/lines.svg)
+
+See complete report [here](/borsh-rs/benchmarks/criterion/report/index.html).
 
 ## Specification
 In short, Borsh is a non self-describing binary serialization format. It is designed to serialize any objects to canonical and deterministic set of bytes.</p>
