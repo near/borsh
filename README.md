@@ -103,21 +103,21 @@ The benchmarks were run on Google Cloud [n1-standard-2 (2 vCPUs, 7.5 GB memory)]
 
 Block header serialization speed vs block header size in bytes (size only roughly corresponds to the serialization complexity which causes non-smoothness of the graph):
 
-![ser_header](borsh.io/criterion/ser_header/report/lines.svg)
+![ser_header](http://borsh.io/criterion/ser_header/report/lines.svg)
 
 Block header de-serialization speed vs block header size in bytes:
 
-![ser_header](borsh.io/criterion/de_header/report/lines.svg)
+![ser_header](http://borsh.io/criterion/de_header/report/lines.svg)
 
 Block serialization speed vs block size in bytes:
 
-![ser_header](borsh.io/criterion/ser_block/report/lines.svg)
+![ser_header](http://borsh.io/criterion/ser_block/report/lines.svg)
 
 Block de-serialization speed vs block size in bytes:
 
-![ser_header](borsh.io/criterion/de_block/report/lines.svg)
+![ser_header](http://borsh.io/criterion/de_block/report/lines.svg)
 
-See complete report [here](borsh.io/criterion/report/index.html).
+See complete report [here](http://borsh.io/criterion/report/index.html).
 
 ## Specification
 In short, Borsh is a non self-describing binary serialization format. It is designed to serialize any objects to canonical and deterministic set of bytes.</p>
