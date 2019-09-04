@@ -68,9 +68,7 @@ impl_for_float!(f64);
 impl BorshSerialize for bool {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
-        writer
-            .write(if *self { &[1u8] } else { &[0u8] })
-            .map(|_| ())
+        (if *self { 1u8 } else { 0u8 }).serialize(writer)
     }
 }
 
@@ -81,7 +79,7 @@ where
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         match self {
-            None => 0u8.serialize(writer).map(|_| ()),
+            None => 0u8.serialize(writer),
             Some(value) => {
                 1u8.serialize(writer)?;
                 value.serialize(writer)
@@ -189,7 +187,7 @@ impl BorshSerialize for std::net::SocketAddrV4 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         self.ip().serialize(writer)?;
-        self.port().serialize(writer).map(|_| ())
+        self.port().serialize(writer)
     }
 }
 
@@ -198,7 +196,7 @@ impl BorshSerialize for std::net::SocketAddrV6 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         self.ip().serialize(writer)?;
-        self.port().serialize(writer).map(|_| ())
+        self.port().serialize(writer)
     }
 }
 
