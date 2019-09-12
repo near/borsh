@@ -1,4 +1,6 @@
+use std::collections::{HashMap, HashSet};
 use borsh::{BorshSerialize, BorshDeserialize};
+
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
 #[borsh_init(init)]
@@ -7,6 +9,8 @@ struct A {
     b: B,
     y: f32,
     z: String,
+    m: HashMap<String, String>,
+    s: HashSet<u64>,
     v: Vec<String>,
     w: Box<[u8]>,
     i: [u8; 32],
@@ -46,11 +50,17 @@ struct D {
 
 #[test]
 fn test_simple_struct() {
+    let mut map: HashMap<String, String> = HashMap::new();
+    map.insert("test".into(), "test".into());
+    let mut set: HashSet<u64> = HashSet::new();
+    set.insert(std::u64::MAX);
     let a = A {
         x: 1,
         b: B { x: 2, y: 3, c: C::C5(D { x: 1 }) },
         y: 4.0,
         z: "123".to_string(),
+        m: map.clone(),
+        s: set.clone(),
         v: vec!["qwe".to_string(), "zxc".to_string()],
         w: vec![0].into_boxed_slice(),
         i: [4u8; 32],
@@ -64,6 +74,8 @@ fn test_simple_struct() {
         b: B { x: 2, y: 3, c: C::C5(D { x: 1 }) },
         y: 4.0,
         z: a.z,
+        m: map.clone(),
+        s: set.clone(),
         v: a.v,
         w: a.w,
         i: a.i,
