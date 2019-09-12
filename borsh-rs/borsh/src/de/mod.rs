@@ -114,11 +114,8 @@ where
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         let mut result = Vec::with_capacity(len as usize);
-        for i in 0..len {
-            result.push(T::deserialize(reader).map_err(|x| {
-                println!("ind {}", i);
-                x
-            })?);
+        for _ in 0..len {
+            result.push(T::deserialize(reader)?);
         }
         Ok(result)
     }
