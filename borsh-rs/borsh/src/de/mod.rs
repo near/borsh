@@ -180,9 +180,14 @@ impl BorshDeserialize for std::net::SocketAddr {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let kind = u8::deserialize(reader)?;
         match kind {
-            0 => std::net::SocketAddrV4::deserialize(reader).map(|addr| std::net::SocketAddr::V4(addr)),
-            1 => std::net::SocketAddrV6::deserialize(reader).map(|addr| std::net::SocketAddr::V6(addr)),
-            value => panic!(format!("Invalid SocketAddr variant: {}", value)),
+            0 => std::net::SocketAddrV4::deserialize(reader)
+                .map(|addr| std::net::SocketAddr::V4(addr)),
+            1 => std::net::SocketAddrV6::deserialize(reader)
+                .map(|addr| std::net::SocketAddr::V6(addr)),
+            value => Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("Invalid SocketAddr variant: {}", value),
+            )),
         }
     }
 }
@@ -252,4 +257,3 @@ impl BorshDeserialize for Box<[u8]> {
         Ok(res.into_boxed_slice())
     }
 }
-

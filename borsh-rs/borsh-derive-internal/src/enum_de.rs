@@ -23,7 +23,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         });
                     } else {
                         let field_type = &field.ty;
-                        deserializable_field_types.extend(quote!{
+                        deserializable_field_types.extend(quote! {
                             #field_type: borsh::BorshDeserialize,
                         });
 
@@ -40,11 +40,12 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         variant_header.extend(quote! { Default::default(), });
                     } else {
                         let field_type = &field.ty;
-                        deserializable_field_types.extend(quote!{
+                        deserializable_field_types.extend(quote! {
                             #field_type: borsh::BorshDeserialize,
                         });
 
-                        variant_header.extend(quote! { borsh::BorshDeserialize::deserialize(reader)?, });
+                        variant_header
+                            .extend(quote! { borsh::BorshDeserialize::deserialize(reader)?, });
                     }
                 }
                 variant_header = quote! { ( #variant_header )};
@@ -67,7 +68,11 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     #variant_idx
                     let mut return_value = match variant_idx {
                         #variant_arms
-                        _ => panic!(format!("Unexpeted variant index: {:?}", variant_idx)),
+                        _ =>
+                        return Err(std::io::Error::new(
+                                   std::io::ErrorKind::InvalidInput,
+                                   format!("Unexpected variant index: {:?}", variant_idx),
+                                  )),
                     };
                     return_value.#method_ident();
                     Ok(return_value)
@@ -81,7 +86,11 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     #variant_idx
                     let return_value = match variant_idx {
                         #variant_arms
-                        _ => panic!(format!("Unexpeted variant index: {:?}", variant_idx)),
+                        _ =>
+                        return Err(std::io::Error::new(
+                                   std::io::ErrorKind::InvalidInput,
+                                   format!("Unexpected variant index: {:?}", variant_idx),
+                                  )),
                     };
                     Ok(return_value)
                 }
