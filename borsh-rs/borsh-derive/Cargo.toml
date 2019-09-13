@@ -1,6 +1,6 @@
 [package]
 name = "borsh-derive"
-version = "0.2.3"
+version = "0.2.4"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -16,6 +16,6 @@ Binary Object Representation Serializer for Hashing
 proc-macro = true
 
 [dependencies]
-borsh-derive-internal = { path = "../borsh-derive-internal" , version="0.2.3"}
+borsh-derive-internal = { path = "../borsh-derive-internal" , version="0.2.4"}
 syn = {version = "0.15.34", features = ["full", "fold"] }
 
