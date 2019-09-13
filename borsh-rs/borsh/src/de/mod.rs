@@ -118,7 +118,8 @@ where
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
-        let mut result = Vec::with_capacity(len as usize);
+        // TODO(16): return capacity allocation when we can safely do that.
+        let mut result = Vec::new();
         for _ in 0..len {
             result.push(T::deserialize(reader)?);
         }
@@ -147,7 +148,8 @@ where
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
-        let mut result = HashMap::with_capacity(len as usize);
+        // TODO(16): return capacity allocation when we can safely do that.
+        let mut result = HashMap::new();
         for _ in 0..len {
             let key = K::deserialize(reader)?;
             let value = V::deserialize(reader)?;
