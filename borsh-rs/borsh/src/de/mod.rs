@@ -2,6 +2,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Cursor, Error, Read};
 use std::mem::size_of;
 
+const ERROR_NOT_ALL_BYTES_READ: &str = "Not all bytes read";
+
 /// A data-structure that can be de-serialized from binary format by NBOR.
 pub trait BorshDeserialize: Sized {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error>;
@@ -9,7 +11,11 @@ pub trait BorshDeserialize: Sized {
     /// Deserialize this instance from a slice of bytes.
     fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
         let mut c = Cursor::new(v);
-        Self::deserialize(&mut c)
+        let result = Self::deserialize(&mut c)?;
+        if c.position() != v.len() as u64 {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, ERROR_NOT_ALL_BYTES_READ));
+        }
+        Ok(result)
     }
 }
 
@@ -56,10 +62,9 @@ macro_rules! impl_for_float {
                 let mut data = [0u8; size_of::<$type>()];
                 reader.read_exact(&mut data)?;
                 let res = $type::from_bits($int_type::from_le_bytes(data));
-                assert!(
-                    !res.is_nan(),
-                    "For portability reasons we do not allow to deserialize NaNs."
-                );
+                if res.is_nan() {
+                    return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "For portability reasons we do not allow to deserialize NaNs."))
+                }
                 Ok(res)
             }
         }
@@ -101,7 +106,7 @@ impl BorshDeserialize for String {
         let mut result = vec![0; len as usize];
         reader.read(&mut result)?;
         String::from_utf8(result)
-            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err.to_string()))
+            .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()))
     }
 }
 
@@ -113,7 +118,8 @@ where
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
-        let mut result = Vec::with_capacity(len as usize);
+        // TODO(16): return capacity allocation when we can safely do that.
+        let mut result = Vec::new();
         for _ in 0..len {
             result.push(T::deserialize(reader)?);
         }
@@ -142,7 +148,8 @@ where
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
-        let mut result = HashMap::with_capacity(len as usize);
+        // TODO(16): return capacity allocation when we can safely do that.
+        let mut result = HashMap::new();
         for _ in 0..len {
             let key = K::deserialize(reader)?;
             let value = V::deserialize(reader)?;
