@@ -185,9 +185,9 @@ impl BorshDeserialize for std::net::SocketAddr {
         let kind = u8::deserialize(reader)?;
         match kind {
             0 => std::net::SocketAddrV4::deserialize(reader)
-                .map(|addr| std::net::SocketAddr::V4(addr)),
+                .map(std::net::SocketAddr::V4),
             1 => std::net::SocketAddrV6::deserialize(reader)
-                .map(|addr| std::net::SocketAddr::V6(addr)),
+                .map(std::net::SocketAddr::V6),
             value => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!("Invalid SocketAddr variant: {}", value),

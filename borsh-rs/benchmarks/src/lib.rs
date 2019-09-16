@@ -156,8 +156,7 @@ pub struct AccountId(String);
 impl Generate for String {
     fn generate<R: rand::Rng>(rng: &mut R) -> Self {
         let len: usize = rng.gen_range(5, 200);
-        let res = rng.sample_iter(&Alphanumeric).take(len).collect::<String>();
-        res
+        rng.sample_iter(&Alphanumeric).take(len).collect::<String>()
     }
 }
 
