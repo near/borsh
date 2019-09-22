@@ -216,25 +216,64 @@ impl BorshSerialize for std::net::Ipv6Addr {
     }
 }
 
-macro_rules! impl_for_fixed_len_array {
-    ($len: expr) => {
-        impl BorshSerialize for [u8; $len] {
-            #[inline]
-            fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
-                writer.write(self).map(|_| ())
-            }
-        }
-    };
-}
-
-impl_for_fixed_len_array!(32);
-impl_for_fixed_len_array!(64);
-impl_for_fixed_len_array!(65);
-
 impl BorshSerialize for Box<[u8]> {
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         (self.len() as u32).serialize(writer)?;
         writer.write(self).map(|_| ())
     }
 }
+
+macro_rules! impl_arrays {
+    ($($len:expr)+) => {
+    $(
+      impl<T> BorshSerialize for [T; $len]
+      where T: BorshSerialize
+      {
+        #[inline]
+        fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+            for el in self.iter() {
+                el.serialize(writer)?;
+            }
+            Ok(())
+        }
+      }
+      )+
+    };
+}
+
+impl_arrays!(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 32 64 65);
+
+macro_rules! impl_tuple {
+    ($($idx:tt $name:ident)+) => {
+      impl<$($name),+> BorshSerialize for ($($name),+)
+      where $($name: BorshSerialize,)+
+      {
+        #[inline]
+        fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+            $(self.$idx.serialize(writer)?;)+
+            Ok(())
+        }
+      }
+    };
+}
+
+impl_tuple!(0 T0 1 T1);
+impl_tuple!(0 T0 1 T1 2 T2);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17 18 T18);
+impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17 18 T18 19 T19);
 

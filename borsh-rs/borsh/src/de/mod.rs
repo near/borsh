@@ -13,7 +13,10 @@ pub trait BorshDeserialize: Sized {
         let mut c = Cursor::new(v);
         let result = Self::deserialize(&mut c)?;
         if c.position() != v.len() as u64 {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, ERROR_NOT_ALL_BYTES_READ));
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                ERROR_NOT_ALL_BYTES_READ,
+            ));
         }
         Ok(result)
     }
@@ -63,7 +66,10 @@ macro_rules! impl_for_float {
                 reader.read_exact(&mut data)?;
                 let res = $type::from_bits($int_type::from_le_bytes(data));
                 if res.is_nan() {
-                    return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "For portability reasons we do not allow to deserialize NaNs."))
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        "For portability reasons we do not allow to deserialize NaNs.",
+                    ));
                 }
                 Ok(res)
             }
@@ -184,10 +190,8 @@ impl BorshDeserialize for std::net::SocketAddr {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let kind = u8::deserialize(reader)?;
         match kind {
-            0 => std::net::SocketAddrV4::deserialize(reader)
-                .map(std::net::SocketAddr::V4),
-            1 => std::net::SocketAddrV6::deserialize(reader)
-                .map(std::net::SocketAddr::V6),
+            0 => std::net::SocketAddrV4::deserialize(reader).map(std::net::SocketAddr::V4),
+            1 => std::net::SocketAddrV6::deserialize(reader).map(std::net::SocketAddr::V6),
             value => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!("Invalid SocketAddr variant: {}", value),
@@ -236,23 +240,6 @@ impl BorshDeserialize for std::net::Ipv6Addr {
     }
 }
 
-macro_rules! impl_for_fixed_len_array {
-    ($len: expr) => {
-        impl BorshDeserialize for [u8; $len] {
-            #[inline]
-            fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
-                let mut data = [0u8; $len];
-                reader.read(&mut data)?;
-                Ok(data)
-            }
-        }
-    };
-}
-
-impl_for_fixed_len_array!(32);
-impl_for_fixed_len_array!(64);
-impl_for_fixed_len_array!(65);
-
 impl BorshDeserialize for Box<[u8]> {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
@@ -261,3 +248,57 @@ impl BorshDeserialize for Box<[u8]> {
         Ok(res.into_boxed_slice())
     }
 }
+
+macro_rules! impl_arrays {
+    ($($len:expr)+) => {
+    $(
+      impl<T> BorshDeserialize for [T; $len]
+      where T: BorshDeserialize + Default + Copy
+      {
+        #[inline]
+        fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+            let mut result = [T::default(); $len];
+            for i in 0..$len {
+                result[i] = T::deserialize(reader)?;
+            }
+            Ok(result)
+        }
+      }
+      )+
+    };
+}
+
+impl_arrays!(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 32 64 65);
+
+macro_rules! impl_tuple {
+    ($($name:ident)+) => {
+      impl<$($name),+> BorshDeserialize for ($($name),+)
+      where $($name: BorshDeserialize,)+
+      {
+        #[inline]
+        fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+            Ok(($($name::deserialize(reader)?,)+))
+        }
+      }
+    };
+}
+
+impl_tuple!(T0 T1);
+impl_tuple!(T0 T1 T2);
+impl_tuple!(T0 T1 T2 T3);
+impl_tuple!(T0 T1 T2 T3 T4);
+impl_tuple!(T0 T1 T2 T3 T4 T5);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15 T16);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15 T16 T17);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15 T16 T17 T18);
+impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15 T16 T17 T18 T19);
