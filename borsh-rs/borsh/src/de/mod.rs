@@ -283,7 +283,6 @@ macro_rules! impl_tuple {
     };
 }
 
-//impl_tuple!(T0);
 impl_tuple!(T0 T1);
 impl_tuple!(T0 T1 T2);
 impl_tuple!(T0 T1 T2 T3);
