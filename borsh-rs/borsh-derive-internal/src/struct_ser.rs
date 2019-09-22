@@ -55,7 +55,10 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::testing_tools::assert_eq;
+
+    fn assert_eq(expected: TokenStream2, actual: TokenStream2) {
+        assert_eq!(expected.to_string(), actual.to_string())
+    }
 
     #[test]
     fn simple_struct() {
