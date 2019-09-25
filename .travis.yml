@@ -30,7 +30,7 @@ install:
   - cargo build --verbose --manifest-path=borsh-rs/Cargo.toml
   - yarn install
 
-build:
+script:
   - cargo build --verbose --manifest-path=borsh-rs/Cargo.toml
   - cargo test --verbose --manifest-path=borsh-rs/Cargo.toml
   - yarn test
