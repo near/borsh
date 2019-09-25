@@ -17,6 +17,8 @@ branches:
 cache:
   yarn: true
   cargo: true
+  directories:
+    - borsh-rs/target
 
 before_install:
   - sudo apt-key adv --fetch-keys http://dl.yarnpkg.com/debian/pubkey.gpg
@@ -25,12 +27,10 @@ before_install:
   - sudo apt-get install -y -qq yarn
 
 install:
-  - cd borsh-rs && cargo build --verbose && cd ..
+  - cargo build --verbose --manifest-path=borsh-rs/Cargo.toml
   - yarn install
 
 build:
-  - cd borsh-rs
-  - cargo build --verbose
-  - cargo test --verbose
-  - cd ..
+  - cargo build --verbose --manifest-path=borsh-rs/Cargo.toml
+  - cargo test --verbose --manifest-path=borsh-rs/Cargo.toml
   - yarn test
