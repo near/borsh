@@ -84,7 +84,7 @@ impl BorshDeserialize for bool {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut buf = [0u8];
-        reader.read(&mut buf)?;
+        reader.read_exact(&mut buf)?;
         Ok(buf[0] == 1)
     }
 }
@@ -110,7 +110,7 @@ impl BorshDeserialize for String {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         let mut result = vec![0; len as usize];
-        reader.read(&mut result)?;
+        reader.read_exact(&mut result)?;
         String::from_utf8(result)
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()))
     }
@@ -225,7 +225,7 @@ impl BorshDeserialize for std::net::Ipv4Addr {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut buf = [0u8; 4];
-        reader.read(&mut buf)?;
+        reader.read_exact(&mut buf)?;
         Ok(std::net::Ipv4Addr::from(buf))
     }
 }
@@ -235,7 +235,7 @@ impl BorshDeserialize for std::net::Ipv6Addr {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut buf = [0u8; 16];
-        reader.read(&mut buf)?;
+        reader.read_exact(&mut buf)?;
         Ok(std::net::Ipv6Addr::from(buf))
     }
 }
@@ -244,7 +244,7 @@ impl BorshDeserialize for Box<[u8]> {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         let mut res = vec![0; len as usize];
-        reader.read(&mut res)?;
+        reader.read_exact(&mut res)?;
         Ok(res.into_boxed_slice())
     }
 }

@@ -58,7 +58,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     }
     let variant_idx = quote! {
         let mut variant_idx = [0u8; std::mem::size_of::<u8>()];
-        reader.read(&mut variant_idx)?;
+        reader.read_exact(&mut variant_idx)?;
         let variant_idx = u8::from_le_bytes(variant_idx);
     };
     if let Some(method_ident) = init_method {

@@ -62,7 +62,7 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
         body.extend(quote!(
             #name::#variant_ident #variant_header => {
                 let variant_idx: u8 = #variant_idx;
-                writer.write(&variant_idx.to_le_bytes())?;
+                writer.write_all(&variant_idx.to_le_bytes())?;
                 #variant_body
             }
         ))
