@@ -14,12 +14,6 @@ branches:
   only:
   - master
 
-cache:
-  yarn: true
-  cargo: true
-  directories:
-    - borsh-rs/target
-
 before_install:
   - sudo apt-key adv --fetch-keys http://dl.yarnpkg.com/debian/pubkey.gpg
   - echo "deb http://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
