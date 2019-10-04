@@ -7,6 +7,8 @@
   </p>
   
   <p>
+    <a href="https://npmjs.com/borsh"><img alt="npm" src="https://img.shields.io/npm/v/borsh.svg?style=flat-square"></a>
+    <a href="https://npmjs.com/borsh"><img alt="npm" src="https://img.shields.io/bundlephobia/minzip/borsh.svg?style=flat-square"></a>
     <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/v/borsh.svg?style=flat-square" alt="Crates.io version" /></a>
     <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/d/borsh.svg?style=flat-square" alt="Download" /></a>
     <a href="https://discord.gg/gBtUFKR"><img src="https://img.shields.io/discord/490367152054992913.svg" alt="Join the community on Discord" /></a>
