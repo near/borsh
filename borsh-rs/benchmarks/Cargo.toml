@@ -13,8 +13,8 @@ rand_xorshift = "0.2.0"
 rand = "0.7.0"
 borsh = { path = "../borsh" }
 serde = { version = "1.0", features = ["derive"] }
-speedy-derive = "0.3.6"
-speedy = "0.4.2"
+speedy-derive = "0.5"
+speedy = "0.5"
 
 [dev-dependencies]
 criterion = "0.3.0"
