@@ -49,6 +49,12 @@ fn test_invalid_length() {
 }
 
 #[test]
+fn test_invalid_length_string() {
+    let bytes = vec![255u8; 4];
+    assert_eq!(String::try_from_slice(&bytes).unwrap_err().to_string(), "failed to fill whole buffer");
+}
+
+#[test]
 fn test_non_utf_string() {
     let bytes = vec![1, 0, 0, 0, 0xC0];
     assert_eq!(String::try_from_slice(&bytes).unwrap_err().to_string(), "invalid utf-8 sequence of 1 bytes from index 0");

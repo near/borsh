@@ -109,8 +109,11 @@ impl BorshDeserialize for String {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
-        let mut result = vec![0; len as usize];
-        reader.read_exact(&mut result)?;
+        // TODO(16): return capacity allocation when we have the size of the buffer left from the reader.
+        let mut result = Vec::new();
+        for _ in 0..len {
+            result.push(u8::deserialize(reader)?);
+        }
         String::from_utf8(result)
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()))
     }
