@@ -26,6 +26,8 @@
         <a href="https://github.com/nearprotocol/borsh#benchmarks">Benchmarks</a>
         <span> | </span>
         <a href="https://github.com/nearprotocol/borsh#specification">Specification</a>
+        <span> | </span>
+        <a href="https://github.com/nearprotocol/borsh#releasing">Releasing</a>
       </h3>
 </div>
 
@@ -230,3 +232,20 @@ Note:
 * Some parts of Rust grammar are not yet formalized, like enums and variants. We backwards derive EBNF forms of Rust grammar from [syn types](https://github.com/dtolnay/syn);
 * We had to extend repetitions of EBNF and instead of defining them as `[ ident_field ':' ident_type ',' ] *` we define them as `ident_field0 ':' ident_type0 ',' ident_field1 ':' ident_type1 ',' ...` so that we can refer to individual elements in the pseudocode;
 * We use `repr()` function to denote that we are writing the representation of the given element into an imaginary buffer.
+
+## Releasing
+
+After you merged your change into the master branch and bumped the versions of all three crates it is time to officially release the new version.
+
+Make sure `borsh`, `borsh-derive` and `borsh-derive-internal` all have the new crate versions. Then navigate to each folder and run (in the given order):
+```bash
+cd ../borsh-derive-internal; cargo publish
+cd ../borsh-derive; cargo publish
+cd ../borsh; cargo publish
+```
+
+Make sure you are on master change, then tag the code and push the tag:
+```bash
+git tag -a v9.9.9 -m "My superawesome change."
+git push origin v9.9.9
+```
