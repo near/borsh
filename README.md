@@ -244,7 +244,7 @@ cd ../borsh-derive; cargo publish
 cd ../borsh; cargo publish
 ```
 
-Make sure you are on master change, then tag the code and push the tag:
+Make sure you are on the master branch, then tag the code and push the tag:
 ```bash
 git tag -a v9.9.9 -m "My superawesome change."
 git push origin v9.9.9
