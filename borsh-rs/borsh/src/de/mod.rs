@@ -2,6 +2,8 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Cursor, Error, Read};
 use std::mem::size_of;
 
+mod hint;
+
 const ERROR_NOT_ALL_BYTES_READ: &str = "Not all bytes read";
 
 /// A data-structure that can be de-serialized from binary format by NBOR.
@@ -110,7 +112,7 @@ impl BorshDeserialize for String {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         // TODO(16): return capacity allocation when we have the size of the buffer left from the reader.
-        let mut result = Vec::new();
+        let mut result = Vec::with_capacity(hint::cautious::<u8>(len));
         for _ in 0..len {
             result.push(u8::deserialize(reader)?);
         }
@@ -128,7 +130,7 @@ where
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         // TODO(16): return capacity allocation when we can safely do that.
-        let mut result = Vec::new();
+        let mut result = Vec::with_capacity(hint::cautious::<T>(len));
         for _ in 0..len {
             result.push(T::deserialize(reader)?);
         }
@@ -247,7 +249,7 @@ impl BorshDeserialize for Box<[u8]> {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         // TODO(16): return capacity allocation when we can safely do that.
-        let mut result = Vec::new();
+        let mut result = Vec::with_capacity(hint::cautious::<u8>(len));
         for _ in 0..len {
             result.push(u8::deserialize(reader)?);
         }
@@ -258,15 +260,12 @@ impl BorshDeserialize for Box<[u8]> {
 macro_rules! impl_arrays {
     ($($len:expr)+) => {
     $(
-      impl<T> BorshDeserialize for [T; $len]
-      where T: BorshDeserialize + Default + Copy
+      impl BorshDeserialize for [u8; $len]
       {
         #[inline]
         fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
-            let mut result = [T::default(); $len];
-            for i in 0..$len {
-                result[i] = T::deserialize(reader)?;
-            }
+            let mut result = [0u8; $len];
+            reader.read(&mut result)?;
             Ok(result)
         }
       }
