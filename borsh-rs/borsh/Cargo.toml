@@ -1,6 +1,6 @@
 [package]
 name = "borsh"
-version = "0.2.7"
+version = "0.2.8"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -13,7 +13,7 @@ Binary Object Representation Serializer for Hashing
 """
 
 [dependencies]
-borsh-derive = { path = "../borsh-derive", version = "0.2.7" }
+borsh-derive = { path = "../borsh-derive", version = "0.2.8" }
 
 [features]
 default = ["std"]
