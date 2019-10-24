@@ -1,9 +1,9 @@
+use crate::Input;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Cursor, Error};
-use crate::Input;
 use std::mem::size_of;
 
-const ERROR_NOT_ALL_BYTES_READ: &str = "Not all bytes Input";
+const ERROR_NOT_ALL_BYTES_READ: &str = "Not all bytes read";
 
 /// A data-structure that can be de-serialized from binary format by NBOR.
 pub trait BorshDeserialize: Sized {
@@ -13,14 +13,14 @@ pub trait BorshDeserialize: Sized {
     fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
         let mut input = vec![0; v.len()];
         input.copy_from_slice(v);
-        let result = Self::deserialize(&mut input.as_slice())?;
-        println!("{:?}",input.len());
-        // if c.position() != v.len() as u64 {
-        //     return Err(std::io::Error::new(
-        //         std::io::ErrorKind::InvalidData,
-        //         ERROR_NOT_ALL_BYTES_READ,
-        //     ));
-        // }
+        let mut input = &input[..];
+        let result = Self::deserialize(&mut input)?;
+        if input.rem_len()? > 0 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                ERROR_NOT_ALL_BYTES_READ,
+            ));
+        }
         Ok(result)
     }
 }
@@ -86,9 +86,7 @@ impl_for_float!(f64, u64);
 impl BorshDeserialize for bool {
     #[inline]
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-        let mut buf = [0u8];
-        input.read(&mut buf)?;
-        Ok(buf[0] == 1)
+        Ok(input.read_byte()? == 1)
     }
 }
 
@@ -111,12 +109,9 @@ where
 impl BorshDeserialize for String {
     #[inline]
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-        let len = u32::deserialize(input)?;
-        // TODO(16): return capacity allocation when we have the size of the buffer left from the input.
-        let mut result = Vec::new();
-        for _ in 0..len {
-            result.push(u8::deserialize(input)?);
-        }
+        let len = read_len_to_alloc(input)?;
+        let mut result = vec![0; len];
+        input.read(&mut result);
         String::from_utf8(result)
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()))
     }
@@ -130,8 +125,13 @@ where
     #[inline]
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
         let len = u32::deserialize(input)?;
-        // TODO(16): return capacity allocation when we can safely do that.
-        let mut result = Vec::new();
+        if (input.rem_len()? < len * std::mem::size_of::<T>()) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("Cannot allocate more bytes then we have in remaining input"),
+            ));
+        }
+        let mut result = Vec::with_capacity(len);
         for _ in 0..len {
             result.push(T::deserialize(input)?);
         }
@@ -248,11 +248,22 @@ impl BorshDeserialize for std::net::Ipv6Addr {
 
 impl BorshDeserialize for Box<[u8]> {
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-        let len = u32::deserialize(input)?;
-        let mut res = vec![0; len as usize];
+        let len = read_len_to_alloc(input)?;
+        let mut res = vec![0; len];
         input.read(&mut res)?;
         Ok(res.into_boxed_slice())
     }
+}
+
+fn read_len_to_alloc(input: &mut impl Input) -> Result<usize, Error> {
+    let len = u32::deserialize(input)?;
+    if (len as usize > input.rem_len()?) {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            format!("Cannot allocate more bytes then we have in remaining input"),
+        ));
+    }
+    Ok(len as usize)
 }
 
 macro_rules! impl_arrays {

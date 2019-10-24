@@ -42,6 +42,8 @@ impl Input for &[u8] {
     }
 }
 
+
+
 #[cfg(test)]
 mod tests {
     use super::Input;
