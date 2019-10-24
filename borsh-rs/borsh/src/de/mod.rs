@@ -246,9 +246,12 @@ impl BorshDeserialize for std::net::Ipv6Addr {
 impl BorshDeserialize for Box<[u8]> {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
-        let mut res = vec![0; len as usize];
-        reader.read_exact(&mut res)?;
-        Ok(res.into_boxed_slice())
+        // TODO(16): return capacity allocation when we can safely do that.
+        let mut result = Vec::new();
+        for _ in 0..len {
+            result.push(u8::deserialize(reader)?);
+        }
+        Ok(result.into_boxed_slice())
     }
 }
 
