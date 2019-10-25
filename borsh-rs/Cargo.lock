@@ -27,7 +27,7 @@ name = "benchmarks"
 version = "0.1.0"
 dependencies = [
  "bincode 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "borsh 0.2.8",
+ "borsh 0.2.9",
  "criterion 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_xorshift 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -54,22 +54,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "borsh"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
- "borsh-derive 0.2.8",
+ "borsh-derive 0.2.9",
 ]
 
 [[package]]
 name = "borsh-derive"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
- "borsh-derive-internal 0.2.8",
+ "borsh-derive-internal 0.2.9",
  "syn 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "borsh-derive-internal"
-version = "0.2.8"
+version = "0.2.9"
 dependencies = [
  "proc-macro2 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
