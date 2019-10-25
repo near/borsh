@@ -1,8 +1,9 @@
 use crate::Input;
-use std::cmp::min;
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::io::{Cursor, Error};
+use std::io::{Error};
 use std::mem::size_of;
+
+mod hint;
 
 const ERROR_NOT_ALL_BYTES_READ: &str = "Not all bytes read";
 
@@ -110,13 +111,12 @@ where
 impl BorshDeserialize for String {
     #[inline]
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-        let len = u32::deserialize(input)? as usize;
-        let capacity = min(
-            input.rem_len()?.checked_div(size_of::<String>()).unwrap_or(0),
-            len,
-        );
-        let mut result = vec![0; capacity];
-        input.read(&mut result)?;
+        let len = u32::deserialize(input)?;
+        // TODO(16): return capacity allocation when we have the size of the buffer left from the reader.
+        let mut result = Vec::with_capacity(hint::cautious::<u8>(input.rem_len()? as u32, len));
+        for _ in 0..len {
+            result.push(u8::deserialize(input)?);
+        }
         String::from_utf8(result)
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()))
     }
@@ -129,13 +129,9 @@ where
 {
     #[inline]
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-        let len = u32::deserialize(input)? as usize;
-        let capacity = min(
-            input.rem_len()?.checked_div(size_of::<T>()).unwrap_or(0),
-            len,
-        );
-
-        let mut result = Vec::with_capacity(capacity);
+        let len = u32::deserialize(input)?;
+        // TODO(16): return capacity allocation when we can safely do that.
+        let mut result = Vec::with_capacity(hint::cautious::<T>(input.rem_len()? as u32, len));
         for _ in 0..len {
             result.push(T::deserialize(input)?);
         }
@@ -252,31 +248,25 @@ impl BorshDeserialize for std::net::Ipv6Addr {
 
 impl BorshDeserialize for Box<[u8]> {
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-        let len = u32::deserialize(input)? as usize;
-        if (len as usize > input.rem_len()?) {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                format!("Cannot allocate more bytes then we have in remaining input"),
-            ));
+        let len = u32::deserialize(input)?;
+        // TODO(16): return capacity allocation when we can safely do that.
+        let mut result = Vec::with_capacity(hint::cautious::<u8>(input.rem_len()? as u32, len));
+        for _ in 0..len {
+            result.push(u8::deserialize(input)?);
         }
-        let mut res = vec![0; len];
-        input.read(&mut res)?;
-        Ok(res.into_boxed_slice())
+        Ok(result.into_boxed_slice())
     }
 }
 
 macro_rules! impl_arrays {
     ($($len:expr)+) => {
     $(
-      impl<T> BorshDeserialize for [T; $len]
-      where T: BorshDeserialize + Default + Copy
+      impl BorshDeserialize for [u8; $len]
       {
         #[inline]
         fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-            let mut result = [T::default(); $len];
-            for i in 0..$len {
-                result[i] = T::deserialize(input)?;
-            }
+            let mut result = [0u8; $len];
+            input.read(&mut result)?;
             Ok(result)
         }
       }

@@ -56,7 +56,7 @@ fn test_invalid_length() {
     let bytes = vec![255u8; 4];
     assert_eq!(
         <Vec<u64>>::try_from_slice(&bytes).unwrap_err().to_string(),
-        "Cannot allocate more bytes then we have in remaining input"
+        "failed to fill whole buffer"
     );
 }
 
@@ -65,7 +65,7 @@ fn test_invalid_length_string() {
     let bytes = vec![255u8; 4];
     assert_eq!(
         String::try_from_slice(&bytes).unwrap_err().to_string(),
-        "Cannot allocate more bytes then we have in remaining input"
+        "failed to fill whole buffer"
     );
 }
 
