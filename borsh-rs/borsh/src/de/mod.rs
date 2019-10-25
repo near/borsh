@@ -1,4 +1,5 @@
 use crate::Input;
+use std::cmp::min;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Cursor, Error};
 use std::mem::size_of;
@@ -109,9 +110,13 @@ where
 impl BorshDeserialize for String {
     #[inline]
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-        let len = read_len_to_alloc(input)?;
-        let mut result = vec![0; len];
-        input.read(&mut result);
+        let len = u32::deserialize(input)? as usize;
+        let capacity = min(
+            input.rem_len()?.checked_div(size_of::<String>()).unwrap_or(0),
+            len,
+        );
+        let mut result = vec![0; capacity];
+        input.read(&mut result)?;
         String::from_utf8(result)
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()))
     }
@@ -124,14 +129,13 @@ where
 {
     #[inline]
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-        let len = u32::deserialize(input)?;
-        if (input.rem_len()? < len * std::mem::size_of::<T>()) {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                format!("Cannot allocate more bytes then we have in remaining input"),
-            ));
-        }
-        let mut result = Vec::with_capacity(len);
+        let len = u32::deserialize(input)? as usize;
+        let capacity = min(
+            input.rem_len()?.checked_div(size_of::<T>()).unwrap_or(0),
+            len,
+        );
+
+        let mut result = Vec::with_capacity(capacity);
         for _ in 0..len {
             result.push(T::deserialize(input)?);
         }
@@ -248,22 +252,17 @@ impl BorshDeserialize for std::net::Ipv6Addr {
 
 impl BorshDeserialize for Box<[u8]> {
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-        let len = read_len_to_alloc(input)?;
+        let len = u32::deserialize(input)? as usize;
+        if (len as usize > input.rem_len()?) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("Cannot allocate more bytes then we have in remaining input"),
+            ));
+        }
         let mut res = vec![0; len];
         input.read(&mut res)?;
         Ok(res.into_boxed_slice())
     }
-}
-
-fn read_len_to_alloc(input: &mut impl Input) -> Result<usize, Error> {
-    let len = u32::deserialize(input)?;
-    if (len as usize > input.rem_len()?) {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidInput,
-            format!("Cannot allocate more bytes then we have in remaining input"),
-        ));
-    }
-    Ok(len as usize)
 }
 
 macro_rules! impl_arrays {
