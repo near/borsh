@@ -65,3 +65,10 @@ fn test_nan_float() {
     let bytes = vec![0, 0, 192, 127];
     assert_eq!(f32::try_from_slice(&bytes).unwrap_err().to_string(), "For portability reasons we do not allow to deserialize NaNs.");
 }
+
+#[test]
+fn test_evil_bytes() {
+    // test takes a really long time if read() is used instead of read_exact()
+    let bytes = vec![255, 255, 255, 255];
+    assert_eq!(<Vec<[u8;32]>>::try_from_slice(&bytes).unwrap_err().to_string(), "failed to fill whole buffer");
+}

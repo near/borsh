@@ -265,7 +265,7 @@ macro_rules! impl_arrays {
         #[inline]
         fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
             let mut result = [0u8; $len];
-            reader.read(&mut result)?;
+            reader.read_exact(&mut result)?;
             Ok(result)
         }
       }
