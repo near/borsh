@@ -38,7 +38,7 @@ Why do we need yet another serialization format? Borsh is the first serializer t
    * Borsh comes with a full specification that can be used for implementations in other languages;
 * Safe. Borsh implementations use safe coding practices. In Rust, Borsh uses only safe code;
 * Speed. In Rust, Borsh achieves high performance by opting out from [Serde](https://serde.rs) which makes it faster
-  than [bincode](https://github.com/servo/bincode); which also reduces the code size.
+  than [bincode](https://github.com/servo/bincode) in some cases; which also reduces the code size.
   
 ## Example
 
