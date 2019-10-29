@@ -1,12 +1,12 @@
 [package]
-name = "fuzz-run"
+name = "borsh-fuzz"
 version = "0.1.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2018"
 publish = false
 
 [[bin]]
-name = "fuzz"
+name = "borsh-fuzz"
 path = "src/main.rs"
 
 [dependencies]

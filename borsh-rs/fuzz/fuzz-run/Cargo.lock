@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "fuzz-run"
+name = "borsh-fuzz"
 version = "0.1.0"
 dependencies = [
  "borsh 0.2.9",
