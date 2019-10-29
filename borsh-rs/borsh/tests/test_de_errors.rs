@@ -31,15 +31,6 @@ fn test_invalid_enum_variant() {
 }
 
 #[test]
-fn test_extra_bytes() {
-    let bytes = vec![1, 0, 0, 0, 32, 32];
-    assert_eq!(
-        <Vec<u8>>::try_from_slice(&bytes).unwrap_err().to_string(),
-        "Not all bytes read"
-    );
-}
-
-#[test]
 fn test_invalid_bool() {
     let bytes = vec![255];
     assert_eq!(<bool>::try_from_slice(&bytes).unwrap(), false);

@@ -5,8 +5,6 @@ use std::mem::size_of;
 
 mod hint;
 
-const ERROR_NOT_ALL_BYTES_READ: &str = "Not all bytes read";
-
 /// A data-structure that can be de-serialized from binary format by NBOR.
 pub trait BorshDeserialize: Sized {
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error>;
@@ -17,12 +15,6 @@ pub trait BorshDeserialize: Sized {
         input.copy_from_slice(v);
         let mut input = &input[..];
         let result = Self::deserialize(&mut input)?;
-        if input.rem_len()? > 0 {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                ERROR_NOT_ALL_BYTES_READ,
-            ));
-        }
         Ok(result)
     }
 }
