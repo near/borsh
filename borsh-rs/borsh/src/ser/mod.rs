@@ -38,12 +38,11 @@ impl_for_integer!(i16);
 impl_for_integer!(i32);
 impl_for_integer!(i64);
 impl_for_integer!(i128);
-impl_for_integer!(isize);
 impl_for_integer!(u16);
 impl_for_integer!(u32);
 impl_for_integer!(u64);
 impl_for_integer!(u128);
-impl_for_integer!(usize);
+
 
 // Note NaNs have a portability issue. Specifically, signalling NaNs on MIPS are quiet NaNs on x86,
 // and vice-versa. We disallow NaNs to avoid this issue.

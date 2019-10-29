@@ -4,7 +4,6 @@ use borsh::{BorshDeserialize, BorshSerialize};
 use rand::distributions::{Alphanumeric, Distribution, Standard};
 use rand::Rng;
 use serde::{Deserialize as SerdeDeserialize, Serialize as SerdeSerialize};
-#[macro_use]
 extern crate speedy_derive;
 use speedy::{Context, Readable, Reader, Writable, Writer};
 
