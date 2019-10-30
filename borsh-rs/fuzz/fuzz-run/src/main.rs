@@ -5,50 +5,15 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 extern crate honggfuzz;
 
 macro_rules! fuzz_types {
-	(
-		$data:ident;
-		$first:ty,
-		$( $rest:ty, )*
-	) => {
-		fuzz_types! {
-			@INTERNAL
-			$data;
-			1u8;
-			{ $first; 0u8 }
-			$( $rest, )*
-		}
-	};
-	(@INTERNAL
-		$data:ident;
-		$counter:expr;
-		{ $( $parsed:ty; $index:expr ),* }
-		$current:ty,
-		$( $rest:ty, )*
-	) => {
-		fuzz_types! {
-			@INTERNAL
-			$data;
-			$counter + 1u8;
-			{ $current; $counter $(, $parsed; $index )* }
-			$( $rest, )*
-		}
-	};
-	(@INTERNAL
-		$data:ident;
-		$counter:expr;
-		{ $( $parsed:ty; $index:expr ),* }
-	) => {
-		let num = $counter;
-		$(
-			if $data[0] % num == $index {
-				// Check that decode doesn't panic.
-				let _ = <$parsed>::deserialize(&mut &$data[1..]);
-				return
-			}
-		)*
+    (
+        $data:ident;
+        $( $type:ty, )*
+    ) => {
+        $(
+            let _ = <$type>::deserialize(&mut &$data[..]);
+        )*
+    };
 
-		unreachable!()
-	};
 }
 
 fn main() {
