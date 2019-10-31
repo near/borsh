@@ -236,6 +236,12 @@ impl BorshDeserialize for std::net::Ipv6Addr {
     }
 }
 
+impl<T: BorshDeserialize> BorshDeserialize for Box<T> {
+    fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
+        Ok(Box::new(T::deserialize(input)?))
+    }
+}
+
 impl BorshDeserialize for Box<[u8]> {
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
         let len = u32::deserialize(input)?;

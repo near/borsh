@@ -18,6 +18,7 @@ struct A {
     lazy: Option<u64>,
     #[borsh_skip]
     skipped: Option<u64>,
+    boxed_array: Box<[u8; 32]>,
 }
 
 impl A {
@@ -68,6 +69,7 @@ fn test_simple_struct() {
         i: [4u8; 32],
         lazy: Some(5),
         skipped: Some(6),
+        boxed_array: Box::new([0u8; 32]),
     };
     let encoded_a = a.try_to_vec().unwrap();
     let decoded_a = A::try_from_slice(&encoded_a).unwrap();
@@ -84,6 +86,7 @@ fn test_simple_struct() {
         i: a.i,
         lazy: Some(50),
         skipped: None,
+        boxed_array: Box::new([0u8; 32]),
     };
 
     assert_eq!(expected_a, decoded_a);
