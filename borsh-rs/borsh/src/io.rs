@@ -1,15 +1,18 @@
 use std::io::{Error, ErrorKind, Result};
+use byteorder::{ByteOrder, LittleEndian};
 
 pub trait Input {
     fn rem_len(&mut self) -> Result<usize>;
     fn read_byte(&mut self) -> Result<u8>;
     fn read(&mut self, buf: &mut [u8]) -> Result<()>;
+    fn read_u32(&mut self) -> Result<u32>;
 }
 
 impl Input for &[u8] {
     fn rem_len(&mut self) -> Result<usize> {
         Ok(self.len())
     }
+
     fn read_byte(&mut self) -> Result<u8> {
         if self.len() < 1 {
             return Err(Error::new(
@@ -21,6 +24,7 @@ impl Input for &[u8] {
         *self = &self[1..];
         Ok(res)
     }
+
     fn read(&mut self, buf: &mut [u8]) -> Result<()> {
         if self.len() < buf.len() {
             return Err(Error::new(
@@ -31,6 +35,18 @@ impl Input for &[u8] {
         buf.copy_from_slice(&self[0..buf.len()]);
         *self = &self[buf.len()..];
         Ok(())
+    }
+
+    fn read_u32(&mut self) -> Result<u32> {
+        if self.len() < std::mem::size_of::<u32>() {
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "failed to fill whole buffer",
+            ));
+        }
+        let result =  LittleEndian::read_u32(self);
+        *self = &self[std::mem::size_of::<u32>()..];
+        Ok(result)
     }
 }
 
