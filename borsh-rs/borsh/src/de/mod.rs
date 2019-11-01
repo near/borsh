@@ -1,8 +1,6 @@
 use crate::Input;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Error};
-use std::mem::size_of;
-
 mod hint;
 
 /// A data-structure that can be de-serialized from binary format by NBOR.
@@ -22,44 +20,45 @@ pub trait BorshDeserialize: Sized {
 impl BorshDeserialize for u8 {
     #[inline]
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-        let mut res = 0u8;
-        input.read(std::slice::from_mut(&mut res))?;
-        Ok(res)
+        input.read_byte()
+    }
+}
+
+impl BorshDeserialize for i8 {
+    #[inline]
+    fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
+        Ok(input.read_byte()? as i8)
     }
 }
 
 macro_rules! impl_for_integer {
-    ($type: ident) => {
+    ($type: ty, $method: ident) => {
         impl BorshDeserialize for $type {
             #[inline]
             fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-                let mut data = [0u8; size_of::<$type>()];
-                input.read(&mut data)?;
-                Ok($type::from_le_bytes(data))
+                Ok(input.$method()?)
             }
         }
     };
 }
 
-impl_for_integer!(i8);
-impl_for_integer!(i16);
-impl_for_integer!(i32);
-impl_for_integer!(i64);
-impl_for_integer!(i128);
-impl_for_integer!(u16);
-impl_for_integer!(u32);
-impl_for_integer!(u64);
-impl_for_integer!(u128);
+impl_for_integer!(i16, read_i16);
+impl_for_integer!(i32, read_i32);
+impl_for_integer!(i64, read_i64);
+impl_for_integer!(i128, read_i128);
+impl_for_integer!(u16, read_u16);
+impl_for_integer!(u32, read_u32);
+impl_for_integer!(u64, read_u64);
+impl_for_integer!(u128, read_u128);
 
 // Note NaNs have a portability issue. Specifically, signalling NaNs on MIPS are quiet NaNs on x86,
 // and vice-versa. We disallow NaNs to avoid this issue.
 macro_rules! impl_for_float {
-    ($type: ident, $int_type: ident) => {
+    ($type: ty, $method: ident) => {
         impl BorshDeserialize for $type {
+            #[inline]
             fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error> {
-                let mut data = [0u8; size_of::<$type>()];
-                input.read(&mut data)?;
-                let res = $type::from_bits($int_type::from_le_bytes(data));
+                let res = input.$method()?;
                 if res.is_nan() {
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
@@ -72,8 +71,9 @@ macro_rules! impl_for_float {
     };
 }
 
-impl_for_float!(f32, u32);
-impl_for_float!(f64, u64);
+
+impl_for_float!(f32, read_f32);
+impl_for_float!(f64, read_f64);
 
 impl BorshDeserialize for bool {
     #[inline]
