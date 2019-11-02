@@ -8,11 +8,8 @@ pub trait BorshDeserialize: Sized {
     fn deserialize<I: Input>(input: &mut I) -> Result<Self, Error>;
 
     /// Deserialize this instance from a slice of bytes.
-    fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
-        let mut input = vec![0; v.len()];
-        input.copy_from_slice(v);
-        let mut input = &input[..];
-        let result = Self::deserialize(&mut input)?;
+    fn try_from_slice(mut v: &[u8]) -> Result<Self, Error> {
+        let result = Self::deserialize(&mut v)?;
         Ok(result)
     }
 }
