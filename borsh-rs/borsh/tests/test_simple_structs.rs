@@ -1,6 +1,5 @@
+use borsh::{BorshDeserialize, BorshSerialize};
 use std::collections::{HashMap, HashSet};
-use borsh::{BorshSerialize, BorshDeserialize};
-
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
 #[borsh_init(init)]
@@ -49,6 +48,21 @@ struct D {
     x: u64,
 }
 
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+struct E1;
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+struct E2 {}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+struct E3();
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+struct E4 {
+    #[borsh_skip]
+    x: u32,
+}
+
 #[test]
 fn test_simple_struct() {
     let mut map: HashMap<String, String> = HashMap::new();
@@ -87,4 +101,52 @@ fn test_simple_struct() {
     };
 
     assert_eq!(expected_a, decoded_a);
+}
+
+#[test]
+fn test_unit_struct() {
+    let e = E1 {};
+    let encoded_e = e.try_to_vec().unwrap();
+    assert_eq!(encoded_e, [0u8]);
+    let _decoded_e = E1::try_from_slice(&encoded_e).unwrap();
+
+    let broken_encoded_e: [u8; 0] = [];
+
+    E1::try_from_slice(&broken_encoded_e).unwrap_err();
+}
+
+#[test]
+fn test_unit_struct_with_brace() {
+    let e = E2 {};
+    let encoded_e = e.try_to_vec().unwrap();
+    assert_eq!(encoded_e, [0u8]);
+    let _decoded_e = E2::try_from_slice(&encoded_e).unwrap();
+
+    let broken_encoded_e: [u8; 0] = [];
+
+    E2::try_from_slice(&broken_encoded_e).unwrap_err();
+}
+
+#[test]
+fn test_unit_struct_with_paren() {
+    let e = E3 {};
+    let encoded_e = e.try_to_vec().unwrap();
+    assert_eq!(encoded_e, [0u8]);
+    let _decoded_e = E3::try_from_slice(&encoded_e).unwrap();
+
+    let broken_encoded_e: [u8; 0] = [];
+
+    E3::try_from_slice(&broken_encoded_e).unwrap_err();
+}
+
+#[test]
+fn test_struct_with_all_skip() {
+    let e = E4 { x: 2 };
+    let encoded_e = e.try_to_vec().unwrap();
+    assert_eq!(encoded_e, [0u8]);
+    let _decoded_e = E4::try_from_slice(&encoded_e).unwrap();
+
+    let broken_encoded_e: [u8; 0] = [];
+
+    E4::try_from_slice(&broken_encoded_e).unwrap_err();
 }

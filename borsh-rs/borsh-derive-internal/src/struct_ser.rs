@@ -21,24 +21,38 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
                 body.extend(delta);
 
                 let field_type = &field.ty;
-                serializable_field_types.extend(quote!{
+                serializable_field_types.extend(quote! {
                     #field_type: borsh::ser::BorshSerialize,
                 });
+            }
+
+            // treat struct A {} or struct A { // all fields skipped } as unit struct.
+            if body.is_empty() {
+                body.extend(quote! {
+                    borsh::BorshSerialize::serialize(&0u8, writer)?;
+                })
             }
         }
         Fields::Unnamed(fields) => {
             for field_idx in 0..fields.unnamed.len() {
-                let field_idx = Index {
-                    index: field_idx as u32,
-                    span: Span::call_site(),
-                };
+                let field_idx = Index { index: field_idx as u32, span: Span::call_site() };
                 let delta = quote! {
                     borsh::BorshSerialize::serialize(&self.#field_idx, writer)?;
                 };
                 body.extend(delta);
             }
+            if body.is_empty() {
+                body.extend(quote! {
+                    borsh::BorshSerialize::serialize(&0u8, writer)?;
+                })
+            }
         }
-        Fields::Unit => {}
+        Fields::Unit => {
+            let delta = quote! {
+                borsh::BorshSerialize::serialize(&0u8, writer)?;
+            };
+            body.extend(delta);
+        }
     }
     Ok(quote! {
         impl #generics borsh::ser::BorshSerialize for #name #generics where #serializable_field_types {
@@ -111,5 +125,84 @@ mod tests {
         };
         assert_eq(expected, actual);
     }
-}
 
+    #[test]
+    fn unit_struct() {
+        let item_struct: ItemStruct =syn::parse2(quote! {
+            struct A;
+        }).unwrap();
+
+        let actual = struct_ser(&item_struct).unwrap();
+        let expected = quote! {
+            impl borsh::ser::BorshSerialize for A where
+            {
+                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+                    borsh::BorshSerialize::serialize(&0u8, writer)?;
+                    Ok(())
+                }
+            }
+        };
+        assert_eq(expected, actual);
+    }
+
+    #[test]
+    fn unit_struct_with_braces() {
+        let item_struct: ItemStruct =syn::parse2(quote! {
+            struct A {}
+        }).unwrap();
+
+        let actual = struct_ser(&item_struct).unwrap();
+        let expected = quote! {
+            impl borsh::ser::BorshSerialize for A where
+            {
+                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+                    borsh::BorshSerialize::serialize(&0u8, writer)?;
+                    Ok(())
+                }
+            }
+        };
+        assert_eq(expected, actual);
+    }
+
+    #[test]
+    fn struct_with_all_skips() {
+        let item_struct: ItemStruct =syn::parse2(quote! {
+            struct A {
+                #[borsh_skip]
+                x: i32,
+            }
+        }).unwrap();
+
+        let actual = struct_ser(&item_struct).unwrap();
+        let expected = quote! {
+            impl borsh::ser::BorshSerialize for A where
+            {
+                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+                    borsh::BorshSerialize::serialize(&0u8, writer)?;
+                    Ok(())
+                }
+            }
+        };
+        assert_eq(expected, actual);
+    }
+
+
+    #[test]
+    fn unit_struct_with_parens() {
+        let item_struct: ItemStruct =syn::parse2(quote! {
+            struct A ();
+        }).unwrap();
+
+        let actual = struct_ser(&item_struct).unwrap();
+        let expected = quote! {
+            impl borsh::ser::BorshSerialize for A where
+            {
+                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+                    borsh::BorshSerialize::serialize(&0u8, writer)?;
+                    Ok(())
+                }
+            }
+        };
+        assert_eq(expected, actual);
+    }
+}
