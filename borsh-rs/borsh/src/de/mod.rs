@@ -127,7 +127,6 @@ where
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
-        // TODO(16): return capacity allocation when we can safely do that.
         if size_of::<T>() == 0 {
             let mut result = Vec::new();
             result.push(T::deserialize(reader)?);
@@ -140,6 +139,7 @@ where
                 Ok(result)
             }
         } else {
+            // TODO(16): return capacity allocation when we can safely do that.
             let mut result = Vec::with_capacity(hint::cautious::<T>(len));
             for _ in 0..len {
                 result.push(T::deserialize(reader)?);
