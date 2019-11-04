@@ -69,7 +69,7 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
     }
     Ok(quote! {
         impl #generics borsh::ser::BorshSerialize for #name #generics where #serializable_field_types {
-            fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+            fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                 match self {
                     #body
                 }
