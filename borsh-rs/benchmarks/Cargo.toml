@@ -25,11 +25,3 @@ serde_cbor = "0.10"
 [[bench]]
 name = "bench"
 harness = false
-
-[[bench]]
-name = "bench-borsh-stable"
-harness = false
-
-[[bin]]
-name = "gen-samples"
-path = "src/gen-samples.rs"
