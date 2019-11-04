@@ -5,3 +5,6 @@ members = [
 "borsh-derive-internal",
 "benchmarks",
 ]
+exclude = [
+"fuzz",
+]
