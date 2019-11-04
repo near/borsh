@@ -64,7 +64,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     if let Some(method_ident) = init_method {
         Ok(quote! {
             impl #generics borsh::de::BorshDeserialize for #name #generics where  #deserializable_field_types {
-                fn deserialize<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
+                fn deserialize<R: std::io::Read>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
                     #variant_idx
                     let mut return_value = match variant_idx {
                         #variant_arms
@@ -82,7 +82,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     } else {
         Ok(quote! {
             impl #generics borsh::de::BorshDeserialize for #name #generics where  #deserializable_field_types {
-                fn deserialize<R: std::io::Read>(reader: &mut R) -> Result<Self, std::io::Error> {
+                fn deserialize<R: std::io::Read>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
                     #variant_idx
                     let return_value = match variant_idx {
                         #variant_arms
