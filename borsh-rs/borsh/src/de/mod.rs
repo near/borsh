@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Cursor, Error, Read};
-use std::mem::size_of;
+use std::mem::{forget, size_of};
 
 mod hint;
 
@@ -128,11 +128,24 @@ where
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         // TODO(16): return capacity allocation when we can safely do that.
-        let mut result = Vec::with_capacity(hint::cautious::<T>(len));
-        for _ in 0..len {
+        if size_of::<T>() == 0 {
+            let mut result = Vec::new();
             result.push(T::deserialize(reader)?);
+
+            let p = result.as_mut_ptr();
+            unsafe {
+                forget(result);
+                let len = len as usize;
+                let result = Vec::from_raw_parts(p, len, len);
+                Ok(result)
+            }
+        } else {
+            let mut result = Vec::with_capacity(hint::cautious::<T>(len));
+            for _ in 0..len {
+                result.push(T::deserialize(reader)?);
+            }
+            Ok(result)
         }
-        Ok(result)
     }
 }
 
