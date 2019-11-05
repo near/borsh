@@ -15,6 +15,12 @@ pub trait BorshSerialize {
     }
 }
 
+impl BorshSerialize for () {
+    fn serialize<W: Write>(&self, _writer: &mut W) -> Result<(), Error> {
+        Ok(())
+    }
+}
+
 impl BorshSerialize for u8 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
@@ -88,10 +94,22 @@ where
 }
 
 impl BorshSerialize for String {
+    fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+        self.as_bytes().serialize(writer)
+    }
+}
+
+impl BorshSerialize for &str {
+    fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+        self.as_bytes().serialize(writer)
+    }
+}
+
+impl BorshSerialize for [u8] {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write_all(&(self.len() as u32).to_le_bytes())?;
-        writer.write_all(self.as_bytes())?;
+        writer.write_all(self)?;
         Ok(())
     }
 }
