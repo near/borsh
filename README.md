@@ -36,7 +36,7 @@ Why do we need yet another serialization format? Borsh is the first serializer t
    * Consistent means there is a bijective mapping between objects and their binary representations. There is no two binary representations that deserialize
    into the same object. This is extremely useful for applications that use binary representation to compute hash;
    * Borsh comes with a full specification that can be used for implementations in other languages;
-* Safe. Borsh implementations use safe coding practices. In Rust, Borsh uses only safe code;
+* Safe. Borsh implementations use safe coding practices. In Rust, Borsh uses almost only safe code, with one exception usage of `unsafe` to avoid an exhaustion attack;
 * Speed. In Rust, Borsh achieves high performance by opting out from [Serde](https://serde.rs) which makes it faster
   than [bincode](https://github.com/servo/bincode) in some cases; which also reduces the code size.
   
