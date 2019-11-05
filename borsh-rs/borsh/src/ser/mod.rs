@@ -105,17 +105,15 @@ impl BorshSerialize for &str {
     }
 }
 
-impl BorshSerialize for [u8] {
-    #[inline]
+#[cfg(feature = "std")]
+impl<T: BorshSerialize> BorshSerialize for Vec<T>
+{
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
-        writer.write_all(&(self.len() as u32).to_le_bytes())?;
-        writer.write_all(self)?;
-        Ok(())
+        self.as_slice().serialize(writer)
     }
 }
 
-#[cfg(feature = "std")]
-impl<T> BorshSerialize for Vec<T>
+impl<T> BorshSerialize for [T]
 where
     T: BorshSerialize,
 {
