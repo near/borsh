@@ -150,28 +150,34 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<T> BorshDeserialize for HashSet<T>
+impl<T, S> BorshDeserialize for HashSet<T, S>
 where
     T: BorshDeserialize + Eq + std::hash::Hash,
+    S: std::hash::BuildHasher + Default
 {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let vec = <Vec<T>>::deserialize(reader)?;
-        Ok(vec.into_iter().collect::<HashSet<T>>())
+        let mut set = HashSet::default();
+        for item in vec {
+            set.insert(item);
+        }
+        Ok(set)
     }
 }
 
 #[cfg(feature = "std")]
-impl<K, V> BorshDeserialize for HashMap<K, V>
+impl<K, V, S> BorshDeserialize for HashMap<K, V, S>
 where
     K: BorshDeserialize + Eq + std::hash::Hash,
     V: BorshDeserialize,
+    S: std::hash::BuildHasher + Default
 {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         // TODO(16): return capacity allocation when we can safely do that.
-        let mut result = HashMap::new();
+        let mut result = HashMap::default();
         for _ in 0..len {
             let key = K::deserialize(reader)?;
             let value = V::deserialize(reader)?;

@@ -49,7 +49,6 @@ impl_for_integer!(u32);
 impl_for_integer!(u64);
 impl_for_integer!(u128);
 
-
 // Note NaNs have a portability issue. Specifically, signalling NaNs on MIPS are quiet NaNs on x86,
 // and vice-versa. We disallow NaNs to avoid this issue.
 macro_rules! impl_for_float {
@@ -106,8 +105,7 @@ impl BorshSerialize for &str {
 }
 
 #[cfg(feature = "std")]
-impl<T: BorshSerialize> BorshSerialize for Vec<T>
-{
+impl<T: BorshSerialize> BorshSerialize for Vec<T> {
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         self.as_slice().serialize(writer)
     }
@@ -134,9 +132,10 @@ impl<T: BorshSerialize> BorshSerialize for &T {
 }
 
 #[cfg(feature = "std")]
-impl<T> BorshSerialize for HashSet<T>
+impl<T, S> BorshSerialize for HashSet<T, S>
 where
     T: BorshSerialize + PartialOrd,
+    S: std::hash::BuildHasher,
 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
@@ -151,10 +150,11 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<K, V> BorshSerialize for HashMap<K, V>
+impl<K, V, S> BorshSerialize for HashMap<K, V, S>
 where
     K: BorshSerialize + PartialOrd,
     V: BorshSerialize,
+    S: std::hash::BuildHasher,
 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
@@ -303,4 +303,3 @@ impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T
 impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17);
 impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17 18 T18);
 impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17 18 T18 19 T19);
-
