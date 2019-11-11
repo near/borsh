@@ -13,7 +13,6 @@ Binary Object Representation Serializer for Hashing
 """
 
 [dependencies]
-byteorder = "1.3.2"
 borsh-derive = { path = "../borsh-derive", version = "0.2.9" }
 
 [features]

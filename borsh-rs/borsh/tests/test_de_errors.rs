@@ -56,7 +56,7 @@ fn test_invalid_length_string() {
     let bytes = vec![255u8; 4];
     assert_eq!(
         String::try_from_slice(&bytes).unwrap_err().to_string(),
-        "Cannot read byte from input"
+        "failed to fill whole buffer"
     );
 }
 
