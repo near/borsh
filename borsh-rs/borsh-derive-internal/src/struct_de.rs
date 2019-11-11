@@ -5,9 +5,7 @@ use syn::{Fields, ItemStruct};
 
 pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
     let name = &input.ident;
-    let generics = &input.generics;
     let init_method = contains_initialize_with(&input.attrs)?;
-    let mut deserializable_field_types = TokenStream2::new();
     let return_value = match &input.fields {
         Fields::Named(fields) => {
             let mut body = TokenStream2::new();
@@ -18,11 +16,6 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
                         #field_name: Default::default(),
                     }
                 } else {
-                    let field_type = &field.ty;
-                    deserializable_field_types.extend(quote!{
-                        #field_type: borsh::BorshDeserialize,
-                    });
-
                     quote! {
                         #field_name: borsh::BorshDeserialize::deserialize(reader)?,
                     }
@@ -51,9 +44,13 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
             }
         }
     };
+
+    let generics = crate::util::add_de_constraints(input.generics.clone());
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
     if let Some(method_ident) = init_method {
         Ok(quote! {
-            impl #generics borsh::de::BorshDeserialize for #name #generics where #deserializable_field_types {
+            impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
                 fn deserialize<R: std::io::Read>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
                     let mut return_value = #return_value;
                     return_value.#method_ident();
@@ -63,7 +60,7 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
         })
     } else {
         Ok(quote! {
-            impl #generics borsh::de::BorshDeserialize for #name #generics where #deserializable_field_types {
+            impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
                 fn deserialize<R: std::io::Read>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
                     Ok(#return_value)
                 }

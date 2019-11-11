@@ -7,6 +7,7 @@ mod struct_de;
 mod struct_ser;
 mod union_de;
 mod union_ser;
+mod util;
 
 pub use enum_de::enum_de;
 pub use enum_ser::enum_ser;

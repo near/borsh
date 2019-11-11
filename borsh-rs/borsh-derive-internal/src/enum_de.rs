@@ -5,10 +5,8 @@ use syn::{Fields, ItemEnum};
 
 pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     let name = &input.ident;
-    let generics = &input.generics;
     let init_method = contains_initialize_with(&input.attrs)?;
     let mut variant_arms = TokenStream2::new();
-    let mut deserializable_field_types = TokenStream2::new();
     for (variant_idx, variant) in input.variants.iter().enumerate() {
         let variant_idx = variant_idx as u8;
         let variant_ident = &variant.ident;
@@ -22,11 +20,6 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                             #field_name: Default::default(),
                         });
                     } else {
-                        let field_type = &field.ty;
-                        deserializable_field_types.extend(quote! {
-                            #field_type: borsh::BorshDeserialize,
-                        });
-
                         variant_header.extend(quote! {
                             #field_name: borsh::BorshDeserialize::deserialize(reader)?,
                         });
@@ -39,11 +32,6 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     if contains_skip(&field.attrs) {
                         variant_header.extend(quote! { Default::default(), });
                     } else {
-                        let field_type = &field.ty;
-                        deserializable_field_types.extend(quote! {
-                            #field_type: borsh::BorshDeserialize,
-                        });
-
                         variant_header
                             .extend(quote! { borsh::BorshDeserialize::deserialize(reader)?, });
                     }
@@ -61,9 +49,13 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
         reader.read_exact(&mut variant_idx)?;
         let variant_idx = u8::from_le_bytes(variant_idx);
     };
+
+    let generics = crate::util::add_de_constraints(input.generics.clone());
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
     if let Some(method_ident) = init_method {
         Ok(quote! {
-            impl #generics borsh::de::BorshDeserialize for #name #generics where  #deserializable_field_types {
+            impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
                 fn deserialize<R: std::io::Read>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
                     #variant_idx
                     let mut return_value = match variant_idx {
@@ -81,7 +73,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
         })
     } else {
         Ok(quote! {
-            impl #generics borsh::de::BorshDeserialize for #name #generics where  #deserializable_field_types {
+            impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
                 fn deserialize<R: std::io::Read>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
                     #variant_idx
                     let return_value = match variant_idx {
