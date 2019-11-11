@@ -5,9 +5,7 @@ use syn::{Fields, Ident, ItemEnum};
 
 pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
     let name = &input.ident;
-    let generics = &input.generics;
     let mut body = TokenStream2::new();
-    let mut serializable_field_types = TokenStream2::new();
     for (variant_idx, variant) in input.variants.iter().enumerate() {
         let variant_idx = variant_idx as u8;
         let variant_ident = &variant.ident;
@@ -21,10 +19,6 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         variant_header.extend(quote! { _#field_name, });
                         continue;
                     } else {
-                        let field_type = &field.ty;
-                        serializable_field_types.extend(quote!{
-                            #field_type: borsh::ser::BorshSerialize,
-                        });
                         variant_header.extend(quote! { #field_name, });
                     }
                     variant_body.extend(quote! {
@@ -42,11 +36,6 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         variant_header.extend(quote! { #field_ident, });
                         continue;
                     } else {
-                        let field_type = &field.ty;
-                        serializable_field_types.extend(quote!{
-                            #field_type: borsh::ser::BorshSerialize,
-                        });
-
                         let field_ident =
                             Ident::new(format!("id{}", field_idx).as_str(), Span::call_site());
                         variant_header.extend(quote! { #field_ident, });
@@ -67,8 +56,12 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
             }
         ))
     }
+
+    let generics = crate::util::add_ser_constraints(input.generics.clone());
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
     Ok(quote! {
-        impl #generics borsh::ser::BorshSerialize for #name #generics where #serializable_field_types {
+        impl #impl_generics borsh::ser::BorshSerialize for #name #ty_generics #where_clause {
             fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                 match self {
                     #body

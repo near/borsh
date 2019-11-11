@@ -256,52 +256,57 @@ impl BorshDeserialize for Box<[u8]> {
 }
 
 macro_rules! impl_arrays {
-    ($($len:expr)+) => {
-    $(
-      impl BorshDeserialize for [u8; $len]
-      {
-        #[inline]
-        fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
-            let mut result = [0u8; $len];
-            reader.read_exact(&mut result)?;
-            Ok(result)
-        }
-      }
-      )+
+    ($($len:expr => ($($n:expr)+))+) => {
+        $(
+            impl BorshDeserialize for [u8; $len] {
+                #[inline]
+                fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+                    let mut result = [0u8; $len];
+                    reader.read_exact(&mut result)?;
+                    Ok(result)
+                }
+            }
+
+            default impl<T: BorshDeserialize> BorshDeserialize for [T; $len] {
+                #[inline]
+                fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+                    Ok([$(
+                        T::deserialize(reader)
+                        .map_err(|e|
+                            Error::new(
+                                std::io::ErrorKind::InvalidData,
+                                format!("error deserializing element at index {}: {}", $n, e)
+                            )
+                        )?
+                    ),+])
+                }
+            }
+        )+
     };
 }
 
-impl_arrays!(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 32 64 65);
-
-macro_rules! impl_tuple {
-    ($($name:ident)+) => {
-      impl<$($name),+> BorshDeserialize for ($($name),+)
-      where $($name: BorshDeserialize,)+
-      {
-        #[inline]
-        fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
-            Ok(($($name::deserialize(reader)?,)+))
-        }
-      }
-    };
+impl<T: BorshDeserialize> BorshDeserialize for [T; 0] {
+    fn deserialize<R: Read>(_reader: &mut R) -> Result<Self, Error> {
+        Ok([])
+    }
 }
 
-impl_tuple!(T0 T1);
-impl_tuple!(T0 T1 T2);
-impl_tuple!(T0 T1 T2 T3);
-impl_tuple!(T0 T1 T2 T3 T4);
-impl_tuple!(T0 T1 T2 T3 T4 T5);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15 T16);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15 T16 T17);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15 T16 T17 T18);
-impl_tuple!(T0 T1 T2 T3 T4 T5 T6 T7 T8 T9 T10 T11 T12 T13 T14 T15 T16 T17 T18 T19);
+borsh_derive::_gen_seq_macro! {
+    impl_arrays => (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 32 64 65)
+}
+
+macro_rules! impl_tuples {
+    ($($len:literal => ($($name:ident)+))+) => {
+        $(
+            impl<$($name: BorshDeserialize),+> BorshDeserialize for ($($name),+) {
+                fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+                    Ok(($($name::deserialize(reader)?,)+))
+                }
+            }
+        )*
+    }
+}
+
+borsh_derive::_gen_seq_macro! {
+    impl_tuples => T :: (2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19)
+}

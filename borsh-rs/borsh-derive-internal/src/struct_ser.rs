@@ -5,9 +5,7 @@ use syn::{Fields, Index, ItemStruct};
 
 pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
     let name = &input.ident;
-    let generics = &input.generics;
     let mut body = TokenStream2::new();
-    let mut serializable_field_types = TokenStream2::new();
     match &input.fields {
         Fields::Named(fields) => {
             for field in &fields.named {
@@ -19,11 +17,6 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
                     borsh::BorshSerialize::serialize(&self.#field_name, writer)?;
                 };
                 body.extend(delta);
-
-                let field_type = &field.ty;
-                serializable_field_types.extend(quote!{
-                    #field_type: borsh::ser::BorshSerialize,
-                });
             }
         }
         Fields::Unnamed(fields) => {
@@ -40,9 +33,13 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
         }
         Fields::Unit => {}
     }
+
+    let generics = crate::util::add_ser_constraints(input.generics.clone());
+    let (impl_generics, ty_generics, where_clause) = generics.split_for_impl();
+
     Ok(quote! {
-        impl #generics borsh::ser::BorshSerialize for #name #generics where #serializable_field_types {
-            fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+        impl #impl_generics borsh::ser::BorshSerialize for #name #ty_generics #where_clause {
+            fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                 #body
                 Ok(())
             }
@@ -71,12 +68,8 @@ mod tests {
 
         let actual = struct_ser(&item_struct).unwrap();
         let expected = quote!{
-            impl borsh::ser::BorshSerialize for A
-            where
-                u64: borsh::ser::BorshSerialize,
-                String: borsh::ser::BorshSerialize,
-            {
-                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+            impl borsh::ser::BorshSerialize for A {
+                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                     borsh::BorshSerialize::serialize(&self.x, writer)?;
                     borsh::BorshSerialize::serialize(&self.y, writer)?;
                     Ok(())
@@ -97,12 +90,8 @@ mod tests {
 
         let actual = struct_ser(&item_struct).unwrap();
         let expected = quote!{
-            impl<K, V> borsh::ser::BorshSerialize for A<K, V>
-            where
-                HashMap<K, V>: borsh::ser::BorshSerialize,
-                String: borsh::ser::BorshSerialize,
-            {
-                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+            impl<K: borsh::ser::BorshSerialize, V: borsh::ser::BorshSerialize> borsh::ser::BorshSerialize for A<K, V> {
+                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                     borsh::BorshSerialize::serialize(&self.x, writer)?;
                     borsh::BorshSerialize::serialize(&self.y, writer)?;
                     Ok(())
@@ -112,4 +101,3 @@ mod tests {
         assert_eq(expected, actual);
     }
 }
-
