@@ -24,6 +24,12 @@ pub trait BorshDeserialize: Sized {
     }
 }
 
+impl BorshDeserialize for () {
+    fn deserialize<R: Read>(_reader: &mut R) -> Result<Self, Error> {
+        Ok(())
+    }
+}
+
 impl BorshDeserialize for u8 {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
