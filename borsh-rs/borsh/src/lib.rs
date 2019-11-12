@@ -1,5 +1,3 @@
-#![feature(specialization)]
-
 pub use borsh_derive::{BorshDeserialize, BorshSerialize};
 
 pub mod de;
