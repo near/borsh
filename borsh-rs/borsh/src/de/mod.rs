@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::io::{Cursor, Error, Read};
 use std::mem::{forget, size_of};
 
@@ -153,16 +153,12 @@ where
 impl<T, S> BorshDeserialize for HashSet<T, S>
 where
     T: BorshDeserialize + Eq + std::hash::Hash,
-    S: std::hash::BuildHasher + Default
+    S: std::hash::BuildHasher + Default,
 {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let vec = <Vec<T>>::deserialize(reader)?;
-        let mut set = HashSet::default();
-        for item in vec {
-            set.insert(item);
-        }
-        Ok(set)
+        Ok(vec.into_iter().collect())
     }
 }
 
@@ -171,7 +167,7 @@ impl<K, V, S> BorshDeserialize for HashMap<K, V, S>
 where
     K: BorshDeserialize + Eq + std::hash::Hash,
     V: BorshDeserialize,
-    S: std::hash::BuildHasher + Default
+    S: std::hash::BuildHasher + Default,
 {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
@@ -188,9 +184,21 @@ where
 }
 
 #[cfg(feature = "std")]
+impl<T> BorshDeserialize for BTreeSet<T>
+where
+    T: BorshDeserialize + Ord,
+{
+    #[inline]
+    fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+        let vec = <Vec<T>>::deserialize(reader)?;
+        Ok(vec.into_iter().collect())
+    }
+}
+
+#[cfg(feature = "std")]
 impl<K, V> BorshDeserialize for BTreeMap<K, V>
 where
-    K: BorshDeserialize + Ord + std::hash::Hash,
+    K: BorshDeserialize + Ord,
     V: BorshDeserialize,
 {
     #[inline]
@@ -277,18 +285,11 @@ impl BorshDeserialize for Box<[u8]> {
 macro_rules! impl_arrays {
     ($($len:expr => ($($n:expr)+))+) => {
         $(
-            impl BorshDeserialize for [u8; $len] {
+            impl<T: BorshDeserialize> BorshDeserialize for [T; $len] {
                 #[inline]
                 fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
-                    let mut result = [0u8; $len];
-                    reader.read_exact(&mut result)?;
-                    Ok(result)
-                }
-            }
-
-            default impl<T: BorshDeserialize> BorshDeserialize for [T; $len] {
-                #[inline]
-                fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+                    // As byte arrays are packed in borsh, this generic implementation should
+                    // produce the same code as an unrolled `reader.read_exact($len)`.
                     Ok([$(
                         T::deserialize(reader)
                         .map_err(|e|
