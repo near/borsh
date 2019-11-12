@@ -70,5 +70,5 @@ fn test_nan_float() {
 fn test_evil_bytes() {
     // test takes a really long time if read() is used instead of read_exact()
     let bytes = vec![255, 255, 255, 255];
-    assert_eq!(<Vec<[u8;32]>>::try_from_slice(&bytes).unwrap_err().to_string(), "failed to fill whole buffer");
+    assert_eq!(<Vec<[u8;32]>>::try_from_slice(&bytes).unwrap_err().to_string(), "error deserializing element at index 0: failed to fill whole buffer");
 }
