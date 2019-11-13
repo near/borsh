@@ -4,6 +4,7 @@ use std::mem::size_of;
 
 macro_rules! impl_read {
     ($name: ident, $type: ty) => {
+        #[inline]
         fn $name(&mut self) -> Result<$type> {
             if self.len() < size_of::<$type>() {
                 return Err(Error::new(
@@ -34,13 +35,14 @@ pub trait Input {
 
     fn read_f32(&mut self) -> Result<f32>;
     fn read_f64(&mut self) -> Result<f64>;
-
 }
 
 impl Input for &[u8] {
+    #[inline]
     fn rem_len(&mut self) -> Result<usize> {
         Ok(self.len())
     }
+    #[inline]
     fn read_byte(&mut self) -> Result<u8> {
         if self.len() < 1 {
             return Err(Error::new(
@@ -52,6 +54,7 @@ impl Input for &[u8] {
         *self = &self[1..];
         Ok(res)
     }
+    #[inline]
     fn read(&mut self, buf: &mut [u8]) -> Result<()> {
         if self.len() < buf.len() {
             return Err(Error::new(
