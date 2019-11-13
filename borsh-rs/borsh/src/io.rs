@@ -29,7 +29,12 @@ impl Input for &[u8] {
                 "failed to fill whole buffer",
             ));
         }
-        buf.copy_from_slice(&self[0..buf.len()]);
+        if buf.len() == 1 {
+            buf[0] = self[0];
+        } else {
+            buf.copy_from_slice(&self[0..buf.len()]);
+        }
+
         *self = &self[buf.len()..];
         Ok(())
     }
