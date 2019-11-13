@@ -8,9 +8,11 @@ pub trait Input {
 }
 
 impl Input for &[u8] {
+    #[inline]
     fn rem_len(&mut self) -> Result<usize> {
         Ok(self.len())
     }
+    #[inline]
     fn read_byte(&mut self) -> Result<u8> {
         if self.len() < 1 {
             return Err(Error::new(
@@ -22,6 +24,7 @@ impl Input for &[u8] {
         *self = &self[1..];
         Ok(res)
     }
+    #[inline]
     fn read(&mut self, buf: &mut [u8]) -> Result<()> {
         if self.len() < buf.len() {
             return Err(Error::new(
