@@ -92,6 +92,26 @@ where
     }
 }
 
+impl<T, E> BorshSerialize for Result<T, E>
+where
+    T: BorshSerialize,
+    E: BorshSerialize,
+{
+    #[inline]
+    fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+        match self {
+            Ok(value) => {
+                0u8.serialize(writer)?;
+                value.serialize(writer)
+            },
+            Err(value) => {
+                1u8.serialize(writer)?;
+                value.serialize(writer)
+            }
+        }
+    }
+}
+
 impl BorshSerialize for String {
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         self.as_bytes().serialize(writer)

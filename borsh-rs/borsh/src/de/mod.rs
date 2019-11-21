@@ -111,6 +111,23 @@ where
     }
 }
 
+impl<T, E> BorshDeserialize for Result<T, E>
+where
+    T: BorshDeserialize,
+    E: BorshDeserialize,
+{
+    #[inline]
+    fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+        let mut flag = [0u8];
+        reader.read_exact(&mut flag)?;
+        Ok(if flag[0] == 0 {
+            Ok(T::deserialize(reader)?)
+        } else {
+            Err(E::deserialize(reader)?)
+        })
+    }
+}
+
 impl BorshDeserialize for String {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
