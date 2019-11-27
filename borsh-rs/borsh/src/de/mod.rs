@@ -85,7 +85,16 @@ impl BorshDeserialize for bool {
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let mut buf = [0u8];
         reader.read_exact(&mut buf)?;
-        Ok(buf[0] == 1)
+        if buf[0] == 0 {
+            Ok(false)
+        } else if buf[0] == 1 {
+            Ok(true)
+        } else {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("Invalid bool representation: {}", buf[0]),
+            ))
+        }
     }
 }
 
@@ -99,8 +108,41 @@ where
         reader.read_exact(&mut flag)?;
         if flag[0] == 0 {
             Ok(None)
-        } else {
+        } else if flag[0] == 1 {
             Ok(Some(T::deserialize(reader)?))
+        } else {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!(
+                    "Invalid Option representation: {}. The first byte must be 0 or 1",
+                    flag[0]
+                ),
+            ))
+        }
+    }
+}
+
+impl<T, E> BorshDeserialize for Result<T, E>
+where
+    T: BorshDeserialize,
+    E: BorshDeserialize,
+{
+    #[inline]
+    fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
+        let mut flag = [0u8];
+        reader.read_exact(&mut flag)?;
+        if flag[0] == 0 {
+            Ok(Err(E::deserialize(reader)?))
+        } else if flag[0] == 1 {
+            Ok(Ok(T::deserialize(reader)?))
+        } else {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!(
+                    "Invalid Result representation: {}. The first byte must be 0 or 1",
+                    flag[0]
+                ),
+            ))
         }
     }
 }
