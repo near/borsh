@@ -7,7 +7,7 @@ use syn::{ItemEnum, ItemStruct, ItemUnion};
 #[proc_macro_derive(BorshSerialize, attributes(borsh_skip))]
 pub fn borsh_serialize(input: TokenStream) -> TokenStream {
     let res = if let Ok(input) = syn::parse::<ItemStruct>(input.clone()) {
-        struct_ser(&input)
+        process_named_struct(&input)
     } else if let Ok(input) = syn::parse::<ItemEnum>(input.clone()) {
         enum_ser(&input)
     } else if let Ok(input) = syn::parse::<ItemUnion>(input.clone()) {
