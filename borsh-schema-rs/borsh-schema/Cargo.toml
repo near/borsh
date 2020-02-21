@@ -12,7 +12,7 @@ Schema Generator for Borsh
 """
 
 [dependencies]
-#borsh-derive = { path = "../borsh-schema-derive", version = "0.1.0" }
+borsh-schema-derive = { path = "../borsh-schema-derive", version = "0.1.0" }
 
 [features]
 default = ["std"]

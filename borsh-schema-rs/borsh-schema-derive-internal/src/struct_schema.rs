@@ -1,4 +1,4 @@
-use crate::attribute_helpers::contains_skip;
+use crate::helpers::{contains_skip, schema_type_name};
 use quote::quote;
 use syn::export::{ToTokens, TokenStream2};
 use syn::{Fields, ItemStruct};
@@ -7,43 +7,9 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let name_str = name.to_token_stream().to_string();
     let generics = &input.generics;
-    let (impl_generics, ty_generics, where_clause_generics) = generics.split_for_impl();
+    let (impl_generics, ty_generics, _) = generics.split_for_impl();
     // Generate function that returns the name of the type.
-    let mut schema_type_name_params = TokenStream2::new();
-    let mut where_clause = TokenStream2::new();
-    if let Some(where_clause_generics) = where_clause_generics {
-        let where_clause_generics = &where_clause_generics.predicates;
-        where_clause = quote! {#where_clause_generics};
-    }
-    for type_param in input.generics.type_params() {
-        let type_param_name = &type_param.ident;
-        if schema_type_name_params.is_empty() {
-            schema_type_name_params = quote! {
-                let params = format!("{}", #type_param_name::schema_type_name());
-            };
-        } else {
-            schema_type_name_params.extend(quote! {
-                let params = format!("{}, {}", params, #type_param_name::schema_type_name());
-            });
-        }
-        where_clause.extend(quote! {
-            #type_param_name: borsh_schema::BorshSchema,
-        });
-    }
-    let schema_type_name = if schema_type_name_params.is_empty() {
-        quote! {
-            fn schema_type_name() -> String {
-                #name_str.to_string()
-            }
-        }
-    } else {
-        quote! {
-            fn schema_type_name() -> String {
-                #schema_type_name_params
-                format!(r#"{}<{}>"#, #name_str, params)
-            }
-        }
-    };
+    let (schema_type_name, mut where_clause) = schema_type_name(&name_str, &input.generics);
 
     // Generate function that returns the schema of required types.
     let mut add_rec_type_definitions_fields = TokenStream2::new();
@@ -58,11 +24,11 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
                 let field_type = &field.ty;
                 if add_rec_type_definitions_fields.is_empty() {
                     add_rec_type_definitions_fields = quote! {
-                        let fields = format!(r#"["{}", "{}"]"#, #field_name, #field_type::schema_type_name());
+                        let fields = format!(r#"["{}", "{}"]"#, #field_name, <#field_type>::schema_type_name());
                     };
                 } else {
                     add_rec_type_definitions_fields.extend(quote! {
-                        let fields = format!(r#"{}, ["{}", "{}"]"#, fields, #field_name, #field_type::schema_type_name());
+                        let fields = format!(r#"{}, ["{}", "{}"]"#, fields, #field_name, <#field_type>::schema_type_name());
                     });
                 }
                 add_rec_type_definitions_rec.extend(quote! {
@@ -71,6 +37,11 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
                 where_clause.extend(quote! {
                     #field_type: borsh_schema::BorshSchema,
                 });
+            }
+            if add_rec_type_definitions_fields.is_empty() {
+                add_rec_type_definitions_fields = quote! {
+                    let fields = "";
+                };
             }
         }
         Fields::Unnamed(fields) => {
@@ -81,11 +52,11 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
                 let field_type = &field.ty;
                 if add_rec_type_definitions_fields.is_empty() {
                     add_rec_type_definitions_fields = quote! {
-                        let fields = format!(r#""{}""#, #field_type::schema_type_name());
+                        let fields = format!(r#""{}""#, <#field_type>::schema_type_name());
                     };
                 } else {
                     add_rec_type_definitions_fields.extend(quote! {
-                        let fields = format!(r#"{}, "{}""#, fields, #field_type::schema_type_name());
+                        let fields = format!(r#"{}, "{}""#, fields, <#field_type>::schema_type_name());
                     });
                 }
                 add_rec_type_definitions_rec.extend(quote! {
@@ -94,6 +65,11 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
                 where_clause.extend(quote! {
                     #field_type: borsh_schema::BorshSchema,
                 });
+            }
+            if add_rec_type_definitions_fields.is_empty() {
+                add_rec_type_definitions_fields = quote! {
+                    let fields = "";
+                };
             }
         }
         Fields::Unit => {
@@ -116,7 +92,9 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
     }
     Ok(quote! {
         impl #impl_generics borsh_schema::BorshSchema for #name #ty_generics #where_clause {
-            #schema_type_name
+            fn schema_type_name() -> String {
+                #schema_type_name
+            }
             #add_rec_type_definitions
         }
     })
@@ -156,6 +134,103 @@ mod tests {
     }
 
     #[test]
+    fn wrapper_struct() {
+        let item_struct: ItemStruct = syn::parse2(quote!{
+            struct A<T>(T);
+        }).unwrap();
+
+        let actual = process_struct(&item_struct).unwrap();
+        let expected = quote!{
+            impl<T> borsh_schema::BorshSchema for A<T>
+            where
+                T: borsh_schema::BorshSchema,
+                T: borsh_schema::BorshSchema,
+            {
+                fn schema_type_name() -> String {
+                    let params = format!("{}", <T>::schema_type_name());
+                    format!(r#"{}<{}>"#, "A", params)
+                }
+                fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
+                    let fields = format!(r#""{}""#, <T>::schema_type_name());
+                    let definition = format!(r#"{{ "kind": "struct", "fields": [ {} ] }}"#, fields);
+                    Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
+                    <T>::add_rec_type_definitions(definitions);
+                }
+            }
+        };
+        assert_eq(expected, actual);
+    }
+
+    #[test]
+    fn tuple_struct() {
+        let item_struct: ItemStruct = syn::parse2(quote!{
+            struct A(u64, String);
+        }).unwrap();
+
+        let actual = process_struct(&item_struct).unwrap();
+        let expected = quote!{
+            impl borsh_schema::BorshSchema for A
+            where
+                u64: borsh_schema::BorshSchema,
+                String: borsh_schema::BorshSchema,
+            {
+                fn schema_type_name() -> String {
+                    "A".to_string()
+                }
+                fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
+                    let fields = format!(r#""{}""#, <u64>::schema_type_name());
+                    let fields = format!(
+                        r#"{}, "{}""#,
+                        fields,
+                        <String>::schema_type_name()
+                    );
+                    let definition = format!(r#"{{ "kind": "struct", "fields": [ {} ] }}"#, fields);
+                    Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
+                    <u64>::add_rec_type_definitions(definitions);
+                    <String>::add_rec_type_definitions(definitions);
+                }
+            }
+        };
+        assert_eq(expected, actual);
+    }
+
+    #[test]
+    fn tuple_struct_params() {
+        let item_struct: ItemStruct = syn::parse2(quote!{
+            struct A<K, V>(K, V);
+        }).unwrap();
+
+        let actual = process_struct(&item_struct).unwrap();
+        let expected = quote!{
+            impl<K, V> borsh_schema::BorshSchema for A<K, V>
+            where
+                K: borsh_schema::BorshSchema,
+                V: borsh_schema::BorshSchema,
+                K: borsh_schema::BorshSchema,
+                V: borsh_schema::BorshSchema,
+            {
+                fn schema_type_name() -> String {
+                    let params = format!("{}", <K>::schema_type_name());
+                    let params = format!("{}, {}", params, <V>::schema_type_name());
+                    format!(r#"{}<{}>"#, "A", params)
+                }
+                fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
+                    let fields = format!(r#""{}""#, <K>::schema_type_name());
+                    let fields = format!(r#"{}, "{}""#, fields, <V>::schema_type_name());
+                    let definition = format!(r#"{{ "kind": "struct", "fields": [ {} ] }}"#, fields);
+                    Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
+                    <K>::add_rec_type_definitions(definitions);
+                    <V>::add_rec_type_definitions(definitions);
+                }
+            }
+        };
+        assert_eq(expected, actual);
+    }
+
+
+
+
+    #[test]
     fn simple_struct() {
         let item_struct: ItemStruct = syn::parse2(quote!{
             struct A {
@@ -175,12 +250,12 @@ mod tests {
                     "A".to_string()
                 }
                 fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
-                    let fields = format!(r#"["{}", "{}"]"#, "x", u64::schema_type_name());
+                    let fields = format!(r#"["{}", "{}"]"#, "x", <u64>::schema_type_name());
                     let fields = format!(
                         r#"{}, ["{}", "{}"]"#,
                         fields,
                         "y",
-                        String::schema_type_name()
+                        <String>::schema_type_name()
                     );
                     let definition = format!(r#"{{ "kind": "struct", "fields": [ {} ] }}"#, fields);
                     Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
@@ -211,26 +286,74 @@ mod tests {
                 String: borsh_schema::BorshSchema,
             {
                 fn schema_type_name() -> String {
-                    let params = format!("{}", K::schema_type_name());
-                    let params = format!("{}, {}", params, V::schema_type_name());
+                    let params = format!("{}", <K>::schema_type_name());
+                    let params = format!("{}, {}", params, <V>::schema_type_name());
                     format!(r#"{}<{}>"#, "A", params)
                 }
                 fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
                     let fields = format!(
                         r#"["{}", "{}"]"#,
                         "x",
-                        HashMap < K,
-                        V > ::schema_type_name()
+                        <HashMap < K, V > > ::schema_type_name()
                     );
                     let fields = format!(
                         r#"{}, ["{}", "{}"]"#,
                         fields,
                         "y",
-                        String::schema_type_name()
+                        <String>::schema_type_name()
                     );
                     let definition = format!(r#"{{ "kind": "struct", "fields": [ {} ] }}"#, fields);
                     Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
                     <HashMap<K, V> >::add_rec_type_definitions(definitions);
+                    <String>::add_rec_type_definitions(definitions);
+                }
+            }
+        };
+        assert_eq(expected, actual);
+    }
+
+    #[test]
+    fn tuple_struct_whole_skip() {
+        let item_struct: ItemStruct = syn::parse2(quote!{
+            struct A(#[borsh_skip] String);
+        }).unwrap();
+
+        let actual = process_struct(&item_struct).unwrap();
+        let expected = quote!{
+            impl borsh_schema::BorshSchema for A
+            {
+                fn schema_type_name() -> String {
+                    "A".to_string()
+                }
+                fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
+                    let fields = "";
+                    let definition = format!(r#"{{ "kind": "struct", "fields": [ {} ] }}"#, fields);
+                    Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
+                }
+            }
+        };
+        assert_eq(expected, actual);
+    }
+
+    #[test]
+    fn tuple_struct_partial_skip() {
+        let item_struct: ItemStruct = syn::parse2(quote!{
+            struct A(#[borsh_skip] u64, String);
+        }).unwrap();
+
+        let actual = process_struct(&item_struct).unwrap();
+        let expected = quote!{
+            impl borsh_schema::BorshSchema for A
+            where
+                String: borsh_schema::BorshSchema,
+            {
+                fn schema_type_name() -> String {
+                    "A".to_string()
+                }
+                fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
+                    let fields = format!(r#""{}""#, <String>::schema_type_name());
+                    let definition = format!(r#"{{ "kind": "struct", "fields": [ {} ] }}"#, fields);
+                    Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
                     <String>::add_rec_type_definitions(definitions);
                 }
             }

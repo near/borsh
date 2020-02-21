@@ -1,4 +1,4 @@
-use std::collections::hash_map::Entry;
+use std::collections::hash_map::{Entry, RandomState};
 use std::collections::*;
 
 /// A string description of the type.
@@ -25,6 +25,19 @@ pub trait BorshSchema {
     }
     /// Get the name of the type without brackets.
     fn schema_type_name() -> String;
+}
+
+impl<T> BorshSchema for Box<T>
+where
+    T: BorshSchema,
+{
+    fn add_rec_type_definitions(definitions: &mut HashMap<String, String, RandomState>) {
+        T::add_rec_type_definitions(definitions);
+    }
+
+    fn schema_type_name() -> String {
+        T::schema_type_name()
+    }
 }
 
 impl BorshSchema for () {

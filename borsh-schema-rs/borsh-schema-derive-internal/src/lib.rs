@@ -1,8 +1,8 @@
 #![recursion_limit = "128"]
 
-//mod union_ser;
-mod attribute_helpers;
+mod helpers;
 
-//pub use enum_ser::enum_ser;
-//pub use union_ser::union_ser;
+mod enum_schema;
 mod struct_schema;
+pub use enum_schema::process_enum;
+pub use struct_schema::process_struct;
