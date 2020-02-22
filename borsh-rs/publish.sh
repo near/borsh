@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -ex
-for p in borsh-derive-internal borsh-derive borsh
+for p in borsh-schema-derive-internal borsh-derive-internal borsh-derive borsh
 do
 pushd ./${p}
 cargo publish
