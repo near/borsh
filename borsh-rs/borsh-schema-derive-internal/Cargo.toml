@@ -1,15 +1,14 @@
 [package]
-name = "borsh-derive-internal"
+name = "borsh-schema-derive-internal"
 version = "0.3.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2018"
 license = "Apache-2.0"
-readme = "README.md"
 categories = ["encoding", "network-programming"]
 repository = "https://github.com/nearprotocol/borsh"
 homepage = "http://borsh.io"
 description = """
-Binary Object Representation Serializer for Hashing
+Schema Generator for Borsh
 """
 
 [dependencies]
