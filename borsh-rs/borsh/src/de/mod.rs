@@ -1,3 +1,4 @@
+use crate::BorshSchema;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Cursor, Error, Read};
 use std::mem::{forget, size_of};

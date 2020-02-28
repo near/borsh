@@ -1,4 +1,5 @@
 use borsh::schema::*;
+use borsh::schema_helpers::{try_from_slice_with_schema, try_to_vec_with_schema};
 
 macro_rules! map(
     () => { ::std::collections::HashMap::new() };
@@ -52,24 +53,71 @@ pub fn single_field_enum() {
 }
 
 #[test]
-pub fn complex_enum() {
-    #[derive(borsh::BorshSchema)]
+pub fn complex_enum_with_schema() {
+    #[derive(
+        borsh::BorshSchema,
+        Default,
+        borsh::BorshSerialize,
+        borsh::BorshDeserialize,
+        PartialEq,
+        Debug,
+    )]
     struct Tomatoes;
-    #[derive(borsh::BorshSchema)]
+    #[derive(
+        borsh::BorshSchema,
+        Default,
+        borsh::BorshSerialize,
+        borsh::BorshDeserialize,
+        PartialEq,
+        Debug,
+    )]
     struct Cucumber;
-    #[derive(borsh::BorshSchema)]
+    #[derive(
+        borsh::BorshSchema,
+        Default,
+        borsh::BorshSerialize,
+        borsh::BorshDeserialize,
+        PartialEq,
+        Debug,
+    )]
     struct Oil;
-    #[derive(borsh::BorshSchema)]
+    #[derive(
+        borsh::BorshSchema,
+        Default,
+        borsh::BorshSerialize,
+        borsh::BorshDeserialize,
+        PartialEq,
+        Debug,
+    )]
     struct Wrapper;
-    #[derive(borsh::BorshSchema)]
+    #[derive(
+        borsh::BorshSchema,
+        Default,
+        borsh::BorshSerialize,
+        borsh::BorshDeserialize,
+        PartialEq,
+        Debug,
+    )]
     struct Filling;
-    #[derive(borsh::BorshSchema)]
+    #[derive(
+        borsh::BorshSchema, borsh::BorshSerialize, borsh::BorshDeserialize, PartialEq, Debug,
+    )]
     enum A {
         Bacon,
         Eggs,
         Salad(Tomatoes, Cucumber, Oil),
         Sausage { wrapper: Wrapper, filling: Filling },
     }
+
+    impl Default for A {
+        fn default() -> Self {
+            A::Sausage {
+                wrapper: Default::default(),
+                filling: Default::default(),
+            }
+        }
+    }
+    // First check schema.
     assert_eq!("A".to_string(), A::declaration());
     let mut defs = Default::default();
     A::add_definitions_recursively(&mut defs);
@@ -95,6 +143,11 @@ pub fn complex_enum() {
         },
         defs
     );
+    // Then check that we serialize and deserialize with schema.
+    let obj = A::default();
+    let data = try_to_vec_with_schema(&obj).unwrap();
+    let obj2: A = try_from_slice_with_schema(&data).unwrap();
+    assert_eq!(obj, obj2);
 }
 
 #[test]
