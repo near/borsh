@@ -13,38 +13,32 @@ pub fn contains_skip(attrs: &[Attribute]) -> bool {
     false
 }
 
-pub fn schema_type_name(ident_str: &String, generics: &Generics) -> (TokenStream2, TokenStream2) {
+pub fn declaration(ident_str: &String, generics: &Generics) -> (TokenStream2, Vec<TokenStream2>) {
     let (_, _, where_clause_generics) = generics.split_for_impl();
     // Generate function that returns the name of the type.
-    let mut schema_type_name_params = TokenStream2::new();
-    let mut where_clause = TokenStream2::new();
+    let mut declaration_params = vec![];
+    let mut where_clause = vec![];
     if let Some(where_clause_generics) = where_clause_generics {
         let where_clause_generics = &where_clause_generics.predicates;
-        where_clause = quote! {#where_clause_generics};
+        where_clause.push(quote! {#where_clause_generics});
     }
     for type_param in generics.type_params() {
         let type_param_name = &type_param.ident;
-        if schema_type_name_params.is_empty() {
-            schema_type_name_params = quote! {
-                let params = format!("{}", <#type_param_name>::schema_type_name());
-            };
-        } else {
-            schema_type_name_params.extend(quote! {
-                let params = format!("{}, {}", params, <#type_param_name>::schema_type_name());
-            });
-        }
-        where_clause.extend(quote! {
-            #type_param_name: borsh::BorshSchema,
+        declaration_params.push(quote! {
+            <#type_param_name>::declaration()
+        });
+        where_clause.push(quote! {
+            #type_param_name: borsh::BorshSchema
         });
     }
-    let result = if schema_type_name_params.is_empty() {
+    let result = if declaration_params.is_empty() {
         quote! {
                 #ident_str.to_string()
         }
     } else {
         quote! {
-                #schema_type_name_params
-                format!(r#"{}<{}>"#, #ident_str, params)
+                let params = vec![#(#declaration_params),*];
+                format!(r#"{}<{}>"#, #ident_str, params.join(", "))
         }
     };
     (result, where_clause)
