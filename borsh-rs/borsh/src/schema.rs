@@ -1,5 +1,5 @@
 use crate as borsh; // For `#[derive(BorshSerialize, BorshDeserialize)]`.
-use crate::{BorshDeserialize, BorshSerialize};
+use crate::{BorshDeserialize, BorshSchema as BorshSchemaMacro, BorshSerialize};
 use std::collections::hash_map::Entry;
 use std::collections::*;
 
@@ -10,7 +10,7 @@ pub type VariantName = String;
 /// The name of the field in the struct (can be used to convert JSON to Borsh using the schema).
 pub type FieldName = String;
 /// The type that we use to represent the definition of the Borsh type.
-#[derive(PartialEq, Debug, BorshSerialize, BorshDeserialize)]
+#[derive(PartialEq, Debug, BorshSerialize, BorshDeserialize, BorshSchemaMacro)]
 pub enum Definition {
     /// A fixed-size array with the length known at the compile time and the same-type elements.
     Array { length: u32, elements: Declaration },
@@ -28,7 +28,7 @@ pub enum Definition {
 }
 
 /// The collection representing the fields of a struct.
-#[derive(PartialEq, Debug, BorshSerialize, BorshDeserialize)]
+#[derive(PartialEq, Debug, BorshSerialize, BorshDeserialize, BorshSchemaMacro)]
 pub enum Fields {
     /// The struct with named fields.
     NamedFields(Vec<(FieldName, Declaration)>),
@@ -36,6 +36,15 @@ pub enum Fields {
     UnnamedFields(Vec<Declaration>),
     /// The struct with no fields.
     Empty,
+}
+
+/// All schema information needed to deserialize a single type.
+#[derive(PartialEq, Debug, BorshSerialize, BorshDeserialize, BorshSchemaMacro)]
+pub struct BorshSchemaContainer {
+    /// Declaration of the type.
+    declaration: Declaration,
+    /// All definitions needed to deserialize the given type.
+    definitions: HashMap<Declaration, Definition>,
 }
 
 /// The declaration and the definition of the type that can be used to (de)serialize Borsh without
@@ -63,6 +72,15 @@ pub trait BorshSchema {
     }
     /// Get the name of the type without brackets.
     fn declaration() -> Declaration;
+
+    fn schema_container() -> BorshSchemaContainer {
+        let mut definitions = HashMap::new();
+        Self::add_definitions_recursively(&mut definitions);
+        BorshSchemaContainer {
+            declaration: Self::declaration(),
+            definitions,
+        }
+    }
 }
 
 impl<T> BorshSchema for Box<T>

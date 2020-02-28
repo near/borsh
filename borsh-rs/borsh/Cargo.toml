@@ -12,6 +12,14 @@ description = """
 Binary Object Representation Serializer for Hashing
 """
 
+[lib]
+name = "borsh"
+path = "src/lib.rs"
+
+[[bin]]
+name = "generate_schema_schema"
+path = "src/generate_schema_schema.rs"
+
 [dependencies]
 borsh-derive = { path = "../borsh-derive", version = "0.4.0" }
 
