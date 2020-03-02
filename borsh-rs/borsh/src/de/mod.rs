@@ -153,8 +153,14 @@ impl BorshDeserialize for String {
         let len = u32::deserialize(reader)?;
         // TODO(16): return capacity allocation when we have the size of the buffer left from the reader.
         let mut result = Vec::with_capacity(hint::cautious::<u8>(len));
-        for _ in 0..len {
-            result.push(u8::deserialize(reader)?);
+        let mut i = 0;
+        let batch_len = 1024;
+        while i < len {
+            let sz = std::cmp::min(i + batch_len, len) - i;
+            let mut buf = vec![0u8; sz as usize];
+            reader.read_exact(&mut buf)?;
+            result.extend_from_slice(&buf);
+            i += sz;
         }
         String::from_utf8(result)
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()))
