@@ -15,6 +15,8 @@ macro_rules! test_string {
 test_string!(test_empty_string, "");
 test_string!(test_a, "a");
 test_string!(test_hello_world, "hello world");
-test_string!(test_x_1024, String::from_utf8(vec![b'X'; 1024]).unwrap());
-test_string!(test_x_4096, String::from_utf8(vec![b'X'; 4096]).unwrap());
-test_string!(test_x_65535, String::from_utf8(vec![b'X'; 65535]).unwrap());
+test_string!(test_x_1024, "x".repeat(1024));
+test_string!(test_x_4096, "x".repeat(4096));
+test_string!(test_x_65535, "x".repeat(65535));
+test_string!(test_hello_1000, "hello world!".repeat(1000));
+test_string!(test_non_ascii, "💩");
