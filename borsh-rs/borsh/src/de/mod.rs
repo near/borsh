@@ -5,6 +5,7 @@ use std::mem::{forget, size_of};
 mod hint;
 
 const ERROR_NOT_ALL_BYTES_READ: &str = "Not all bytes read";
+const READ_BATCH_SIZE: u32 = 4096;
 
 /// A data-structure that can be de-serialized from binary format by NBOR.
 pub trait BorshDeserialize: Sized {
@@ -151,17 +152,30 @@ impl BorshDeserialize for String {
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
-        // TODO(16): return capacity allocation when we have the size of the buffer left from the reader.
-        let mut result = Vec::with_capacity(hint::cautious::<u8>(len));
-        let mut i = 0;
-        let batch_len = 1024;
-        while i < len {
-            let sz = std::cmp::min(i + batch_len, len) - i;
-            let mut buf = vec![0u8; sz as usize];
-            reader.read_exact(&mut buf)?;
-            result.extend_from_slice(&buf);
-            i += sz;
+        if len == 0 {
+            return Ok(String::new());
         }
+        let result = if len <= READ_BATCH_SIZE {
+            let mut buf = vec![0u8; len as usize];
+            reader.read_exact(&mut buf)?;
+            buf
+        } else {
+            // TODO(16): return capacity allocation when we have the size of the buffer left from the reader.
+            let mut result = Vec::with_capacity(hint::cautious::<u8>(len));
+            let mut i = 0;
+            while i < len {
+                let buf_len = if i + READ_BATCH_SIZE <= len {
+                    READ_BATCH_SIZE
+                } else {
+                    (len - i)
+                };
+                let mut buf = vec![0u8; buf_len as usize];
+                reader.read_exact(&mut buf)?;
+                result.extend(&buf);
+                i += buf_len;
+            }
+            result
+        };
         String::from_utf8(result)
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()))
     }
@@ -175,6 +189,9 @@ where
     #[inline]
     fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
+        if len == 0 {
+            return Ok(Vec::new());
+        }
         if size_of::<T>() == 0 {
             let mut result = Vec::new();
             result.push(T::deserialize(reader)?);
