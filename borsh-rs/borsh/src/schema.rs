@@ -1,3 +1,16 @@
+//! Since Borsh is not a self-descriptive format we have a way to describe types serialized with Borsh so that
+//! we can deserialize serialized blobs without having Rust types available. Additionally, this can be used to
+//! serialize content provided in a different format, e.g. JSON object `{"user": "alice", "message": "Message"}`
+//! can be serialized by JS code into Borsh format such that it can be deserialized into `struct UserMessage {user: String, message: String}`
+//! on Rust side.
+//!
+//! The important components are: `BorshSchema` trait, `Definition` and `Declaration` types, and `BorshSchemaContainer` struct.
+//! * `BorshSchema` trait allows any type that implements it to be self-descriptive, i.e. generate it's own schema;
+//! * `Declaration` is used to describe the type identifier, e.g. `HashMap<u64, String>`;
+//! * `Definition` is used to describe the structure of the type;
+//! * `BorshSchemaContainer` is used to store all declarations and defintions that are needed to work with a single type.
+
+#![allow(dead_code)]  // Unclear why rust check complains on fields of `Definition` variants.
 use crate as borsh; // For `#[derive(BorshSerialize, BorshDeserialize)]`.
 use crate::{BorshDeserialize, BorshSchema as BorshSchemaMacro, BorshSerialize};
 use std::collections::hash_map::Entry;
@@ -42,9 +55,9 @@ pub enum Fields {
 #[derive(PartialEq, Debug, BorshSerialize, BorshDeserialize, BorshSchemaMacro)]
 pub struct BorshSchemaContainer {
     /// Declaration of the type.
-    declaration: Declaration,
+    pub declaration: Declaration,
     /// All definitions needed to deserialize the given type.
-    definitions: HashMap<Declaration, Definition>,
+    pub definitions: HashMap<Declaration, Definition>,
 }
 
 /// The declaration and the definition of the type that can be used to (de)serialize Borsh without

@@ -1,3 +1,4 @@
+#![allow(dead_code)]  // Local structures do not have their fields used.
 use borsh::schema::*;
 
 macro_rules! map(
