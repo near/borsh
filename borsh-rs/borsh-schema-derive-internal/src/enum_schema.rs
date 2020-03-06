@@ -1,4 +1,4 @@
-use crate::helpers::schema_type_name;
+use crate::helpers::declaration;
 use quote::quote;
 use syn::export::{Span, ToTokens, TokenStream2};
 use syn::{
@@ -12,14 +12,14 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
     let generics = &input.generics;
     let (impl_generics, ty_generics, _) = generics.split_for_impl();
     // Generate function that returns the name of the type.
-    let (schema_type_name, mut where_clause) = schema_type_name(&name_str, &input.generics);
+    let (declaration, where_clause) = declaration(&name_str, &input.generics);
 
     // Generate function that returns the schema for variants.
     // Definitions of the variants.
-    let mut variants_defs = TokenStream2::new();
+    let mut variants_defs = vec![];
     // Definitions of the anonymous structs used in variants.
     let mut anonymous_defs = TokenStream2::new();
-    // Recursive calls to `add_rec_type_definitions`.
+    // Recursive calls to `add_definitions_recursively`.
     let mut add_recursive_defs = TokenStream2::new();
     for variant in &input.variants {
         let variant_name_str = variant.ident.to_token_stream().to_string();
@@ -96,35 +96,31 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
             #anonymous_struct
         });
         add_recursive_defs.extend(quote! {
-            <#full_variant_ident #ty_generics>::add_rec_type_definitions(definitions);
+            <#full_variant_ident #ty_generics>::add_definitions_recursively(definitions);
         });
-        if variants_defs.is_empty() {
-            variants_defs = quote! {
-                let variants = format!(r#"["{}", "{}"]"#, #variant_name_str , <#full_variant_ident #ty_generics>::schema_type_name());
-            };
-        } else {
-            variants_defs.extend(quote! {
-                let variants = format!(r#"{}, ["{}", "{}"]"#, variants, #variant_name_str, <#full_variant_ident #ty_generics>::schema_type_name());
-            });
-        }
+        variants_defs.push(quote! {
+            (#variant_name_str.to_string(), <#full_variant_ident #ty_generics>::declaration())
+        });
     }
 
     let type_definitions = quote! {
-        fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
+        fn add_definitions_recursively(definitions: &mut ::std::collections::HashMap<borsh::schema::Declaration, borsh::schema::Definition>) {
             #anonymous_defs
             #add_recursive_defs
-            #variants_defs
-            let definition = format!(r#"{{ "kind": "enum", "variants": [ {} ] }}"#, variants);
-            Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
+            let variants = vec![#(#variants_defs),*];
+            let definition = borsh::schema::Definition::Enum{variants};
+            Self::add_definition(Self::declaration(), definition, definitions);
         }
     };
-    if !where_clause.is_empty() {
-        where_clause = quote! { where #where_clause};
-    }
+    let where_clause = if !where_clause.is_empty() {
+        quote! { where #(#where_clause),*}
+    } else {
+        TokenStream2::new()
+    };
     Ok(quote! {
         impl #impl_generics borsh::BorshSchema for #name #ty_generics #where_clause {
-            fn schema_type_name() -> String {
-                #schema_type_name
+            fn declaration() -> borsh::schema::Declaration {
+                #declaration
             }
             #type_definitions
         }
@@ -153,25 +149,27 @@ mod tests {
         let actual = process_enum(&item_enum).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A {
-                fn schema_type_name() -> String {
+                fn declaration() -> borsh::schema::Declaration {
                     "A".to_string()
                 }
-                fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
+                fn add_definitions_recursively(
+                    definitions: &mut ::std::collections::HashMap<
+                        borsh::schema::Declaration,
+                        borsh::schema::Definition
+                    >
+                ) {
                     #[derive(borsh :: BorshSchema)]
                     struct ABacon;
                     #[derive(borsh :: BorshSchema)]
                     struct AEggs;
-                    <ABacon>::add_rec_type_definitions(definitions);
-                    <AEggs>::add_rec_type_definitions(definitions);
-                    let variants = format!(r#"["{}", "{}"]"#, "Bacon", <ABacon>::schema_type_name());
-                    let variants = format!(
-                        r#"{}, ["{}", "{}"]"#,
-                        variants,
-                        "Eggs",
-                        <AEggs>::schema_type_name()
-                    );
-                    let definition = format!(r#"{{ "kind": "enum", "variants": [ {} ] }}"#, variants);
-                    Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
+                    <ABacon>::add_definitions_recursively(definitions);
+                    <AEggs>::add_definitions_recursively(definitions);
+                    let variants = vec![
+                        ("Bacon".to_string(), <ABacon>::declaration()),
+                        ("Eggs".to_string(), <AEggs>::declaration())
+                    ];
+                    let definition = borsh::schema::Definition::Enum { variants };
+                    Self::add_definition(Self::declaration(), definition, definitions);
                 }
             }
         };
@@ -189,16 +187,21 @@ mod tests {
         let actual = process_enum(&item_enum).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A {
-                fn schema_type_name() -> String {
+                fn declaration() -> borsh::schema::Declaration {
                     "A".to_string()
                 }
-                fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
+                fn add_definitions_recursively(
+                    definitions: &mut ::std::collections::HashMap<
+                        borsh::schema::Declaration,
+                        borsh::schema::Definition
+                    >
+                ) {
                     #[derive(borsh :: BorshSchema)]
                     struct ABacon;
-                    <ABacon>::add_rec_type_definitions(definitions);
-                    let variants = format!(r#"["{}", "{}"]"#, "Bacon", <ABacon>::schema_type_name());
-                    let definition = format!(r#"{{ "kind": "enum", "variants": [ {} ] }}"#, variants);
-                    Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
+                    <ABacon>::add_definitions_recursively(definitions);
+                    let variants = vec![("Bacon".to_string(), <ABacon>::declaration())];
+                    let definition = borsh::schema::Definition::Enum { variants };
+                    Self::add_definition(Self::declaration(), definition, definitions);
                 }
             }
         };
@@ -219,10 +222,15 @@ mod tests {
         let actual = process_enum(&item_enum).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A {
-                fn schema_type_name() -> String {
+                fn declaration() -> borsh::schema::Declaration {
                     "A".to_string()
                 }
-                fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
+                fn add_definitions_recursively(
+                    definitions: &mut ::std::collections::HashMap<
+                        borsh::schema::Declaration,
+                        borsh::schema::Definition
+                    >
+                ) {
                     #[derive(borsh :: BorshSchema)]
                     struct ABacon;
                     #[derive(borsh :: BorshSchema)]
@@ -234,31 +242,18 @@ mod tests {
                         wrapper: Wrapper,
                         filling: Filling
                     }
-                    <ABacon>::add_rec_type_definitions(definitions);
-                    <AEggs>::add_rec_type_definitions(definitions);
-                    <ASalad>::add_rec_type_definitions(definitions);
-                    <ASausage>::add_rec_type_definitions(definitions);
-                    let variants = format!(r#"["{}", "{}"]"#, "Bacon", <ABacon>::schema_type_name());
-                    let variants = format!(
-                        r#"{}, ["{}", "{}"]"#,
-                        variants,
-                        "Eggs",
-                        <AEggs>::schema_type_name()
-                    );
-                    let variants = format!(
-                        r#"{}, ["{}", "{}"]"#,
-                        variants,
-                        "Salad",
-                        <ASalad>::schema_type_name()
-                    );
-                    let variants = format!(
-                        r#"{}, ["{}", "{}"]"#,
-                        variants,
-                        "Sausage",
-                        <ASausage>::schema_type_name()
-                    );
-                    let definition = format!(r#"{{ "kind": "enum", "variants": [ {} ] }}"#, variants);
-                    Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
+                    <ABacon>::add_definitions_recursively(definitions);
+                    <AEggs>::add_definitions_recursively(definitions);
+                    <ASalad>::add_definitions_recursively(definitions);
+                    <ASausage>::add_definitions_recursively(definitions);
+                    let variants = vec![
+                        ("Bacon".to_string(), <ABacon>::declaration()),
+                        ("Eggs".to_string(), <AEggs>::declaration()),
+                        ("Salad".to_string(), <ASalad>::declaration()),
+                        ("Sausage".to_string(), <ASausage>::declaration())
+                    ];
+                    let definition = borsh::schema::Definition::Enum { variants };
+                    Self::add_definition(Self::declaration(), definition, definitions);
                 }
             }
         };
@@ -281,20 +276,29 @@ mod tests {
             impl<C, W> borsh::BorshSchema for A<C, W>
             where
                 C: borsh::BorshSchema,
-                W: borsh::BorshSchema,
+                W: borsh::BorshSchema
             {
-                fn schema_type_name() -> String {
-                    let params = format!("{}", <C>::schema_type_name());
-                    let params = format!("{}, {}", params, <W>::schema_type_name());
-                    format!(r#"{}<{}>"#, "A", params)
+                fn declaration() -> borsh::schema::Declaration {
+                    let params = vec![<C>::declaration(), <W>::declaration()];
+                    format!(r#"{}<{}>"#, "A", params.join(", "))
                 }
-                fn add_rec_type_definitions(definitions: &mut ::std::collections::HashMap<String, String>) {
+                fn add_definitions_recursively(
+                    definitions: &mut ::std::collections::HashMap<
+                        borsh::schema::Declaration,
+                        borsh::schema::Definition
+                    >
+                ) {
                     #[derive(borsh :: BorshSchema)]
-                    struct ABacon<C, W>( #[borsh_skip] ::std::marker::PhantomData<(C, W)>);
+                    struct ABacon<C, W>(#[borsh_skip] ::std::marker::PhantomData<(C, W)>);
                     #[derive(borsh :: BorshSchema)]
-                    struct AEggs<C, W>( #[borsh_skip] ::std::marker::PhantomData<(C, W)>);
+                    struct AEggs<C, W>(#[borsh_skip] ::std::marker::PhantomData<(C, W)>);
                     #[derive(borsh :: BorshSchema)]
-                    struct ASalad<C, W>(Tomatoes, C, Oil, #[borsh_skip] ::std::marker::PhantomData<(C, W)>);
+                    struct ASalad<C, W>(
+                        Tomatoes,
+                        C,
+                        Oil,
+                        #[borsh_skip] ::std::marker::PhantomData<(C, W)>
+                    );
                     #[derive(borsh :: BorshSchema)]
                     struct ASausage<C, W> {
                         wrapper: W,
@@ -302,35 +306,18 @@ mod tests {
                         #[borsh_skip]
                         borsh_schema_phantom_data: ::std::marker::PhantomData<(C, W)>
                     }
-                    <ABacon<C, W> >::add_rec_type_definitions(definitions);
-                    <AEggs<C, W> >::add_rec_type_definitions(definitions);
-                    <ASalad<C, W> >::add_rec_type_definitions(definitions);
-                    <ASausage<C, W> >::add_rec_type_definitions(definitions);
-                    let variants = format!(
-                        r#"["{}", "{}"]"#,
-                        "Bacon",
-                        <ABacon<C, W> >::schema_type_name()
-                    );
-                    let variants = format!(
-                        r#"{}, ["{}", "{}"]"#,
-                        variants,
-                        "Eggs",
-                        <AEggs<C, W> >::schema_type_name()
-                    );
-                    let variants = format!(
-                        r#"{}, ["{}", "{}"]"#,
-                        variants,
-                        "Salad",
-                        <ASalad<C, W> >::schema_type_name()
-                    );
-                    let variants = format!(
-                        r#"{}, ["{}", "{}"]"#,
-                        variants,
-                        "Sausage",
-                        <ASausage<C, W> >::schema_type_name()
-                    );
-                    let definition = format!(r#"{{ "kind": "enum", "variants": [ {} ] }}"#, variants);
-                    Self::add_single_type_definition(Self::schema_type_name(), definition, definitions);
+                    <ABacon<C, W> >::add_definitions_recursively(definitions);
+                    <AEggs<C, W> >::add_definitions_recursively(definitions);
+                    <ASalad<C, W> >::add_definitions_recursively(definitions);
+                    <ASausage<C, W> >::add_definitions_recursively(definitions);
+                    let variants = vec![
+                        ("Bacon".to_string(), <ABacon<C, W> >::declaration()),
+                        ("Eggs".to_string(), <AEggs<C, W> >::declaration()),
+                        ("Salad".to_string(), <ASalad<C, W> >::declaration()),
+                        ("Sausage".to_string(), <ASausage<C, W> >::declaration())
+                    ];
+                    let definition = borsh::schema::Definition::Enum { variants };
+                    Self::add_definition(Self::declaration(), definition, definitions);
                 }
             }
         };

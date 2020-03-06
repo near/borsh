@@ -1,4 +1,6 @@
-use borsh::schema::BorshSchema;
+#![allow(dead_code)]  // Local structures do not have their fields used.
+use borsh::schema::*;
+use borsh::schema_helpers::{try_from_slice_with_schema, try_to_vec_with_schema};
 
 macro_rules! map(
     () => { ::std::collections::HashMap::new() };
@@ -6,7 +8,7 @@ macro_rules! map(
         {
             let mut m = ::std::collections::HashMap::new();
             $(
-                m.insert($key.to_string(), $value.to_string());
+                m.insert($key.to_string(), $value);
             )+
             m
         }
@@ -20,14 +22,14 @@ pub fn simple_enum() {
         Bacon,
         Eggs,
     }
-    assert_eq!("A".to_string(), A::schema_type_name());
+    assert_eq!("A".to_string(), A::declaration());
     let mut defs = Default::default();
-    A::add_rec_type_definitions(&mut defs);
+    A::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "ABacon" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "AEggs" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "A" => r#"{ "kind": "enum", "variants": [ ["Bacon", "ABacon"], ["Eggs", "AEggs"] ] }"#
+        "ABacon" => Definition::Struct{ fields: Fields::Empty },
+        "AEggs" => Definition::Struct{ fields: Fields::Empty },
+        "A" => Definition::Enum { variants: vec![("Bacon".to_string(), "ABacon".to_string()), ("Eggs".to_string(), "AEggs".to_string())]}
         },
         defs
     );
@@ -39,54 +41,114 @@ pub fn single_field_enum() {
     enum A {
         Bacon,
     }
-    assert_eq!("A".to_string(), A::schema_type_name());
+    assert_eq!("A".to_string(), A::declaration());
     let mut defs = Default::default();
-    A::add_rec_type_definitions(&mut defs);
+    A::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "ABacon" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "A" => r#"{ "kind": "enum", "variants": [ ["Bacon", "ABacon"] ] }"#
+        "ABacon" => Definition::Struct {fields: Fields::Empty},
+        "A" => Definition::Enum { variants: vec![("Bacon".to_string(), "ABacon".to_string())]}
         },
         defs
     );
 }
 
 #[test]
-pub fn complex_enum() {
-    #[derive(borsh::BorshSchema)]
+pub fn complex_enum_with_schema() {
+    #[derive(
+        borsh::BorshSchema,
+        Default,
+        borsh::BorshSerialize,
+        borsh::BorshDeserialize,
+        PartialEq,
+        Debug,
+    )]
     struct Tomatoes;
-    #[derive(borsh::BorshSchema)]
+    #[derive(
+        borsh::BorshSchema,
+        Default,
+        borsh::BorshSerialize,
+        borsh::BorshDeserialize,
+        PartialEq,
+        Debug,
+    )]
     struct Cucumber;
-    #[derive(borsh::BorshSchema)]
+    #[derive(
+        borsh::BorshSchema,
+        Default,
+        borsh::BorshSerialize,
+        borsh::BorshDeserialize,
+        PartialEq,
+        Debug,
+    )]
     struct Oil;
-    #[derive(borsh::BorshSchema)]
+    #[derive(
+        borsh::BorshSchema,
+        Default,
+        borsh::BorshSerialize,
+        borsh::BorshDeserialize,
+        PartialEq,
+        Debug,
+    )]
     struct Wrapper;
-    #[derive(borsh::BorshSchema)]
+    #[derive(
+        borsh::BorshSchema,
+        Default,
+        borsh::BorshSerialize,
+        borsh::BorshDeserialize,
+        PartialEq,
+        Debug,
+    )]
     struct Filling;
-    #[derive(borsh::BorshSchema)]
+    #[derive(
+        borsh::BorshSchema, borsh::BorshSerialize, borsh::BorshDeserialize, PartialEq, Debug,
+    )]
     enum A {
         Bacon,
         Eggs,
         Salad(Tomatoes, Cucumber, Oil),
         Sausage { wrapper: Wrapper, filling: Filling },
     }
-    assert_eq!("A".to_string(), A::schema_type_name());
+
+    impl Default for A {
+        fn default() -> Self {
+            A::Sausage {
+                wrapper: Default::default(),
+                filling: Default::default(),
+            }
+        }
+    }
+    // First check schema.
+    assert_eq!("A".to_string(), A::declaration());
     let mut defs = Default::default();
-    A::add_rec_type_definitions(&mut defs);
+    A::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "Cucumber" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "ASalad" => r#"{ "kind": "struct", "fields": [ "Tomatoes", "Cucumber", "Oil" ] }"#,
-        "ABacon" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "Oil" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "A" => r#"{ "kind": "enum", "variants": [ ["Bacon", "ABacon"], ["Eggs", "AEggs"], ["Salad", "ASalad"], ["Sausage", "ASausage"] ] }"#,
-        "Wrapper" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "Tomatoes" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "ASausage" => r#"{ "kind": "struct", "fields": [ ["wrapper", "Wrapper"], ["filling", "Filling"] ] }"#,
-        "AEggs" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "Filling" => r#"{ "kind": "struct", "fields": [  ] }"#},
+        "Cucumber" => Definition::Struct {fields: Fields::Empty},
+        "ASalad" => Definition::Struct{ fields: Fields::UnnamedFields(vec!["Tomatoes".to_string(), "Cucumber".to_string(), "Oil".to_string()])},
+        "ABacon" => Definition::Struct {fields: Fields::Empty},
+        "Oil" => Definition::Struct {fields: Fields::Empty},
+        "A" => Definition::Enum{ variants: vec![
+        ("Bacon".to_string(), "ABacon".to_string()),
+        ("Eggs".to_string(), "AEggs".to_string()),
+        ("Salad".to_string(), "ASalad".to_string()),
+        ("Sausage".to_string(), "ASausage".to_string())]},
+        "Wrapper" => Definition::Struct {fields: Fields::Empty},
+        "Tomatoes" => Definition::Struct {fields: Fields::Empty},
+        "ASausage" => Definition::Struct { fields: Fields::NamedFields(vec![
+        ("wrapper".to_string(), "Wrapper".to_string()),
+        ("filling".to_string(), "Filling".to_string())
+        ])},
+        "AEggs" => Definition::Struct {fields: Fields::Empty},
+        "Filling" => Definition::Struct {fields: Fields::Empty}
+        },
         defs
     );
+    // Then check that we serialize and deserialize with schema.
+    let obj = A::default();
+    let data = try_to_vec_with_schema(&obj).unwrap();
+    let obj2: A = try_from_slice_with_schema(&data).unwrap();
+    assert_eq!(obj, obj2);
 }
 
 #[test]
@@ -110,22 +172,37 @@ pub fn complex_enum_generics() {
     }
     assert_eq!(
         "A<Cucumber, Wrapper>".to_string(),
-        <A<Cucumber, Wrapper>>::schema_type_name()
+        <A<Cucumber, Wrapper>>::declaration()
     );
     let mut defs = Default::default();
-    <A<Cucumber, Wrapper>>::add_rec_type_definitions(&mut defs);
+    <A<Cucumber, Wrapper>>::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "Cucumber" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "ASalad<Cucumber, Wrapper>" => r#"{ "kind": "struct", "fields": [ "Tomatoes", "Cucumber", "Oil" ] }"#,
-        "ABacon<Cucumber, Wrapper>" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "Oil" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "A<Cucumber, Wrapper>" => r#"{ "kind": "enum", "variants": [ ["Bacon", "ABacon<Cucumber, Wrapper>"], ["Eggs", "AEggs<Cucumber, Wrapper>"], ["Salad", "ASalad<Cucumber, Wrapper>"], ["Sausage", "ASausage<Cucumber, Wrapper>"] ] }"#,
-        "Wrapper" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "Tomatoes" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "ASausage<Cucumber, Wrapper>" => r#"{ "kind": "struct", "fields": [ ["wrapper", "Wrapper"], ["filling", "Filling"] ] }"#,
-        "AEggs<Cucumber, Wrapper>" => r#"{ "kind": "struct", "fields": [  ] }"#,
-        "Filling" => r#"{ "kind": "struct", "fields": [  ] }"#},
+        "Cucumber" => Definition::Struct {fields: Fields::Empty},
+        "ASalad<Cucumber, Wrapper>" => Definition::Struct{
+            fields: Fields::UnnamedFields(vec!["Tomatoes".to_string(), "Cucumber".to_string(), "Oil".to_string()])
+        },
+        "ABacon<Cucumber, Wrapper>" => Definition::Struct {fields: Fields::Empty},
+        "Oil" => Definition::Struct {fields: Fields::Empty},
+        "A<Cucumber, Wrapper>" => Definition::Enum{
+            variants: vec![
+            ("Bacon".to_string(), "ABacon<Cucumber, Wrapper>".to_string()),
+            ("Eggs".to_string(), "AEggs<Cucumber, Wrapper>".to_string()),
+            ("Salad".to_string(), "ASalad<Cucumber, Wrapper>".to_string()),
+            ("Sausage".to_string(), "ASausage<Cucumber, Wrapper>".to_string())
+            ]
+        },
+        "Wrapper" => Definition::Struct {fields: Fields::Empty},
+        "Tomatoes" => Definition::Struct {fields: Fields::Empty},
+        "ASausage<Cucumber, Wrapper>" => Definition::Struct {
+            fields: Fields::NamedFields(vec![
+            ("wrapper".to_string(), "Wrapper".to_string()),
+            ("filling".to_string(), "Filling".to_string())
+            ])
+        },
+        "AEggs<Cucumber, Wrapper>" => Definition::Struct {fields: Fields::Empty},
+        "Filling" => Definition::Struct {fields: Fields::Empty}
+        },
         defs
     );
 }

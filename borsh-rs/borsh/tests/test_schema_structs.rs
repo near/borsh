@@ -1,4 +1,4 @@
-use borsh::schema::BorshSchema;
+use borsh::schema::*;
 
 macro_rules! map(
     () => { ::std::collections::HashMap::new() };
@@ -6,7 +6,7 @@ macro_rules! map(
         {
             let mut m = ::std::collections::HashMap::new();
             $(
-                m.insert($key.to_string(), $value.to_string());
+                m.insert($key.to_string(), $value);
             )+
             m
         }
@@ -17,12 +17,12 @@ macro_rules! map(
 pub fn unit_struct() {
     #[derive(borsh::BorshSchema)]
     struct A;
-    assert_eq!("A".to_string(), A::schema_type_name());
+    assert_eq!("A".to_string(), A::declaration());
     let mut defs = Default::default();
-    A::add_rec_type_definitions(&mut defs);
+    A::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "A" => r#"{ "kind": "struct", "fields": [  ] }"#
+        "A" => Definition::Struct {fields: Fields::Empty}
         },
         defs
     );
@@ -35,12 +35,15 @@ pub fn simple_struct() {
         _f1: u64,
         _f2: String,
     };
-    assert_eq!("A".to_string(), A::schema_type_name());
+    assert_eq!("A".to_string(), A::declaration());
     let mut defs = Default::default();
-    A::add_rec_type_definitions(&mut defs);
+    A::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "A" => r#"{ "kind": "struct", "fields": [ ["_f1", "u64"], ["_f2", "string"] ] }"#
+        "A" => Definition::Struct{ fields: Fields::NamedFields(vec![
+        ("_f1".to_string(), "u64".to_string()),
+        ("_f2".to_string(), "string".to_string())
+        ])}
         },
         defs
     );
@@ -50,12 +53,12 @@ pub fn simple_struct() {
 pub fn wrapper_struct() {
     #[derive(borsh::BorshSchema)]
     struct A<T>(T);
-    assert_eq!("A<u64>".to_string(), <A<u64>>::schema_type_name());
+    assert_eq!("A<u64>".to_string(), <A<u64>>::declaration());
     let mut defs = Default::default();
-    <A<u64>>::add_rec_type_definitions(&mut defs);
+    <A<u64>>::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "A<u64>" => r#"{ "kind": "struct", "fields": [ "u64" ] }"#
+        "A<u64>" => Definition::Struct {fields: Fields::UnnamedFields(vec!["u64".to_string()])}
         },
         defs
     );
@@ -65,12 +68,14 @@ pub fn wrapper_struct() {
 pub fn tuple_struct() {
     #[derive(borsh::BorshSchema)]
     struct A(u64, String);
-    assert_eq!("A".to_string(), A::schema_type_name());
+    assert_eq!("A".to_string(), A::declaration());
     let mut defs = Default::default();
-    A::add_rec_type_definitions(&mut defs);
+    A::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "A" => r#"{ "kind": "struct", "fields": [ "u64", "string" ] }"#
+        "A" => Definition::Struct {fields: Fields::UnnamedFields(vec![
+         "u64".to_string(), "string".to_string()
+        ])}
         },
         defs
     );
@@ -82,13 +87,15 @@ pub fn tuple_struct_params() {
     struct A<K, V>(K, V);
     assert_eq!(
         "A<u64, string>".to_string(),
-        <A<u64, String>>::schema_type_name()
+        <A<u64, String>>::declaration()
     );
     let mut defs = Default::default();
-    <A<u64, String>>::add_rec_type_definitions(&mut defs);
+    <A<u64, String>>::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "A<u64, string>" => r#"{ "kind": "struct", "fields": [ "u64", "string" ] }"#
+        "A<u64, string>" => Definition::Struct { fields: Fields::UnnamedFields(vec![
+            "u64".to_string(), "string".to_string()
+        ])}
         },
         defs
     );
@@ -103,15 +110,20 @@ pub fn simple_generics() {
     };
     assert_eq!(
         "A<u64, string>".to_string(),
-        <A<u64, String>>::schema_type_name()
+        <A<u64, String>>::declaration()
     );
     let mut defs = Default::default();
-    <A<u64, String>>::add_rec_type_definitions(&mut defs);
+    <A<u64, String>>::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "A<u64, string>" => r#"{ "kind": "struct", "fields": [ ["_f1", "HashMap<u64, string>"], ["_f2", "string"] ] }"#,
-        "HashMap<u64, string>" => r#"{ "kind": "sequence", "params": [ "Tuple<u64, string>" ] }"#,
-        "Tuple<u64, string>" => r#"{ "kind": "tuple", "params": [ "u64", "string" ] }"#
+        "A<u64, string>" => Definition::Struct {
+        fields: Fields::NamedFields(vec![
+        ("_f1".to_string(), "HashMap<u64, string>".to_string()),
+        ("_f2".to_string(), "string".to_string())
+        ])
+        },
+        "HashMap<u64, string>" => Definition::Sequence {elements: "Tuple<u64, string>".to_string()},
+        "Tuple<u64, string>" => Definition::Tuple{elements: vec!["u64".to_string(), "string".to_string()]}
         },
         defs
     );

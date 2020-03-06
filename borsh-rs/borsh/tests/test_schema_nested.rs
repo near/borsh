@@ -1,4 +1,5 @@
-use borsh::schema::BorshSchema;
+#![allow(dead_code)]  // Local structures do not have their fields used.
+use borsh::schema::*;
 
 macro_rules! map(
     () => { ::std::collections::HashMap::new() };
@@ -6,7 +7,7 @@ macro_rules! map(
         {
             let mut m = ::std::collections::HashMap::new();
             $(
-                m.insert($key.to_string(), $value.to_string());
+                m.insert($key.to_string(), $value);
             )+
             m
         }
@@ -41,31 +42,40 @@ pub fn duplicated_instantiations() {
     }
     assert_eq!(
         "A<Cucumber, Wrapper<string>>".to_string(),
-        <A<Cucumber, Wrapper<String>>>::schema_type_name()
+        <A<Cucumber, Wrapper<String>>>::declaration()
     );
     let mut defs = Default::default();
-    <A<Cucumber, Wrapper<String>>>::add_rec_type_definitions(&mut defs);
+    <A<Cucumber, Wrapper<String>>>::add_definitions_recursively(&mut defs);
     assert_eq!(
         map! {
-        "A<Cucumber, Wrapper<string>>" => "{ \"kind\": \"enum\", \"variants\": [ [\"Bacon\", \"ABacon<Cucumber, Wrapper<string>>\"], [\"Eggs\", \"AEggs<Cucumber, Wrapper<string>>\"], [\"Salad\", \"ASalad<Cucumber, Wrapper<string>>\"], [\"Sausage\", \"ASausage<Cucumber, Wrapper<string>>\"] ] }",
-        "A<string, string>" => "{ \"kind\": \"enum\", \"variants\": [ [\"Bacon\", \"ABacon<string, string>\"], [\"Eggs\", \"AEggs<string, string>\"], [\"Salad\", \"ASalad<string, string>\"], [\"Sausage\", \"ASausage<string, string>\"] ] }",
-        "ABacon<Cucumber, Wrapper<string>>" => "{ \"kind\": \"struct\", \"fields\": [  ] }",
-        "ABacon<string, string>" => "{ \"kind\": \"struct\", \"fields\": [  ] }",
-        "AEggs<Cucumber, Wrapper<string>>" => "{ \"kind\": \"struct\", \"fields\": [  ] }",
-        "AEggs<string, string>" => "{ \"kind\": \"struct\", \"fields\": [  ] }",
-        "ASalad<Cucumber, Wrapper<string>>" => "{ \"kind\": \"struct\", \"fields\": [ \"Tomatoes\", \"Cucumber\", \"Oil<u64, string>\" ] }",
-        "ASalad<string, string>" => "{ \"kind\": \"struct\", \"fields\": [ \"Tomatoes\", \"string\", \"Oil<u64, string>\" ] }",
-        "ASausage<Cucumber, Wrapper<string>>" => "{ \"kind\": \"struct\", \"fields\": [ [\"wrapper\", \"Wrapper<string>\"], [\"filling\", \"Filling\"] ] }",
-        "ASausage<string, string>" => "{ \"kind\": \"struct\", \"fields\": [ [\"wrapper\", \"string\"], [\"filling\", \"Filling\"] ] }",
-        "Cucumber" => "{ \"kind\": \"struct\", \"fields\": [  ] }",
-        "Filling" => "{ \"kind\": \"struct\", \"fields\": [  ] }",
-        "HashMap<u64, string>" => "{ \"kind\": \"sequence\", \"params\": [ \"Tuple<u64, string>\" ] }",
-        "Oil<u64, string>" => "{ \"kind\": \"struct\", \"fields\": [ [\"seeds\", \"HashMap<u64, string>\"], [\"liquid\", \"Option<u64>\"] ] }",
-        "Option<string>" => "{ \"kind\": \"enum\", \"variants\": [ [\"None\", \"nil\"], [\"Some\", \"string\"] ] }",
-        "Option<u64>" => "{ \"kind\": \"enum\", \"variants\": [ [\"None\", \"nil\"], [\"Some\", \"u64\"] ] }",
-        "Tomatoes" => "{ \"kind\": \"struct\", \"fields\": [  ] }",
-        "Tuple<u64, string>" => "{ \"kind\": \"tuple\", \"params\": [ \"u64\", \"string\" ] }",
-        "Wrapper<string>" => "{ \"kind\": \"struct\", \"fields\": [ [\"foo\", \"Option<string>\"], [\"bar\", \"A<string, string>\"] ] }"
+        "A<Cucumber, Wrapper<string>>" => Definition::Enum {variants: vec![
+         ("Bacon".to_string(), "ABacon<Cucumber, Wrapper<string>>".to_string()),
+         ("Eggs".to_string(), "AEggs<Cucumber, Wrapper<string>>".to_string()),
+         ("Salad".to_string(), "ASalad<Cucumber, Wrapper<string>>".to_string()),
+         ("Sausage".to_string(), "ASausage<Cucumber, Wrapper<string>>".to_string())
+        ]},
+        "A<string, string>" => Definition::Enum {variants: vec![
+            ("Bacon".to_string(), "ABacon<string, string>".to_string()),
+            ("Eggs".to_string(), "AEggs<string, string>".to_string()),
+            ("Salad".to_string(), "ASalad<string, string>".to_string()),
+            ("Sausage".to_string(), "ASausage<string, string>".to_string())]},
+        "ABacon<Cucumber, Wrapper<string>>" => Definition::Struct {fields: Fields::Empty},
+        "ABacon<string, string>" => Definition::Struct {fields: Fields::Empty},
+        "AEggs<Cucumber, Wrapper<string>>" => Definition::Struct {fields: Fields::Empty},
+        "AEggs<string, string>" => Definition::Struct {fields: Fields::Empty},
+        "ASalad<Cucumber, Wrapper<string>>" => Definition::Struct {fields: Fields::UnnamedFields(vec!["Tomatoes".to_string(), "Cucumber".to_string(), "Oil<u64, string>".to_string()])},
+        "ASalad<string, string>" => Definition::Struct { fields: Fields::UnnamedFields( vec!["Tomatoes".to_string(), "string".to_string(), "Oil<u64, string>".to_string() ])},
+        "ASausage<Cucumber, Wrapper<string>>" => Definition::Struct {fields: Fields::NamedFields(vec![("wrapper".to_string(), "Wrapper<string>".to_string()), ("filling".to_string(), "Filling".to_string())])},
+        "ASausage<string, string>" => Definition::Struct{ fields: Fields::NamedFields(vec![("wrapper".to_string(), "string".to_string()), ("filling".to_string(), "Filling".to_string())])},
+        "Cucumber" => Definition::Struct {fields: Fields::Empty},
+        "Filling" => Definition::Struct {fields: Fields::Empty},
+        "HashMap<u64, string>" => Definition::Sequence { elements: "Tuple<u64, string>".to_string()},
+        "Oil<u64, string>" => Definition::Struct { fields: Fields::NamedFields(vec![("seeds".to_string(), "HashMap<u64, string>".to_string()), ("liquid".to_string(), "Option<u64>".to_string())])},
+        "Option<string>" => Definition::Enum {variants: vec![("None".to_string(), "nil".to_string()), ("Some".to_string(), "string".to_string())]},
+        "Option<u64>" => Definition::Enum { variants: vec![("None".to_string(), "nil".to_string()), ("Some".to_string(), "u64".to_string())]},
+        "Tomatoes" => Definition::Struct {fields: Fields::Empty},
+        "Tuple<u64, string>" => Definition::Tuple {elements: vec!["u64".to_string(), "string".to_string()]},
+        "Wrapper<string>" => Definition::Struct{ fields: Fields::NamedFields(vec![("foo".to_string(), "Option<string>".to_string()), ("bar".to_string(), "A<string, string>".to_string())])}
         },
         defs
     );
