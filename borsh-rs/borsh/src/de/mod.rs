@@ -313,12 +313,15 @@ impl BorshDeserialize for Box<[u8]> {
 macro_rules! impl_arrays {
     ($($len:expr)+) => {
     $(
-      impl BorshDeserialize for [u8; $len]
+      impl<T> BorshDeserialize for [T; $len]
+      where T: BorshDeserialize + Default + Copy
       {
         #[inline]
         fn deserialize<R: Read>(reader: &mut R) -> Result<Self, Error> {
-            let mut result = [0u8; $len];
-            reader.read_exact(&mut result)?;
+            let mut result = [T::default(); $len];
+            for i in 0..$len {
+                result[i] = T::deserialize(reader)?;
+            }
             Ok(result)
         }
       }
