@@ -25,10 +25,10 @@ pub trait BorshDeserialize: Sized {
         Ok(result)
     }
 
-    /// Returns the size in bytes of Self, if the size is fixed without dynamic memory inside,
-    /// e.g. u32 -> Some(4)
-    fn get_fixed_size() -> Option<usize> {
-        None
+    /// Whether to transmute u8 memory directly to the Self
+    #[inline]
+    fn use_unsafe_transmute() -> bool {
+        false
     }
 }
 
@@ -50,20 +50,8 @@ impl BorshDeserialize for u8 {
     }
 
     #[inline]
-    fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
-        if v.len() == size_of::<u8>() {
-            Ok(u8::from_le_bytes(v.try_into().unwrap()))
-        } else {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-            ))
-        }
-    }
-
-    #[inline]
-    fn get_fixed_size() -> Option<usize> {
-        Some(size_of::<u8>())
+    fn use_unsafe_transmute() -> bool {
+        true
     }
 }
 
@@ -84,23 +72,6 @@ macro_rules! impl_for_integer {
                 };
                 reader.consume(size_of::<$type>());
                 Ok(res)
-            }
-
-            #[inline]
-            fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
-                if v.len() == size_of::<$type>() {
-                    Ok($type::from_le_bytes(v.try_into().unwrap()))
-                } else {
-                    Err(std::io::Error::new(
-                        std::io::ErrorKind::InvalidInput,
-                        ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-                    ))
-                }
-            }
-
-            #[inline]
-            fn get_fixed_size() -> Option<usize> {
-                Some(size_of::<$type>())
             }
         }
     };
@@ -142,30 +113,6 @@ macro_rules! impl_for_float {
                     ));
                 }
                 Ok(res)
-            }
-
-            #[inline]
-            fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
-                if v.len() == size_of::<$int_type>() {
-                    let res = $type::from_bits($int_type::from_le_bytes(v.try_into().unwrap()));
-                    if res.is_nan() {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidInput,
-                            "For portability reasons we do not allow to deserialize NaNs.",
-                        ));
-                    }
-                    Ok(res)
-                } else {
-                    Err(std::io::Error::new(
-                        std::io::ErrorKind::InvalidInput,
-                        ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-                    ))
-                }
-            }
-
-            #[inline]
-            fn get_fixed_size() -> Option<usize> {
-                Some(size_of::<$int_type>())
             }
         }
     };
@@ -285,9 +232,41 @@ where
     fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
         let len = u32::deserialize(reader)?;
         if len == 0 {
-            return Ok(Vec::new());
-        }
-        if size_of::<T>() == 0 {
+            Ok(Vec::new())
+        } else if T::use_unsafe_transmute() {
+            let mut result = Vec::with_capacity(hint::cautious::<u8>(len));
+            let mut len = len as usize;
+            while len > 0 {
+                let read_len = {
+                    let buf = reader.fill_buf()?;
+                    if buf.is_empty() {
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::InvalidInput,
+                            ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+                        ));
+                    }
+                    if buf.len() > len {
+                        result.extend_from_slice(&buf[..len]);
+                        len
+                    } else {
+                        result.extend_from_slice(&buf);
+                        buf.len()
+                    }
+                };
+                len -= read_len;
+                reader.consume(read_len)
+            }
+            let result = unsafe {
+                // Ensure the original vector is not dropped.
+                let mut v_clone = std::mem::ManuallyDrop::new(result);
+                Vec::from_raw_parts(
+                    v_clone.as_mut_ptr() as *mut T,
+                    v_clone.len(),
+                    v_clone.capacity(),
+                )
+            };
+            Ok(result)
+        } else if size_of::<T>() == 0 {
             let mut result = Vec::new();
             result.push(T::deserialize(reader)?);
 
