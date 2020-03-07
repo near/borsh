@@ -25,7 +25,13 @@ pub trait BorshDeserialize: Sized {
         Ok(result)
     }
 
-    /// Whether to transmute u8 memory directly to the Self
+    /// Returns the size in bytes of Self, if the size is fixed without dynamic memory inside,
+    /// e.g. u32 -> Some(4)
+    fn get_fixed_size() -> Option<usize> {
+        None
+    }
+
+    /// Whether it's possible to transmute u8 memory directly into Self
     #[inline]
     fn use_unsafe_transmute() -> bool {
         false
@@ -47,6 +53,23 @@ impl BorshDeserialize for u8 {
         };
         reader.consume(size_of::<u8>());
         Ok(res)
+    }
+
+    #[inline]
+    fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
+        if v.len() == size_of::<u8>() {
+            Ok(v[0])
+        } else {
+            Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+            ))
+        }
+    }
+
+    #[inline]
+    fn get_fixed_size() -> Option<usize> {
+        Some(size_of::<u8>())
     }
 
     #[inline]
@@ -72,6 +95,23 @@ macro_rules! impl_for_integer {
                 };
                 reader.consume(size_of::<$type>());
                 Ok(res)
+            }
+
+            #[inline]
+            fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
+                if v.len() == size_of::<$type>() {
+                    Ok($type::from_le_bytes(v.try_into().unwrap()))
+                } else {
+                    Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+                    ))
+                }
+            }
+
+            #[inline]
+            fn get_fixed_size() -> Option<usize> {
+                Some(size_of::<$type>())
             }
         }
     };
@@ -113,6 +153,30 @@ macro_rules! impl_for_float {
                     ));
                 }
                 Ok(res)
+            }
+
+            #[inline]
+            fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
+                if v.len() == size_of::<$int_type>() {
+                    let res = $type::from_bits($int_type::from_le_bytes(v.try_into().unwrap()));
+                    if res.is_nan() {
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::InvalidInput,
+                            "For portability reasons we do not allow to deserialize NaNs.",
+                        ));
+                    }
+                    Ok(res)
+                } else {
+                    Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+                    ))
+                }
+            }
+
+            #[inline]
+            fn get_fixed_size() -> Option<usize> {
+                Some(size_of::<$int_type>())
             }
         }
     };
@@ -265,6 +329,29 @@ where
                     v_clone.capacity(),
                 )
             };
+            Ok(result)
+        } else if let Some(fixed_len) = T::get_fixed_size() {
+            let mut result = Vec::with_capacity(hint::cautious::<T>(len));
+            let len = len as usize;
+            while result.len() < len {
+                let read_len = {
+                    let buf = reader.fill_buf()?;
+                    let buf_len = buf.len();
+                    if buf_len < fixed_len {
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::InvalidInput,
+                            ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+                        ));
+                    }
+                    let mut pos = 0;
+                    while result.len() < len && pos + fixed_len <= buf_len {
+                        result.push(T::try_from_slice(&buf[pos..pos + fixed_len])?);
+                        pos += fixed_len;
+                    }
+                    pos
+                };
+                reader.consume(read_len)
+            }
             Ok(result)
         } else if size_of::<T>() == 0 {
             let mut result = Vec::new();
