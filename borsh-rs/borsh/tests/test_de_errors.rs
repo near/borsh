@@ -12,22 +12,33 @@ struct B {
     y: u32,
 }
 
+const ERROR_UNEXPECTED_LENGTH_OF_INPUT: &str = "Unexpected length of input";
+
 #[test]
 fn test_missing_bytes() {
     let bytes = vec![1, 0];
-    assert_eq!(B::try_from_slice(&bytes).unwrap_err().to_string(), "failed to fill whole buffer");
+    assert_eq!(
+        B::try_from_slice(&bytes).unwrap_err().to_string(),
+        ERROR_UNEXPECTED_LENGTH_OF_INPUT
+    );
 }
 
 #[test]
 fn test_invalid_enum_variant() {
     let bytes = vec![123];
-    assert_eq!(A::try_from_slice(&bytes).unwrap_err().to_string(), "Unexpected variant index: 123");
+    assert_eq!(
+        A::try_from_slice(&bytes).unwrap_err().to_string(),
+        "Unexpected variant index: 123"
+    );
 }
 
 #[test]
 fn test_extra_bytes() {
     let bytes = vec![1, 0, 0, 0, 32, 32];
-    assert_eq!(<Vec<u8>>::try_from_slice(&bytes).unwrap_err().to_string(), "Not all bytes read");
+    assert_eq!(
+        <Vec<u8>>::try_from_slice(&bytes).unwrap_err().to_string(),
+        "Not all bytes read"
+    );
 }
 
 #[test]
@@ -46,8 +57,13 @@ fn test_invalid_option() {
     for i in 2u8..=255 {
         let bytes = [i, 32];
         assert_eq!(
-            <Option<u8>>::try_from_slice(&bytes).unwrap_err().to_string(),
-            format!("Invalid Option representation: {}. The first byte must be 0 or 1", i)
+            <Option<u8>>::try_from_slice(&bytes)
+                .unwrap_err()
+                .to_string(),
+            format!(
+                "Invalid Option representation: {}. The first byte must be 0 or 1",
+                i
+            )
         );
     }
 }
@@ -57,8 +73,13 @@ fn test_invalid_result() {
     for i in 2u8..=255 {
         let bytes = [i, 0];
         assert_eq!(
-            <Result<u64, String>>::try_from_slice(&bytes).unwrap_err().to_string(),
-            format!("Invalid Result representation: {}. The first byte must be 0 or 1", i)
+            <Result<u64, String>>::try_from_slice(&bytes)
+                .unwrap_err()
+                .to_string(),
+            format!(
+                "Invalid Result representation: {}. The first byte must be 0 or 1",
+                i
+            )
         );
     }
 }
@@ -68,7 +89,7 @@ fn test_invalid_length() {
     let bytes = vec![255u8; 4];
     assert_eq!(
         <Vec<u64>>::try_from_slice(&bytes).unwrap_err().to_string(),
-        "failed to fill whole buffer"
+        ERROR_UNEXPECTED_LENGTH_OF_INPUT
     );
 }
 
@@ -77,7 +98,7 @@ fn test_invalid_length_string() {
     let bytes = vec![255u8; 4];
     assert_eq!(
         String::try_from_slice(&bytes).unwrap_err().to_string(),
-        "failed to fill whole buffer"
+        ERROR_UNEXPECTED_LENGTH_OF_INPUT
     );
 }
 
@@ -100,34 +121,15 @@ fn test_nan_float() {
 }
 
 #[test]
-fn test_evil_bytes_vec() {
-    // Should fail to allocate given length
-    // test takes a really long time if read() is used instead of read_exact()
-    let bytes = vec![255, 255, 255, 255];
-    assert_eq!(
-        <Vec<[u8; 32]>>::try_from_slice(&bytes).unwrap_err().to_string(),
-        "failed to fill whole buffer"
-    );
-}
-
-#[test]
 fn test_evil_bytes_vec_with_extra() {
     // Should fail to allocate given length
     // test takes a really long time if read() is used instead of read_exact()
     let bytes = vec![255, 255, 255, 255, 32, 32];
     assert_eq!(
-        <Vec<[u8; 32]>>::try_from_slice(&bytes).unwrap_err().to_string(),
-        "failed to fill whole buffer"
-    );
-}
-
-#[test]
-fn test_evil_bytes_string() {
-    // Should fail to allocate given length
-    let bytes = vec![255, 255, 255, 255];
-    assert_eq!(
-        <String>::try_from_slice(&bytes).unwrap_err().to_string(),
-        "failed to fill whole buffer"
+        <Vec<[u8; 32]>>::try_from_slice(&bytes)
+            .unwrap_err()
+            .to_string(),
+        ERROR_UNEXPECTED_LENGTH_OF_INPUT
     );
 }
 
@@ -137,6 +139,6 @@ fn test_evil_bytes_string_extra() {
     let bytes = vec![255, 255, 255, 255, 32, 32];
     assert_eq!(
         <String>::try_from_slice(&bytes).unwrap_err().to_string(),
-        "failed to fill whole buffer"
+        ERROR_UNEXPECTED_LENGTH_OF_INPUT
     );
 }

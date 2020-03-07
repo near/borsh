@@ -6,6 +6,7 @@ struct A<T, F, G> {
     y: String,
     b: B<F, G>,
     c: Result<T, G>,
+    d: [u64; 5],
 }
 
 #[derive(BorshSerialize, BorshDeserialize, PartialEq, Debug)]
@@ -21,6 +22,7 @@ fn test_generic_struct() {
         y: "world".to_string(),
         b: B::X { f: vec![1, 2] },
         c: Err("error".to_string()),
+        d: [0, 1, 2, 3, 4]
     };
     let data = a.try_to_vec().unwrap();
     let actual_a = A::<String, u64, String>::try_from_slice(&data).unwrap();
