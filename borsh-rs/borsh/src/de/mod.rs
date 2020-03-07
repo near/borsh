@@ -255,34 +255,7 @@ where
 impl BorshDeserialize for String {
     #[inline]
     fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let len = u32::deserialize(reader)?;
-        if len == 0 {
-            return Ok(String::new());
-        }
-        // TODO(16): return capacity allocation when we have the size of the buffer left from the reader.
-        let mut result = Vec::with_capacity(hint::cautious::<u8>(len));
-        let mut len = len as usize;
-        while len > 0 {
-            let read_len = {
-                let buf = reader.fill_buf()?;
-                if buf.is_empty() {
-                    return Err(std::io::Error::new(
-                        std::io::ErrorKind::InvalidInput,
-                        ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-                    ));
-                }
-                if buf.len() > len {
-                    result.extend_from_slice(&buf[..len]);
-                    len
-                } else {
-                    result.extend_from_slice(&buf);
-                    buf.len()
-                }
-            };
-            len -= read_len;
-            reader.consume(read_len)
-        }
-        String::from_utf8(result)
+        String::from_utf8(Vec::<u8>::deserialize(reader)?)
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()))
     }
 }
