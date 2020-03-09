@@ -79,7 +79,7 @@ impl BorshDeserialize for u8 {
 }
 
 macro_rules! impl_for_integer {
-    ($type: ident) => {
+    ($type: ident, $use_unsafe_transmute: expr) => {
         impl BorshDeserialize for $type {
             #[inline]
             fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
@@ -113,19 +113,24 @@ macro_rules! impl_for_integer {
             fn get_fixed_size() -> Option<usize> {
                 Some(size_of::<$type>())
             }
+
+            #[inline]
+            fn use_unsafe_transmute() -> bool {
+                $use_unsafe_transmute
+            }
         }
     };
 }
 
-impl_for_integer!(i8);
-impl_for_integer!(i16);
-impl_for_integer!(i32);
-impl_for_integer!(i64);
-impl_for_integer!(i128);
-impl_for_integer!(u16);
-impl_for_integer!(u32);
-impl_for_integer!(u64);
-impl_for_integer!(u128);
+impl_for_integer!(i8, true);
+impl_for_integer!(i16, false);
+impl_for_integer!(i32, false);
+impl_for_integer!(i64, false);
+impl_for_integer!(i128, false);
+impl_for_integer!(u16, false);
+impl_for_integer!(u32, false);
+impl_for_integer!(u64, false);
+impl_for_integer!(u128, false);
 
 // Note NaNs have a portability issue. Specifically, signalling NaNs on MIPS are quiet NaNs on x86,
 // and vice-versa. We disallow NaNs to avoid this issue.
