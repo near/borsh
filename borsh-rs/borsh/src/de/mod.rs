@@ -76,7 +76,7 @@ impl BorshDeserialize for u8 {
 
     #[inline]
     fn use_unsafe_transmute() -> bool {
-        // It's safe to cast `Vec<u8>` to `Vec<T>` when T is u8
+        // It's safe to cast `Vec<u8>` to `Vec<Self>` when Self is u8
         true
     }
 }
@@ -125,8 +125,8 @@ macro_rules! impl_for_integer {
     };
 }
 
-// It's safe to cast `Vec<u8>` to `Vec<T>` when T is i8, because there is only one byte, so order
-// of bytes doesn't matter
+// It's safe to cast `Vec<u8>` to `Vec<Self>` when Self is i8, because there is only one byte, so
+// the order of bytes doesn't matter.
 impl_for_integer!(i8, true);
 impl_for_integer!(i16, false);
 impl_for_integer!(i32, false);

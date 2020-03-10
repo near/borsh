@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Error, Write};
+use std::mem::size_of;
 
 const DEFAULT_SERIALIZER_CAPACITY: usize = 1024;
 
@@ -13,6 +14,13 @@ pub trait BorshSerialize {
         self.serialize(&mut result)?;
         Ok(result)
     }
+
+    /// Whether it's possible to transmute `Vec<Self>` directly into `Vec<u8>`.
+    /// If it's `true`, then `Vec<Self>` implementation will use unsafe behavior to transmute
+    /// `Vec<Self>` to `Vec<u8>`. Required `size_of::<Self>() == size_of::<u8>()`.
+    fn use_unsafe_transmute() -> bool {
+        false
+    }
 }
 
 impl BorshSerialize for u8 {
@@ -20,29 +28,39 @@ impl BorshSerialize for u8 {
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write_all(std::slice::from_ref(self))
     }
+
+    fn use_unsafe_transmute() -> bool {
+        // It's safe to cast `Vec<Self>` to `Vec<u8>` when Self is u8
+        true
+    }
 }
 
 macro_rules! impl_for_integer {
-    ($type: ident) => {
+    ($type: ident, $use_unsafe_transmute: expr) => {
         impl BorshSerialize for $type {
             #[inline]
             fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
                 writer.write_all(&self.to_le_bytes())
             }
+
+            fn use_unsafe_transmute() -> bool {
+                $use_unsafe_transmute
+            }
         }
     };
 }
 
-impl_for_integer!(i8);
-impl_for_integer!(i16);
-impl_for_integer!(i32);
-impl_for_integer!(i64);
-impl_for_integer!(i128);
-impl_for_integer!(u16);
-impl_for_integer!(u32);
-impl_for_integer!(u64);
-impl_for_integer!(u128);
-
+// It's safe to cast `Vec<Self>` to `Vec<u8>` when Self is i8, because there is only one byte, so
+// the order of bytes doesn't matter.
+impl_for_integer!(i8, true);
+impl_for_integer!(i16, false);
+impl_for_integer!(i32, false);
+impl_for_integer!(i64, false);
+impl_for_integer!(i128, false);
+impl_for_integer!(u16, false);
+impl_for_integer!(u32, false);
+impl_for_integer!(u64, false);
+impl_for_integer!(u128, false);
 
 // Note NaNs have a portability issue. Specifically, signalling NaNs on MIPS are quiet NaNs on x86,
 // and vice-versa. We disallow NaNs to avoid this issue.
@@ -90,7 +108,7 @@ where
 impl<T, E> BorshSerialize for Result<T, E>
 where
     T: BorshSerialize,
-    E: BorshSerialize
+    E: BorshSerialize,
 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
@@ -124,8 +142,19 @@ where
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write_all(&(self.len() as u32).to_le_bytes())?;
-        for item in self {
-            item.serialize(writer)?;
+        if T::use_unsafe_transmute() && size_of::<T>() == size_of::<u8>() {
+            // The code below uses unsafe memory representation from `&[T]` to `&[u8]`.
+            // The size of the memory should match because `size_of::<T>() == size_of::<u8>()`.
+            //
+            // Currently, it's used only for `u8` and `i8` types. But because `Vec<u8>` is the most
+            // common use-case for serialization and deserialization, it's worth it to
+            // handle it as a special case.
+            let buf = unsafe { std::slice::from_raw_parts(self.as_ptr() as *const u8, self.len()) };
+            writer.write_all(buf)?;
+        } else {
+            for item in self {
+                item.serialize(writer)?;
+            }
         }
         Ok(())
     }
@@ -295,4 +324,3 @@ impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T
 impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17);
 impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17 18 T18);
 impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17 18 T18 19 T19);
-
