@@ -18,6 +18,8 @@ pub trait BorshSerialize {
     /// Whether Self is u8.
     /// NOTE: `Vec<u8>` is the most common use-case for serialization and deserialization, it's
     /// worth handling it as a special case to improve performance.
+    /// It's a workaround for specific `Vec<u8>` implementation versus generic `Vec<T>`
+    /// implementation. See https://github.com/rust-lang/rfcs/pull/1210 for details.
     #[inline]
     fn is_u8() -> bool {
         false
