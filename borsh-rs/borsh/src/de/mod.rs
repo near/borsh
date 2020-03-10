@@ -31,7 +31,9 @@ pub trait BorshDeserialize: Sized {
         None
     }
 
-    /// Whether it's possible to transmute u8 memory directly into Self
+    /// Whether it's possible to transmute `Vec<u8>` directly into `Vec<Self>`.
+    /// If it's `true`, then `Vec<Self>` implementation will use unsafe behavior to transmute
+    /// `Vec<u8>` to `Vec<Self>`. Required `size_of::<Self>() == size_of::<u8>()`.
     #[inline]
     fn use_unsafe_transmute() -> bool {
         false
@@ -74,6 +76,7 @@ impl BorshDeserialize for u8 {
 
     #[inline]
     fn use_unsafe_transmute() -> bool {
+        // It's safe to cast `Vec<u8>` to `Vec<T>` when T is u8
         true
     }
 }
@@ -122,6 +125,8 @@ macro_rules! impl_for_integer {
     };
 }
 
+// It's safe to cast `Vec<u8>` to `Vec<T>` when T is i8, because there is only one byte, so order
+// of bytes doesn't matter
 impl_for_integer!(i8, true);
 impl_for_integer!(i16, false);
 impl_for_integer!(i32, false);
@@ -275,7 +280,7 @@ where
         let len = u32::deserialize(reader)?;
         if len == 0 {
             Ok(Vec::new())
-        } else if T::use_unsafe_transmute() {
+        } else if T::use_unsafe_transmute() && size_of::<T>() == size_of::<u8>() {
             let mut result = Vec::with_capacity(hint::cautious::<u8>(len));
             let mut len = len as usize;
             while len > 0 {
@@ -298,6 +303,16 @@ where
                 len -= read_len;
                 reader.consume(read_len)
             }
+            // See comment from https://doc.rust-lang.org/std/mem/fn.transmute.html
+            // The no-copy, unsafe way, still using transmute, but not UB.
+            // This is equivalent to the original, but safer, and reuses the
+            // same `Vec` internals. Therefore, the new inner type must have the
+            // exact same size, and the same alignment, as the old type.
+            //
+            // We assume the inner of bits representation of `T` is the same a `u8`.
+            // Currently, it's only true for `u8` and `i8` types. But because `Vec<u8>` is the most
+            // common use-case for serialization and deserialization, it's worth it to
+            // handle it as a special case.
             let result = unsafe {
                 // Ensure the original vector is not dropped.
                 let mut v_clone = std::mem::ManuallyDrop::new(result);
