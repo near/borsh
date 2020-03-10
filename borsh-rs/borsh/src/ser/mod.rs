@@ -15,10 +15,11 @@ pub trait BorshSerialize {
         Ok(result)
     }
 
-    /// Whether it's possible to transmute `Vec<Self>` directly into `Vec<u8>`.
-    /// If it's `true`, then `Vec<Self>` implementation will use unsafe behavior to transmute
-    /// `Vec<Self>` to `Vec<u8>`. Required `size_of::<Self>() == size_of::<u8>()`.
-    fn use_unsafe_transmute() -> bool {
+    /// Whether Self is u8.
+    /// NOTE: `Vec<u8>` is the most common use-case for serialization and deserialization, it's
+    /// worth handling it as a special case to improve performance.
+    #[inline]
+    fn is_u8() -> bool {
         false
     }
 }
@@ -29,38 +30,32 @@ impl BorshSerialize for u8 {
         writer.write_all(std::slice::from_ref(self))
     }
 
-    fn use_unsafe_transmute() -> bool {
-        // It's safe to cast `Vec<Self>` to `Vec<u8>` when Self is u8
+    #[inline]
+    fn is_u8() -> bool {
         true
     }
 }
 
 macro_rules! impl_for_integer {
-    ($type: ident, $use_unsafe_transmute: expr) => {
+    ($type: ident) => {
         impl BorshSerialize for $type {
             #[inline]
             fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
                 writer.write_all(&self.to_le_bytes())
             }
-
-            fn use_unsafe_transmute() -> bool {
-                $use_unsafe_transmute
-            }
         }
     };
 }
 
-// It's safe to cast `Vec<Self>` to `Vec<u8>` when Self is i8, because there is only one byte, so
-// the order of bytes doesn't matter.
-impl_for_integer!(i8, true);
-impl_for_integer!(i16, false);
-impl_for_integer!(i32, false);
-impl_for_integer!(i64, false);
-impl_for_integer!(i128, false);
-impl_for_integer!(u16, false);
-impl_for_integer!(u32, false);
-impl_for_integer!(u64, false);
-impl_for_integer!(u128, false);
+impl_for_integer!(i8);
+impl_for_integer!(i16);
+impl_for_integer!(i32);
+impl_for_integer!(i64);
+impl_for_integer!(i128);
+impl_for_integer!(u16);
+impl_for_integer!(u32);
+impl_for_integer!(u64);
+impl_for_integer!(u128);
 
 // Note NaNs have a portability issue. Specifically, signalling NaNs on MIPS are quiet NaNs on x86,
 // and vice-versa. We disallow NaNs to avoid this issue.
@@ -142,13 +137,11 @@ where
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write_all(&(self.len() as u32).to_le_bytes())?;
-        if T::use_unsafe_transmute() && size_of::<T>() == size_of::<u8>() {
+        if T::is_u8() && size_of::<T>() == size_of::<u8>() {
             // The code below uses unsafe memory representation from `&[T]` to `&[u8]`.
             // The size of the memory should match because `size_of::<T>() == size_of::<u8>()`.
             //
-            // Currently, it's used only for `u8` and `i8` types. But because `Vec<u8>` is the most
-            // common use-case for serialization and deserialization, it's worth it to
-            // handle it as a special case.
+            // `T::is_u8()` is a workaround for not being able to implement `Vec<u8>` separately.
             let buf = unsafe { std::slice::from_raw_parts(self.as_ptr() as *const u8, self.len()) };
             writer.write_all(buf)?;
         } else {
