@@ -57,7 +57,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
         });
     }
     let variant_idx = quote! {
-        let variant_idx = u8::deserialize(buf)?;
+        let variant_idx: u8 = borsh::BorshDeserialize::deserialize(buf)?;
     };
     if let Some(method_ident) = init_method {
         Ok(quote! {
