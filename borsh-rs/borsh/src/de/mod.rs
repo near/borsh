@@ -1,6 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryInto;
-use std::io::{BufRead, Cursor, Error};
+use std::io::Error;
 use std::mem::{forget, size_of};
 
 mod hint;
@@ -10,25 +10,21 @@ const ERROR_UNEXPECTED_LENGTH_OF_INPUT: &str = "Unexpected length of input";
 
 /// A data-structure that can be de-serialized from binary format by NBOR.
 pub trait BorshDeserialize: Sized {
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error>;
+    /// Deserializes this instance from a given slice of bytes.
+    /// Updates the buffer to point at the remaining bytes.
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error>;
 
     /// Deserialize this instance from a slice of bytes.
     fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
-        let mut c = Cursor::new(v);
-        let result = Self::deserialize(&mut c)?;
-        if c.position() != v.len() as u64 {
+        let mut v_mut = v;
+        let result = Self::deserialize(&mut v_mut)?;
+        if !v_mut.is_empty() {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 ERROR_NOT_ALL_BYTES_READ,
             ));
         }
         Ok(result)
-    }
-
-    /// Returns the size in bytes of Self, if the size is fixed without dynamic memory inside,
-    /// e.g. u32 -> Some(4)
-    fn get_fixed_size() -> Option<usize> {
-        None
     }
 
     /// Whether Self is u8.
@@ -44,36 +40,16 @@ pub trait BorshDeserialize: Sized {
 
 impl BorshDeserialize for u8 {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let res = {
-            let buf = reader.fill_buf()?;
-            if buf.is_empty() {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidInput,
-                    ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-                ));
-            }
-            buf[0]
-        };
-        reader.consume(size_of::<u8>());
-        Ok(res)
-    }
-
-    #[inline]
-    fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
-        if v.len() == size_of::<u8>() {
-            Ok(v[0])
-        } else {
-            Err(std::io::Error::new(
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        if buf.is_empty() {
+            return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-            ))
+            ));
         }
-    }
-
-    #[inline]
-    fn get_fixed_size() -> Option<usize> {
-        Some(size_of::<u8>())
+        let res = buf[0];
+        *buf = &buf[1..];
+        Ok(res)
     }
 
     #[inline]
@@ -86,36 +62,16 @@ macro_rules! impl_for_integer {
     ($type: ident) => {
         impl BorshDeserialize for $type {
             #[inline]
-            fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-                let res = {
-                    let buf = reader.fill_buf()?;
-                    if buf.len() < size_of::<$type>() {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidInput,
-                            ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-                        ));
-                    }
-                    $type::from_le_bytes(buf[..size_of::<$type>()].try_into().unwrap())
-                };
-                reader.consume(size_of::<$type>());
-                Ok(res)
-            }
-
-            #[inline]
-            fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
-                if v.len() == size_of::<$type>() {
-                    Ok($type::from_le_bytes(v.try_into().unwrap()))
-                } else {
-                    Err(std::io::Error::new(
+            fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+                if buf.len() < size_of::<$type>() {
+                    return Err(std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
                         ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-                    ))
+                    ));
                 }
-            }
-
-            #[inline]
-            fn get_fixed_size() -> Option<usize> {
-                Some(size_of::<$type>())
+                let res = $type::from_le_bytes(buf[..size_of::<$type>()].try_into().unwrap());
+                *buf = &buf[size_of::<$type>()..];
+                Ok(res)
             }
         }
     };
@@ -136,20 +92,18 @@ impl_for_integer!(u128);
 macro_rules! impl_for_float {
     ($type: ident, $int_type: ident) => {
         impl BorshDeserialize for $type {
-            fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-                let res = {
-                    let buf = reader.fill_buf()?;
-                    if buf.len() < size_of::<$int_type>() {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidInput,
-                            ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-                        ));
-                    }
-                    $type::from_bits($int_type::from_le_bytes(
-                        buf[..size_of::<$int_type>()].try_into().unwrap(),
-                    ))
-                };
-                reader.consume(size_of::<$int_type>());
+            #[inline]
+            fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+                if buf.len() < size_of::<$type>() {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::InvalidInput,
+                        ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+                    ));
+                }
+                let res = $type::from_bits($int_type::from_le_bytes(
+                    buf[..size_of::<$int_type>()].try_into().unwrap(),
+                ));
+                *buf = &buf[size_of::<$int_type>()..];
                 if res.is_nan() {
                     return Err(std::io::Error::new(
                         std::io::ErrorKind::InvalidInput,
@@ -157,30 +111,6 @@ macro_rules! impl_for_float {
                     ));
                 }
                 Ok(res)
-            }
-
-            #[inline]
-            fn try_from_slice(v: &[u8]) -> Result<Self, Error> {
-                if v.len() == size_of::<$int_type>() {
-                    let res = $type::from_bits($int_type::from_le_bytes(v.try_into().unwrap()));
-                    if res.is_nan() {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidInput,
-                            "For portability reasons we do not allow to deserialize NaNs.",
-                        ));
-                    }
-                    Ok(res)
-                } else {
-                    Err(std::io::Error::new(
-                        std::io::ErrorKind::InvalidInput,
-                        ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-                    ))
-                }
-            }
-
-            #[inline]
-            fn get_fixed_size() -> Option<usize> {
-                Some(size_of::<$int_type>())
             }
         }
     };
@@ -191,17 +121,23 @@ impl_for_float!(f64, u64);
 
 impl BorshDeserialize for bool {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let mut buf = [0u8];
-        reader.read_exact(&mut buf)?;
-        if buf[0] == 0 {
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        if buf.is_empty() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+            ));
+        }
+        let b = buf[0];
+        *buf = &buf[1..];
+        if b == 0 {
             Ok(false)
-        } else if buf[0] == 1 {
+        } else if b == 1 {
             Ok(true)
         } else {
             Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
-                format!("Invalid bool representation: {}", buf[0]),
+                format!("Invalid bool representation: {}", b),
             ))
         }
     }
@@ -212,19 +148,25 @@ where
     T: BorshDeserialize,
 {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let mut flag = [0u8];
-        reader.read_exact(&mut flag)?;
-        if flag[0] == 0 {
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        if buf.is_empty() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+            ));
+        }
+        let flag = buf[0];
+        *buf = &buf[1..];
+        if flag == 0 {
             Ok(None)
-        } else if flag[0] == 1 {
-            Ok(Some(T::deserialize(reader)?))
+        } else if flag == 1 {
+            Ok(Some(T::deserialize(buf)?))
         } else {
             Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!(
                     "Invalid Option representation: {}. The first byte must be 0 or 1",
-                    flag[0]
+                    flag
                 ),
             ))
         }
@@ -237,19 +179,25 @@ where
     E: BorshDeserialize,
 {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let mut flag = [0u8];
-        reader.read_exact(&mut flag)?;
-        if flag[0] == 0 {
-            Ok(Err(E::deserialize(reader)?))
-        } else if flag[0] == 1 {
-            Ok(Ok(T::deserialize(reader)?))
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        if buf.is_empty() {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+            ));
+        }
+        let flag = buf[0];
+        *buf = &buf[1..];
+        if flag == 0 {
+            Ok(Err(E::deserialize(buf)?))
+        } else if flag == 1 {
+            Ok(Ok(T::deserialize(buf)?))
         } else {
             Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!(
                     "Invalid Result representation: {}. The first byte must be 0 or 1",
-                    flag[0]
+                    flag
                 ),
             ))
         }
@@ -258,8 +206,8 @@ where
 
 impl BorshDeserialize for String {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        String::from_utf8(Vec::<u8>::deserialize(reader)?)
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        String::from_utf8(Vec::<u8>::deserialize(buf)?)
             .map_err(|err| std::io::Error::new(std::io::ErrorKind::InvalidData, err.to_string()))
     }
 }
@@ -270,33 +218,20 @@ where
     T: BorshDeserialize,
 {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let len = u32::deserialize(reader)?;
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        let len = u32::deserialize(buf)?;
         if len == 0 {
             Ok(Vec::new())
         } else if T::is_u8() && size_of::<T>() == size_of::<u8>() {
-            let mut result = Vec::with_capacity(hint::cautious::<u8>(len));
-            let mut len = len as usize;
-            while len > 0 {
-                let read_len = {
-                    let buf = reader.fill_buf()?;
-                    if buf.is_empty() {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidInput,
-                            ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-                        ));
-                    }
-                    if buf.len() > len {
-                        result.extend_from_slice(&buf[..len]);
-                        len
-                    } else {
-                        result.extend_from_slice(&buf);
-                        buf.len()
-                    }
-                };
-                len -= read_len;
-                reader.consume(read_len)
+            let len = len as usize;
+            if buf.len() < len {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+                ));
             }
+            let result = buf[..len].to_vec();
+            *buf = &buf[len..];
             // See comment from https://doc.rust-lang.org/std/mem/fn.transmute.html
             // The no-copy, unsafe way, still using transmute, but not UB.
             // This is equivalent to the original, but safer, and reuses the
@@ -316,32 +251,9 @@ where
                 )
             };
             Ok(result)
-        } else if let Some(fixed_len) = T::get_fixed_size() {
-            let mut result = Vec::with_capacity(hint::cautious::<T>(len));
-            let len = len as usize;
-            while result.len() < len {
-                let read_len = {
-                    let buf = reader.fill_buf()?;
-                    let buf_len = buf.len();
-                    if buf_len < fixed_len {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::InvalidInput,
-                            ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-                        ));
-                    }
-                    let mut pos = 0;
-                    while result.len() < len && pos + fixed_len <= buf_len {
-                        result.push(T::try_from_slice(&buf[pos..pos + fixed_len])?);
-                        pos += fixed_len;
-                    }
-                    pos
-                };
-                reader.consume(read_len)
-            }
-            Ok(result)
         } else if size_of::<T>() == 0 {
             let mut result = Vec::new();
-            result.push(T::deserialize(reader)?);
+            result.push(T::deserialize(buf)?);
 
             let p = result.as_mut_ptr();
             unsafe {
@@ -354,7 +266,7 @@ where
             // TODO(16): return capacity allocation when we can safely do that.
             let mut result = Vec::with_capacity(hint::cautious::<T>(len));
             for _ in 0..len {
-                result.push(T::deserialize(reader)?);
+                result.push(T::deserialize(buf)?);
             }
             Ok(result)
         }
@@ -367,8 +279,8 @@ where
     T: BorshDeserialize + Eq + std::hash::Hash,
 {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let vec = <Vec<T>>::deserialize(reader)?;
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        let vec = <Vec<T>>::deserialize(buf)?;
         Ok(vec.into_iter().collect::<HashSet<T>>())
     }
 }
@@ -380,13 +292,13 @@ where
     V: BorshDeserialize,
 {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let len = u32::deserialize(reader)?;
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        let len = u32::deserialize(buf)?;
         // TODO(16): return capacity allocation when we can safely do that.
         let mut result = HashMap::new();
         for _ in 0..len {
-            let key = K::deserialize(reader)?;
-            let value = V::deserialize(reader)?;
+            let key = K::deserialize(buf)?;
+            let value = V::deserialize(buf)?;
             result.insert(key, value);
         }
         Ok(result)
@@ -400,12 +312,12 @@ where
     V: BorshDeserialize,
 {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let len = u32::deserialize(reader)?;
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        let len = u32::deserialize(buf)?;
         let mut result = BTreeMap::new();
         for _ in 0..len {
-            let key = K::deserialize(reader)?;
-            let value = V::deserialize(reader)?;
+            let key = K::deserialize(buf)?;
+            let value = V::deserialize(buf)?;
             result.insert(key, value);
         }
         Ok(result)
@@ -415,11 +327,11 @@ where
 #[cfg(feature = "std")]
 impl BorshDeserialize for std::net::SocketAddr {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let kind = u8::deserialize(reader)?;
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        let kind = u8::deserialize(buf)?;
         match kind {
-            0 => std::net::SocketAddrV4::deserialize(reader).map(std::net::SocketAddr::V4),
-            1 => std::net::SocketAddrV6::deserialize(reader).map(std::net::SocketAddr::V6),
+            0 => std::net::SocketAddrV4::deserialize(buf).map(std::net::SocketAddr::V4),
+            1 => std::net::SocketAddrV6::deserialize(buf).map(std::net::SocketAddr::V6),
             value => Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 format!("Invalid SocketAddr variant: {}", value),
@@ -431,9 +343,9 @@ impl BorshDeserialize for std::net::SocketAddr {
 #[cfg(feature = "std")]
 impl BorshDeserialize for std::net::SocketAddrV4 {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let ip = std::net::Ipv4Addr::deserialize(reader)?;
-        let port = u16::deserialize(reader)?;
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        let ip = std::net::Ipv4Addr::deserialize(buf)?;
+        let port = u16::deserialize(buf)?;
         Ok(std::net::SocketAddrV4::new(ip, port))
     }
 }
@@ -441,9 +353,9 @@ impl BorshDeserialize for std::net::SocketAddrV4 {
 #[cfg(feature = "std")]
 impl BorshDeserialize for std::net::SocketAddrV6 {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let ip = std::net::Ipv6Addr::deserialize(reader)?;
-        let port = u16::deserialize(reader)?;
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        let ip = std::net::Ipv6Addr::deserialize(buf)?;
+        let port = u16::deserialize(buf)?;
         Ok(std::net::SocketAddrV6::new(ip, port, 0, 0))
     }
 }
@@ -451,32 +363,50 @@ impl BorshDeserialize for std::net::SocketAddrV6 {
 #[cfg(feature = "std")]
 impl BorshDeserialize for std::net::Ipv4Addr {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let mut buf = [0u8; 4];
-        reader.read_exact(&mut buf)?;
-        Ok(std::net::Ipv4Addr::from(buf))
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        if buf.len() < 4 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+            ));
+        }
+        let bytes: [u8; 4] = buf[..4].try_into().unwrap();
+        let res = std::net::Ipv4Addr::from(bytes);
+        *buf = &buf[4..];
+        Ok(res)
     }
 }
 
 #[cfg(feature = "std")]
 impl BorshDeserialize for std::net::Ipv6Addr {
     #[inline]
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let mut buf = [0u8; 16];
-        reader.read_exact(&mut buf)?;
-        Ok(std::net::Ipv6Addr::from(buf))
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        if buf.len() < 16 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+            ));
+        }
+        let bytes: [u8; 16] = buf[..16].try_into().unwrap();
+        let res = std::net::Ipv6Addr::from(bytes);
+        *buf = &buf[16..];
+        Ok(res)
     }
 }
 
 impl BorshDeserialize for Box<[u8]> {
-    fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-        let len = u32::deserialize(reader)?;
-        // TODO(16): return capacity allocation when we can safely do that.
-        let mut result = Vec::with_capacity(hint::cautious::<u8>(len));
-        for _ in 0..len {
-            result.push(u8::deserialize(reader)?);
+    #[inline]
+    fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+        let len = u32::deserialize(buf)? as usize;
+        if buf.len() < len {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+            ));
         }
-        Ok(result.into_boxed_slice())
+        let res = buf[..len].to_vec().into_boxed_slice();
+        *buf = &buf[len..];
+        Ok(res)
     }
 }
 
@@ -487,10 +417,11 @@ macro_rules! impl_arrays {
       where T: BorshDeserialize + Default + Copy
       {
         #[inline]
-        fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
+        fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+
             let mut result = [T::default(); $len];
             for i in 0..$len {
-                result[i] = T::deserialize(reader)?;
+                result[i] = T::deserialize(buf)?;
             }
             Ok(result)
         }
@@ -507,8 +438,9 @@ macro_rules! impl_tuple {
       where $($name: BorshDeserialize,)+
       {
         #[inline]
-        fn deserialize<R: BufRead>(reader: &mut R) -> Result<Self, Error> {
-            Ok(($($name::deserialize(reader)?,)+))
+        fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+
+            Ok(($($name::deserialize(buf)?,)+))
         }
       }
     };
