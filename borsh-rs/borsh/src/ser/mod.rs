@@ -1,5 +1,6 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io::{Error, Write};
+use std::mem::size_of;
 
 const DEFAULT_SERIALIZER_CAPACITY: usize = 1024;
 
@@ -13,12 +14,27 @@ pub trait BorshSerialize {
         self.serialize(&mut result)?;
         Ok(result)
     }
+
+    /// Whether Self is u8.
+    /// NOTE: `Vec<u8>` is the most common use-case for serialization and deserialization, it's
+    /// worth handling it as a special case to improve performance.
+    /// It's a workaround for specific `Vec<u8>` implementation versus generic `Vec<T>`
+    /// implementation. See https://github.com/rust-lang/rfcs/pull/1210 for details.
+    #[inline]
+    fn is_u8() -> bool {
+        false
+    }
 }
 
 impl BorshSerialize for u8 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write_all(std::slice::from_ref(self))
+    }
+
+    #[inline]
+    fn is_u8() -> bool {
+        true
     }
 }
 
@@ -42,7 +58,6 @@ impl_for_integer!(u16);
 impl_for_integer!(u32);
 impl_for_integer!(u64);
 impl_for_integer!(u128);
-
 
 // Note NaNs have a portability issue. Specifically, signalling NaNs on MIPS are quiet NaNs on x86,
 // and vice-versa. We disallow NaNs to avoid this issue.
@@ -90,7 +105,7 @@ where
 impl<T, E> BorshSerialize for Result<T, E>
 where
     T: BorshSerialize,
-    E: BorshSerialize
+    E: BorshSerialize,
 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
@@ -124,8 +139,17 @@ where
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
         writer.write_all(&(self.len() as u32).to_le_bytes())?;
-        for item in self {
-            item.serialize(writer)?;
+        if T::is_u8() && size_of::<T>() == size_of::<u8>() {
+            // The code below uses unsafe memory representation from `&[T]` to `&[u8]`.
+            // The size of the memory should match because `size_of::<T>() == size_of::<u8>()`.
+            //
+            // `T::is_u8()` is a workaround for not being able to implement `Vec<u8>` separately.
+            let buf = unsafe { std::slice::from_raw_parts(self.as_ptr() as *const u8, self.len()) };
+            writer.write_all(buf)?;
+        } else {
+            for item in self {
+                item.serialize(writer)?;
+            }
         }
         Ok(())
     }
@@ -295,4 +319,3 @@ impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T
 impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17);
 impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17 18 T18);
 impl_tuple!(0 T0 1 T1 2 T2 3 T3 4 T4 5 T5 6 T6 7 T7 8 T8 9 T9 10 T10 11 T11 12 T12 13 T13 14 T14 15 T15 16 T16 17 T17 18 T18 19 T19);
-

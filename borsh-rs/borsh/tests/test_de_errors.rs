@@ -12,12 +12,14 @@ struct B {
     y: u32,
 }
 
+const ERROR_UNEXPECTED_LENGTH_OF_INPUT: &str = "Unexpected length of input";
+
 #[test]
 fn test_missing_bytes() {
     let bytes = vec![1, 0];
     assert_eq!(
         B::try_from_slice(&bytes).unwrap_err().to_string(),
-        "failed to fill whole buffer"
+        ERROR_UNEXPECTED_LENGTH_OF_INPUT
     );
 }
 
@@ -87,7 +89,7 @@ fn test_invalid_length() {
     let bytes = vec![255u8; 4];
     assert_eq!(
         <Vec<u64>>::try_from_slice(&bytes).unwrap_err().to_string(),
-        "failed to fill whole buffer"
+        ERROR_UNEXPECTED_LENGTH_OF_INPUT
     );
 }
 
@@ -96,7 +98,7 @@ fn test_invalid_length_string() {
     let bytes = vec![255u8; 4];
     assert_eq!(
         String::try_from_slice(&bytes).unwrap_err().to_string(),
-        "failed to fill whole buffer"
+        ERROR_UNEXPECTED_LENGTH_OF_INPUT
     );
 }
 
@@ -119,13 +121,24 @@ fn test_nan_float() {
 }
 
 #[test]
-fn test_evil_bytes() {
+fn test_evil_bytes_vec_with_extra() {
+    // Should fail to allocate given length
     // test takes a really long time if read() is used instead of read_exact()
-    let bytes = vec![255, 255, 255, 255];
+    let bytes = vec![255, 255, 255, 255, 32, 32];
     assert_eq!(
         <Vec<[u8; 32]>>::try_from_slice(&bytes)
             .unwrap_err()
             .to_string(),
-        "failed to fill whole buffer"
+        ERROR_UNEXPECTED_LENGTH_OF_INPUT
+    );
+}
+
+#[test]
+fn test_evil_bytes_string_extra() {
+    // Might fail if reading too much
+    let bytes = vec![255, 255, 255, 255, 32, 32];
+    assert_eq!(
+        <String>::try_from_slice(&bytes).unwrap_err().to_string(),
+        ERROR_UNEXPECTED_LENGTH_OF_INPUT
     );
 }

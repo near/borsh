@@ -28,7 +28,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         });
 
                         variant_header.extend(quote! {
-                            #field_name: borsh::BorshDeserialize::deserialize(reader)?,
+                            #field_name: borsh::BorshDeserialize::deserialize(buf)?,
                         });
                     }
                 }
@@ -45,7 +45,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         });
 
                         variant_header
-                            .extend(quote! { borsh::BorshDeserialize::deserialize(reader)?, });
+                            .extend(quote! { borsh::BorshDeserialize::deserialize(buf)?, });
                     }
                 }
                 variant_header = quote! { ( #variant_header )};
@@ -57,14 +57,12 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
         });
     }
     let variant_idx = quote! {
-        let mut variant_idx = [0u8; std::mem::size_of::<u8>()];
-        reader.read_exact(&mut variant_idx)?;
-        let variant_idx = u8::from_le_bytes(variant_idx);
+        let variant_idx: u8 = borsh::BorshDeserialize::deserialize(buf)?;
     };
     if let Some(method_ident) = init_method {
         Ok(quote! {
             impl #generics borsh::de::BorshDeserialize for #name #generics where  #deserializable_field_types {
-                fn deserialize<R: std::io::Read>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
+                fn deserialize(buf: &mut &[u8]) -> std::result::Result<Self, std::io::Error> {
                     #variant_idx
                     let mut return_value = match variant_idx {
                         #variant_arms
@@ -82,7 +80,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     } else {
         Ok(quote! {
             impl #generics borsh::de::BorshDeserialize for #name #generics where  #deserializable_field_types {
-                fn deserialize<R: std::io::Read>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
+                fn deserialize(buf: &mut &[u8]) -> std::result::Result<Self, std::io::Error> {
                     #variant_idx
                     let return_value = match variant_idx {
                         #variant_arms

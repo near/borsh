@@ -19,12 +19,12 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
                     }
                 } else {
                     let field_type = &field.ty;
-                    deserializable_field_types.extend(quote!{
+                    deserializable_field_types.extend(quote! {
                         #field_type: borsh::BorshDeserialize,
                     });
 
                     quote! {
-                        #field_name: borsh::BorshDeserialize::deserialize(reader)?,
+                        #field_name: borsh::BorshDeserialize::deserialize(buf)?,
                     }
                 };
                 body.extend(delta);
@@ -37,7 +37,7 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
             let mut body = TokenStream2::new();
             for _ in 0..fields.unnamed.len() {
                 let delta = quote! {
-                    borsh::BorshDeserialize::deserialize(reader)?,
+                    borsh::BorshDeserialize::deserialize(buf)?,
                 };
                 body.extend(delta);
             }
@@ -54,7 +54,7 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
     if let Some(method_ident) = init_method {
         Ok(quote! {
             impl #generics borsh::de::BorshDeserialize for #name #generics where #deserializable_field_types {
-                fn deserialize<R: std::io::Read>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
+                fn deserialize(buf: &mut &[u8]) ->  std::result::Result<Self, std::io::Error> {
                     let mut return_value = #return_value;
                     return_value.#method_ident();
                     Ok(return_value)
@@ -64,7 +64,7 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
     } else {
         Ok(quote! {
             impl #generics borsh::de::BorshDeserialize for #name #generics where #deserializable_field_types {
-                fn deserialize<R: std::io::Read>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
+                fn deserialize(buf: &mut &[u8]) -> std::result::Result<Self, std::io::Error> {
                     Ok(#return_value)
                 }
             }
