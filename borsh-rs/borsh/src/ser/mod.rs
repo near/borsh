@@ -289,7 +289,7 @@ macro_rules! impl_arrays {
                 Ok(())
             }
         }
-        )+
+    )+
     };
 }
 

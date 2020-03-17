@@ -27,7 +27,7 @@ name = "benchmarks"
 version = "0.1.0"
 dependencies = [
  "bincode 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "borsh 0.6.0",
+ "borsh 0.6.1",
  "criterion 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_xorshift 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -54,23 +54,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "borsh"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
- "borsh-derive 0.6.0",
+ "borsh-derive 0.6.1",
 ]
 
 [[package]]
 name = "borsh-derive"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
- "borsh-derive-internal 0.6.0",
- "borsh-schema-derive-internal 0.6.0",
+ "borsh-derive-internal 0.6.1",
+ "borsh-schema-derive-internal 0.6.1",
  "syn 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "borsh-derive-internal"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "proc-macro2 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -79,7 +79,7 @@ dependencies = [
 
 [[package]]
 name = "borsh-schema-derive-internal"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "proc-macro2 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
