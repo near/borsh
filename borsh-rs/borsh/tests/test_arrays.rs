@@ -36,3 +36,4 @@ test_arrays!(test_array_u32, 1000000000u32, u32);
 test_arrays!(test_array_u64, 1000000000000000000u64, u64);
 test_arrays!(test_array_u128, 1000000000000000000000000000000000000u128, u128);
 test_arrays!(test_array_f32, 1000000000.0f32, f32);
+test_arrays!(test_array_array_u8, [100u8; 32], [u8; 32]);
