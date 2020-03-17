@@ -413,24 +413,47 @@ impl BorshDeserialize for Box<[u8]> {
 macro_rules! impl_arrays {
     ($($len:expr)+) => {
     $(
-      impl<T> BorshDeserialize for [T; $len]
-      where T: BorshDeserialize + Default + Copy
-      {
-        #[inline]
-        fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
-
-            let mut result = [T::default(); $len];
-            for i in 0..$len {
-                result[i] = T::deserialize(buf)?;
+        impl<T> BorshDeserialize for [T; $len]
+        where
+            T: BorshDeserialize + Default + Copy
+        {
+            #[inline]
+            fn deserialize(buf: &mut &[u8]) -> Result<Self, Error> {
+                let mut result = [T::default(); $len];
+                if T::is_u8() && size_of::<T>() == size_of::<u8>() {
+                    if buf.len() < $len {
+                        return Err(std::io::Error::new(
+                            std::io::ErrorKind::InvalidInput,
+                            ERROR_UNEXPECTED_LENGTH_OF_INPUT,
+                        ));
+                    }
+                    // The size of the memory should match because `size_of::<T>() == size_of::<u8>()`.
+                    // `T::is_u8()` is a workaround for not being able to implement `[u8; *]` separately.
+                    result.copy_from_slice(unsafe { std::slice::from_raw_parts(buf.as_ptr() as *const T, $len) });
+                    *buf = &buf[$len..];
+                } else {
+                    for i in 0..$len {
+                        result[i] = T::deserialize(buf)?;
+                    }
+                }
+                Ok(result)
             }
-            Ok(result)
         }
-      }
-      )+
+    )+
     };
 }
 
-impl_arrays!(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 32 64 65);
+impl_arrays!(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 32 64 65);
+
+impl<T> BorshDeserialize for [T; 0]
+where
+    T: BorshDeserialize + Default + Copy,
+{
+    #[inline]
+    fn deserialize(_buf: &mut &[u8]) -> Result<Self, Error> {
+        Ok([T::default(); 0])
+    }
+}
 
 macro_rules! impl_tuple {
     ($($name:ident)+) => {
