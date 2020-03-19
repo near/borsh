@@ -269,22 +269,41 @@ impl BorshSerialize for Box<[u8]> {
 macro_rules! impl_arrays {
     ($($len:expr)+) => {
     $(
-      impl<T> BorshSerialize for [T; $len]
-      where T: BorshSerialize
-      {
-        #[inline]
-        fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
-            for el in self.iter() {
-                el.serialize(writer)?;
+        impl<T> BorshSerialize for [T; $len]
+        where T: BorshSerialize
+        {
+            #[inline]
+            fn serialize<W: Write>(&self, writer: &mut W) -> Result<(), Error> {
+                if T::is_u8() && size_of::<T>() == size_of::<u8>() {
+                    // The code below uses unsafe memory representation from `&[T]` to `&[u8]`.
+                    // The size of the memory should match because `size_of::<T>() == size_of::<u8>()`.
+                    //
+                    // `T::is_u8()` is a workaround for not being able to implement `[u8; *]` separately.
+                    let buf = unsafe { std::slice::from_raw_parts(self.as_ptr() as *const u8, self.len()) };
+                    writer.write_all(buf)?;
+                } else {
+                    for el in self.iter() {
+                        el.serialize(writer)?;
+                    }
+                }
+                Ok(())
             }
-            Ok(())
         }
-      }
-      )+
+    )+
     };
 }
 
-impl_arrays!(0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 32 64 65);
+impl<T> BorshSerialize for [T; 0]
+where
+    T: BorshSerialize,
+{
+    #[inline]
+    fn serialize<W: Write>(&self, _writer: &mut W) -> Result<(), Error> {
+        Ok(())
+    }
+}
+
+impl_arrays!(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 32 64 65);
 
 macro_rules! impl_tuple {
     ($($idx:tt $name:ident)+) => {
