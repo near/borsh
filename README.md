@@ -272,8 +272,9 @@ npm run test
 ## Publish
 
 Prepare `dist` version by running:
-
-yarn dist
+```bash
+npm run build
+```
 
 When publishing to npm use [np](https://github.com/sindresorhus/np).
 
