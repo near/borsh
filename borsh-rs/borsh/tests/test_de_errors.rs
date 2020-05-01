@@ -77,7 +77,7 @@ fn test_invalid_result() {
                 .unwrap_err()
                 .to_string(),
             format!(
-                "Invalid Result representation: {}. The first byte must be 0 or 1",
+                "Invalid std::result::Result representation: {}. The first byte must be 0 or 1",
                 i
             )
         );

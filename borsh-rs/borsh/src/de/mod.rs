@@ -173,7 +173,7 @@ where
     }
 }
 
-impl<T, E> BorshDeserialize for Result<T, E>
+impl<T, E> BorshDeserialize for std::result::Result<T, E>
 where
     T: BorshDeserialize,
     E: BorshDeserialize,
@@ -196,7 +196,7 @@ where
             Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 format!(
-                    "Invalid Result representation: {}. The first byte must be 0 or 1",
+                    "Invalid std::result::Result representation: {}. The first byte must be 0 or 1",
                     flag
                 ),
             ))

@@ -27,7 +27,7 @@ impl<'a, C> Readable<'a, C> for CryptoHash
 where
     C: Context,
 {
-    fn read_from<R: Reader<'a, C>>(reader: &mut R) -> Result<Self, std::io::Error> {
+    fn read_from<R: Reader<'a, C>>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
         let mut data = [0u8; 32];
         reader.read_bytes(&mut data)?;
         Ok(Self(data))
@@ -38,7 +38,7 @@ impl<C: Context> Writable<C> for CryptoHash {
     fn write_to<'a, T: ?Sized + Writer<'a, C>>(
         &'a self,
         writer: &mut T,
-    ) -> Result<(), std::io::Error> {
+    ) -> std::result::Result<(), std::io::Error> {
         writer.write_bytes(&self.0).map(|_| ())
     }
 }
@@ -59,7 +59,7 @@ impl<'a, C> Readable<'a, C> for MerkleHash
 where
     C: Context,
 {
-    fn read_from<R: Reader<'a, C>>(reader: &mut R) -> Result<Self, std::io::Error> {
+    fn read_from<R: Reader<'a, C>>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
         let mut data = [0u8; 32];
         reader.read_bytes(&mut data)?;
         Ok(Self(data))
@@ -70,7 +70,7 @@ impl<C: Context> Writable<C> for MerkleHash {
     fn write_to<'a, T: ?Sized + Writer<'a, C>>(
         &'a self,
         writer: &mut T,
-    ) -> Result<(), std::io::Error> {
+    ) -> std::result::Result<(), std::io::Error> {
         writer.write_bytes(&self.0).map(|_| ())
     }
 }
@@ -91,7 +91,7 @@ impl<'a, C> Readable<'a, C> for Signature
 where
     C: Context,
 {
-    fn read_from<R: Reader<'a, C>>(reader: &mut R) -> Result<Self, std::io::Error> {
+    fn read_from<R: Reader<'a, C>>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
         let mut data = [0u8; 32];
         reader.read_bytes(&mut data)?;
         Ok(Self(data))
@@ -102,7 +102,7 @@ impl<C: Context> Writable<C> for Signature {
     fn write_to<'a, T: ?Sized + Writer<'a, C>>(
         &'a self,
         writer: &mut T,
-    ) -> Result<(), std::io::Error> {
+    ) -> std::result::Result<(), std::io::Error> {
         writer.write_bytes(&self.0).map(|_| ())
     }
 }
@@ -123,7 +123,7 @@ impl<'a, C> Readable<'a, C> for PublicKey
 where
     C: Context,
 {
-    fn read_from<R: Reader<'a, C>>(reader: &mut R) -> Result<Self, std::io::Error> {
+    fn read_from<R: Reader<'a, C>>(reader: &mut R) -> std::result::Result<Self, std::io::Error> {
         let mut data = [0u8; 32];
         reader.read_bytes(&mut data)?;
         Ok(Self(data))
@@ -134,7 +134,7 @@ impl<C: Context> Writable<C> for PublicKey {
     fn write_to<'a, T: ?Sized + Writer<'a, C>>(
         &'a self,
         writer: &mut T,
-    ) -> Result<(), std::io::Error> {
+    ) -> std::result::Result<(), std::io::Error> {
         writer.write_bytes(&self.0).map(|_| ())
     }
 }

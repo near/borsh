@@ -102,7 +102,7 @@ where
     }
 }
 
-impl<T, E> BorshSerialize for Result<T, E>
+impl<T, E> BorshSerialize for std::result::Result<T, E>
 where
     T: BorshSerialize,
     E: BorshSerialize,

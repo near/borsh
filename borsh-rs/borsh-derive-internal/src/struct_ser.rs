@@ -42,7 +42,7 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
     }
     Ok(quote! {
         impl #generics borsh::ser::BorshSerialize for #name #generics where #serializable_field_types {
-            fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+            fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                 #body
                 Ok(())
             }
@@ -76,7 +76,7 @@ mod tests {
                 u64: borsh::ser::BorshSerialize,
                 String: borsh::ser::BorshSerialize,
             {
-                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                     borsh::BorshSerialize::serialize(&self.x, writer)?;
                     borsh::BorshSerialize::serialize(&self.y, writer)?;
                     Ok(())
@@ -102,7 +102,7 @@ mod tests {
                 HashMap<K, V>: borsh::ser::BorshSerialize,
                 String: borsh::ser::BorshSerialize,
             {
-                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> Result<(), std::io::Error> {
+                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                     borsh::BorshSerialize::serialize(&self.x, writer)?;
                     borsh::BorshSerialize::serialize(&self.y, writer)?;
                     Ok(())
