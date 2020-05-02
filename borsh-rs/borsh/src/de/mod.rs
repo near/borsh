@@ -196,7 +196,7 @@ where
             Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
                 format!(
-                    "Invalid std::result::Result representation: {}. The first byte must be 0 or 1",
+                    "Invalid Result representation: {}. The first byte must be 0 or 1",
                     flag
                 ),
             ))
