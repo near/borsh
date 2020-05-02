@@ -181,7 +181,7 @@ where
     }
 }
 
-impl<T, E> BorshSchema for Result<T, E>
+impl<T, E> BorshSchema for std::result::Result<T, E>
 where
     T: BorshSchema,
     E: BorshSchema,

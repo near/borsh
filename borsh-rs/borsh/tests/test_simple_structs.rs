@@ -15,7 +15,7 @@ struct A {
     v: Vec<String>,
     w: Box<[u8]>,
     i: [u8; 32],
-    u: Result<String, String>,
+    u: std::result::Result<String, String>,
     lazy: Option<u64>,
     #[borsh_skip]
     skipped: Option<u64>,

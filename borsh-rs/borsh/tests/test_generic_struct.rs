@@ -5,7 +5,7 @@ struct A<T, F, G> {
     x: Vec<T>,
     y: String,
     b: B<F, G>,
-    c: Result<T, G>,
+    c: std::result::Result<T, G>,
     d: [u64; 5],
 }
 

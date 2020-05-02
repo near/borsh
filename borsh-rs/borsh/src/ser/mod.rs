@@ -102,7 +102,7 @@ where
     }
 }
 
-impl<T, E> BorshSerialize for Result<T, E>
+impl<T, E> BorshSerialize for std::result::Result<T, E>
 where
     T: BorshSerialize,
     E: BorshSerialize,
@@ -131,8 +131,7 @@ impl BorshSerialize for String {
     }
 }
 
-#[cfg(feature = "std")]
-impl<T> BorshSerialize for Vec<T>
+impl<T> BorshSerialize for [T]
 where
     T: BorshSerialize,
 {
@@ -152,6 +151,16 @@ where
             }
         }
         Ok(())
+    }
+}
+
+#[cfg(feature = "std")]
+impl<T> BorshSerialize for Vec<T>
+where
+T: BorshSerialize {
+    #[inline]
+    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        self.as_slice().serialize(writer)
     }
 }
 
@@ -266,6 +275,12 @@ impl BorshSerialize for Box<[u8]> {
     }
 }
 
+impl<T: BorshSerialize> BorshSerialize for Box<T> {
+    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        self.as_ref().serialize(writer)
+    }
+}
+
 macro_rules! impl_arrays {
     ($($len:expr)+) => {
     $(
@@ -304,6 +319,12 @@ where
 }
 
 impl_arrays!(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 64 65 128 256 512 1024 2048);
+
+impl BorshSerialize for () {
+    fn serialize<W: Write>(&self, _writer: &mut W) -> io::Result<()> {
+        Ok(())
+    }
+}
 
 macro_rules! impl_tuple {
     ($($idx:tt $name:ident)+) => {

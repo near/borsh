@@ -173,7 +173,7 @@ where
     }
 }
 
-impl<T, E> BorshDeserialize for Result<T, E>
+impl<T, E> BorshDeserialize for std::result::Result<T, E>
 where
     T: BorshDeserialize,
     E: BorshDeserialize,
@@ -410,6 +410,12 @@ impl BorshDeserialize for Box<[u8]> {
     }
 }
 
+impl<T: BorshDeserialize> BorshDeserialize for Box<T> {
+    fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
+        Ok(Box::new(T::deserialize(buf)?))
+    }
+}
+
 macro_rules! impl_arrays {
     ($($len:expr)+) => {
     $(
@@ -452,6 +458,12 @@ where
     #[inline]
     fn deserialize(_buf: &mut &[u8]) -> io::Result<Self> {
         Ok([T::default(); 0])
+    }
+}
+
+impl BorshDeserialize for () {
+    fn deserialize(_buf: &mut &[u8]) -> io::Result<Self> {
+        Ok(())
     }
 }
 
