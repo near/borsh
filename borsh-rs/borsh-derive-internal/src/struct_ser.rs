@@ -1,7 +1,10 @@
-use crate::attribute_helpers::contains_skip;
+use std::convert::TryFrom;
+
 use quote::quote;
 use syn::export::{Span, TokenStream2};
 use syn::{Fields, Index, ItemStruct};
+
+use crate::attribute_helpers::contains_skip;
 
 pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
     let name = &input.ident;
@@ -21,7 +24,7 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
                 body.extend(delta);
 
                 let field_type = &field.ty;
-                serializable_field_types.extend(quote!{
+                serializable_field_types.extend(quote! {
                     #field_type: borsh::ser::BorshSerialize,
                 });
             }
@@ -29,7 +32,7 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
         Fields::Unnamed(fields) => {
             for field_idx in 0..fields.unnamed.len() {
                 let field_idx = Index {
-                    index: field_idx as u32,
+                    index: u32::try_from(field_idx).expect("up to 2^32 fields are supported"),
                     span: Span::call_site(),
                 };
                 let delta = quote! {
@@ -112,4 +115,3 @@ mod tests {
         assert_eq(expected, actual);
     }
 }
-

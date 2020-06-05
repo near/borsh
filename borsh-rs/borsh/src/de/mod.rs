@@ -223,7 +223,7 @@ where
         if len == 0 {
             Ok(Vec::new())
         } else if T::is_u8() && size_of::<T>() == size_of::<u8>() {
-            let len = len as usize;
+            let len = len.try_into().map_err(|_| io::ErrorKind::InvalidInput)?;
             if buf.len() < len {
                 return Err(io::Error::new(
                     io::ErrorKind::InvalidInput,
@@ -258,7 +258,7 @@ where
             let p = result.as_mut_ptr();
             unsafe {
                 forget(result);
-                let len = len as usize;
+                let len = len.try_into().map_err(|_| io::ErrorKind::InvalidInput)?;
                 let result = Vec::from_raw_parts(p, len, len);
                 Ok(result)
             }
@@ -397,7 +397,9 @@ impl BorshDeserialize for std::net::Ipv6Addr {
 impl BorshDeserialize for Box<[u8]> {
     #[inline]
     fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
-        let len = u32::deserialize(buf)? as usize;
+        let len = u32::deserialize(buf)?
+            .try_into()
+            .map_err(|_| io::ErrorKind::InvalidInput)?;
         if buf.len() < len {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,

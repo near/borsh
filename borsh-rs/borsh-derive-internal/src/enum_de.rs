@@ -1,7 +1,10 @@
-use crate::attribute_helpers::{contains_initialize_with, contains_skip};
+use std::convert::TryFrom;
+
 use quote::quote;
 use syn::export::TokenStream2;
 use syn::{Fields, ItemEnum};
+
+use crate::attribute_helpers::{contains_initialize_with, contains_skip};
 
 pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     let name = &input.ident;
@@ -10,7 +13,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     let mut variant_arms = TokenStream2::new();
     let mut deserializable_field_types = TokenStream2::new();
     for (variant_idx, variant) in input.variants.iter().enumerate() {
-        let variant_idx = variant_idx as u8;
+        let variant_idx = u8::try_from(variant_idx).expect("up to 256 enum variants are supported");
         let variant_ident = &variant.ident;
         let mut variant_header = TokenStream2::new();
         match &variant.fields {
