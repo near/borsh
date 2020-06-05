@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryInto;
 use std::io;
@@ -212,6 +213,16 @@ impl BorshDeserialize for String {
     }
 }
 
+impl BorshDeserialize for Cow<'_, str> {
+    #[inline]
+    fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
+        Ok(Cow::Owned(
+            String::from_utf8(Vec::<u8>::deserialize(buf)?)
+                .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err.to_string()))?,
+        ))
+    }
+}
+
 #[cfg(feature = "std")]
 impl<T> BorshDeserialize for Vec<T>
 where
@@ -270,6 +281,17 @@ where
             }
             Ok(result)
         }
+    }
+}
+
+impl<T> BorshDeserialize for Cow<'_, [T]>
+where
+    T: BorshDeserialize + Eq + std::hash::Hash,
+    [T]: std::borrow::ToOwned,
+{
+    #[inline]
+    fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
+        Ok(Cow::Owned(Vec::<T>::deserialize(buf)?.to_owned()))
     }
 }
 

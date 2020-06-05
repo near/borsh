@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::mem::size_of;
 use std::{io, io::Write};
@@ -131,6 +132,15 @@ impl BorshSerialize for String {
     }
 }
 
+impl BorshSerialize for Cow<'_, str> {
+    #[inline]
+    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        writer.write_all(&(self.len() as u32).to_le_bytes())?;
+        writer.write_all(self.as_bytes())?;
+        Ok(())
+    }
+}
+
 impl<T> BorshSerialize for [T]
 where
     T: BorshSerialize,
@@ -154,10 +164,22 @@ where
     }
 }
 
+impl<T> BorshSerialize for Cow<'_, [T]>
+where
+    T: BorshSerialize,
+    [T]: std::borrow::ToOwned,
+{
+    #[inline]
+    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        self.as_ref().serialize(writer)
+    }
+}
+
 #[cfg(feature = "std")]
 impl<T> BorshSerialize for Vec<T>
 where
-T: BorshSerialize {
+    T: BorshSerialize,
+{
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         self.as_slice().serialize(writer)
