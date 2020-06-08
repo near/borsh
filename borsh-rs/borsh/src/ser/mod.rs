@@ -123,21 +123,17 @@ where
     }
 }
 
-impl BorshSerialize for String {
+impl BorshSerialize for str {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_all(&(self.len() as u32).to_le_bytes())?;
-        writer.write_all(self.as_bytes())?;
-        Ok(())
+        self.as_bytes().serialize(writer)
     }
 }
 
-impl BorshSerialize for Cow<'_, str> {
+impl BorshSerialize for String {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_all(&(self.len() as u32).to_le_bytes())?;
-        writer.write_all(self.as_bytes())?;
-        Ok(())
+        self.as_bytes().serialize(writer)
     }
 }
 
@@ -164,10 +160,9 @@ where
     }
 }
 
-impl<T> BorshSerialize for Cow<'_, [T]>
+impl<T> BorshSerialize for Cow<'_, T>
 where
-    T: BorshSerialize,
-    [T]: std::borrow::ToOwned,
+    T: BorshSerialize + std::borrow::ToOwned + ?Sized,
 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
