@@ -406,25 +406,14 @@ impl BorshDeserialize for std::net::Ipv6Addr {
     }
 }
 
-impl BorshDeserialize for Box<[u8]> {
-    #[inline]
+impl<T, U> BorshDeserialize for Box<T>
+where
+    U: Into<Box<T>> + std::borrow::Borrow<T>,
+    T: std::borrow::ToOwned<Owned = U> + ?Sized,
+    T::Owned: BorshDeserialize,
+{
     fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
-        let len = u32::deserialize(buf)? as usize;
-        if buf.len() < len {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-            ));
-        }
-        let res = buf[..len].to_vec().into_boxed_slice();
-        *buf = &buf[len..];
-        Ok(res)
-    }
-}
-
-impl<T: BorshDeserialize> BorshDeserialize for Box<T> {
-    fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
-        Ok(Box::new(T::deserialize(buf)?))
+        Ok(T::Owned::deserialize(buf)?.into())
     }
 }
 
