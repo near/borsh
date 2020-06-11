@@ -285,14 +285,7 @@ impl BorshSerialize for std::net::Ipv6Addr {
     }
 }
 
-impl BorshSerialize for Box<[u8]> {
-    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        (self.len() as u32).serialize(writer)?;
-        writer.write_all(self)
-    }
-}
-
-impl<T: BorshSerialize> BorshSerialize for Box<T> {
+impl<T: BorshSerialize + ?Sized> BorshSerialize for Box<T> {
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         self.as_ref().serialize(writer)
     }
