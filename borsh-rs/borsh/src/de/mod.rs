@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryInto;
 use std::io;
@@ -270,6 +271,17 @@ where
             }
             Ok(result)
         }
+    }
+}
+
+impl<T> BorshDeserialize for Cow<'_, T>
+where
+    T: std::borrow::ToOwned + ?Sized,
+    T::Owned: BorshDeserialize,
+{
+    #[inline]
+    fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
+        Ok(Cow::Owned(BorshDeserialize::deserialize(buf)?))
     }
 }
 
