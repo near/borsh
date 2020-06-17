@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryFrom;
 use std::mem::size_of;
@@ -123,14 +124,17 @@ where
     }
 }
 
+impl BorshSerialize for str {
+    #[inline]
+    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        self.as_bytes().serialize(writer)
+    }
+}
+
 impl BorshSerialize for String {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_all(
-            &(u32::try_from(self.len()).map_err(|_| io::ErrorKind::InvalidInput)?).to_le_bytes(),
-        )?;
-        writer.write_all(self.as_bytes())?;
-        Ok(())
+        self.as_bytes().serialize(writer)
     }
 }
 
@@ -156,6 +160,16 @@ where
             }
         }
         Ok(())
+    }
+}
+
+impl<T> BorshSerialize for Cow<'_, T>
+where
+    T: BorshSerialize + std::borrow::ToOwned + ?Sized,
+{
+    #[inline]
+    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        self.as_ref().serialize(writer)
     }
 }
 
@@ -280,16 +294,7 @@ impl BorshSerialize for std::net::Ipv6Addr {
     }
 }
 
-impl BorshSerialize for Box<[u8]> {
-    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        u32::try_from(self.len())
-            .map_err(|_| io::ErrorKind::InvalidInput)?
-            .serialize(writer)?;
-        writer.write_all(self)
-    }
-}
-
-impl<T: BorshSerialize> BorshSerialize for Box<T> {
+impl<T: BorshSerialize + ?Sized> BorshSerialize for Box<T> {
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         self.as_ref().serialize(writer)
     }

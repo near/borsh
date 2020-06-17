@@ -13,7 +13,7 @@
     <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/d/borsh.svg?style=flat-square" alt="Download" /></a>
     <a href="https://discord.gg/gBtUFKR"><img src="https://img.shields.io/discord/490367152054992913.svg" alt="Join the community on Discord" /></a>
     <a href="https://opensource.org/licenses/Apache-2.0"> <img src="https://img.shields.io/badge/license-Apache2.0-blue.svg" alt="Apache 2.0 License" /></a>
-    <a href="https://travis-ci.com/nearprotocol/borsh"><img src="https://travis-ci.com/nearprotocol/borsh.svg?branch=master" alt="Travis Build" /></a>
+    <a href="https://travis-ci.com/near/borsh"><img src="https://travis-ci.com/near/borsh.svg?branch=master" alt="Travis Build" /></a>
   </p>
   
   <h3>

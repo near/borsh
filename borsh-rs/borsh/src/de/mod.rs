@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::convert::TryInto;
 use std::io;
@@ -273,6 +274,17 @@ where
     }
 }
 
+impl<T> BorshDeserialize for Cow<'_, T>
+where
+    T: std::borrow::ToOwned + ?Sized,
+    T::Owned: BorshDeserialize,
+{
+    #[inline]
+    fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
+        Ok(Cow::Owned(BorshDeserialize::deserialize(buf)?))
+    }
+}
+
 #[cfg(feature = "std")]
 impl<T> BorshDeserialize for HashSet<T>
 where
@@ -394,27 +406,14 @@ impl BorshDeserialize for std::net::Ipv6Addr {
     }
 }
 
-impl BorshDeserialize for Box<[u8]> {
-    #[inline]
+impl<T, U> BorshDeserialize for Box<T>
+where
+    U: Into<Box<T>> + std::borrow::Borrow<T>,
+    T: std::borrow::ToOwned<Owned = U> + ?Sized,
+    T::Owned: BorshDeserialize,
+{
     fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
-        let len = u32::deserialize(buf)?
-            .try_into()
-            .map_err(|_| io::ErrorKind::InvalidInput)?;
-        if buf.len() < len {
-            return Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                ERROR_UNEXPECTED_LENGTH_OF_INPUT,
-            ));
-        }
-        let res = buf[..len].to_vec().into_boxed_slice();
-        *buf = &buf[len..];
-        Ok(res)
-    }
-}
-
-impl<T: BorshDeserialize> BorshDeserialize for Box<T> {
-    fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
-        Ok(Box::new(T::deserialize(buf)?))
+        Ok(T::Owned::deserialize(buf)?.into())
     }
 }
 
