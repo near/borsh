@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 use std::collections::{BTreeMap, HashMap, HashSet};
+use std::convert::TryFrom;
 use std::mem::size_of;
 use std::{io, io::Write};
 
@@ -143,7 +144,9 @@ where
 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        writer.write_all(&(self.len() as u32).to_le_bytes())?;
+        writer.write_all(
+            &(u32::try_from(self.len()).map_err(|_| io::ErrorKind::InvalidInput)?).to_le_bytes(),
+        )?;
         if T::is_u8() && size_of::<T>() == size_of::<u8>() {
             // The code below uses unsafe memory representation from `&[T]` to `&[u8]`.
             // The size of the memory should match because `size_of::<T>() == size_of::<u8>()`.
@@ -190,7 +193,9 @@ where
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         let mut vec = self.iter().collect::<Vec<_>>();
         vec.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        (vec.len() as u32).serialize(writer)?;
+        u32::try_from(vec.len())
+            .map_err(|_| io::ErrorKind::InvalidInput)?
+            .serialize(writer)?;
         for item in vec {
             item.serialize(writer)?;
         }
@@ -208,7 +213,9 @@ where
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         let mut vec = self.iter().collect::<Vec<_>>();
         vec.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
-        (vec.len() as u32).serialize(writer)?;
+        u32::try_from(vec.len())
+            .map_err(|_| io::ErrorKind::InvalidInput)?
+            .serialize(writer)?;
         for (key, value) in vec {
             key.serialize(writer)?;
             value.serialize(writer)?;
@@ -225,7 +232,9 @@ where
 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
-        (self.len() as u32).serialize(writer)?;
+        u32::try_from(self.len())
+            .map_err(|_| io::ErrorKind::InvalidInput)?
+            .serialize(writer)?;
         for (key, value) in self.iter() {
             key.serialize(writer)?;
             value.serialize(writer)?;

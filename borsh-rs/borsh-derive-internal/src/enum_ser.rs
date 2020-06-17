@@ -1,7 +1,10 @@
-use crate::attribute_helpers::contains_skip;
+use std::convert::TryFrom;
+
 use quote::quote;
 use syn::export::{Span, TokenStream2};
 use syn::{Fields, Ident, ItemEnum};
+
+use crate::attribute_helpers::contains_skip;
 
 pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
     let name = &input.ident;
@@ -9,7 +12,7 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
     let mut body = TokenStream2::new();
     let mut serializable_field_types = TokenStream2::new();
     for (variant_idx, variant) in input.variants.iter().enumerate() {
-        let variant_idx = variant_idx as u8;
+        let variant_idx = u8::try_from(variant_idx).expect("up to 256 enum variants are supported");
         let variant_ident = &variant.ident;
         let mut variant_header = TokenStream2::new();
         let mut variant_body = TokenStream2::new();
@@ -22,7 +25,7 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         continue;
                     } else {
                         let field_type = &field.ty;
-                        serializable_field_types.extend(quote!{
+                        serializable_field_types.extend(quote! {
                             #field_type: borsh::ser::BorshSerialize,
                         });
                         variant_header.extend(quote! { #field_name, });
@@ -35,7 +38,8 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
             }
             Fields::Unnamed(fields) => {
                 for (field_idx, field) in fields.unnamed.iter().enumerate() {
-                    let field_idx = field_idx as u32;
+                    let field_idx =
+                        u32::try_from(field_idx).expect("up to 2^32 fields are supported");
                     if contains_skip(&field.attrs) {
                         let field_ident =
                             Ident::new(format!("_id{}", field_idx).as_str(), Span::call_site());
@@ -43,7 +47,7 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         continue;
                     } else {
                         let field_type = &field.ty;
-                        serializable_field_types.extend(quote!{
+                        serializable_field_types.extend(quote! {
                             #field_type: borsh::ser::BorshSerialize,
                         });
 
