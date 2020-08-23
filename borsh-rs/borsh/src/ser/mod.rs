@@ -163,6 +163,13 @@ where
     }
 }
 
+impl<T: BorshSerialize> BorshSerialize for &T {
+    #[inline]
+    fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
+        (*self).serialize(writer)
+    }
+}
+
 impl<T> BorshSerialize for Cow<'_, T>
 where
     T: BorshSerialize + std::borrow::ToOwned + ?Sized,

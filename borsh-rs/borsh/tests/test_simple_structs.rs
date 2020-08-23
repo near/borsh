@@ -52,6 +52,11 @@ struct D {
     x: u64,
 }
 
+#[derive(BorshSerialize)]
+struct E<'a, 'b> {
+    a: &'a A<'b>,
+}
+
 #[test]
 fn test_simple_struct() {
     let mut map: HashMap<String, String> = HashMap::new();
@@ -85,6 +90,10 @@ fn test_simple_struct() {
         skipped: Some(6),
     };
     let encoded_a = a.try_to_vec().unwrap();
+    let e = E { a: &a };
+    let encoded_ref_a = e.try_to_vec().unwrap();
+    assert_eq!(encoded_ref_a, encoded_a);
+
     let decoded_a = A::try_from_slice(&encoded_a).unwrap();
     let expected_a = A {
         x: 1,
