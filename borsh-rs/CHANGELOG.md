@@ -1,3 +1,6 @@
+# 0.7.1
+- Implement `BorshSerialize` for `&T` if `T` implements `BorshSerialize`.
+
 # 0.7.0
 
 - Extended `Box<T>` implementation for `?Sized` types (`[T]`, `str`, ...).
