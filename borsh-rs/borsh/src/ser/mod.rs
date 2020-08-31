@@ -163,7 +163,7 @@ where
     }
 }
 
-impl<T: BorshSerialize> BorshSerialize for &T {
+impl<T: BorshSerialize + ?Sized> BorshSerialize for &T {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> io::Result<()> {
         (*self).serialize(writer)
