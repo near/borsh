@@ -57,6 +57,16 @@ struct E<'a, 'b> {
     a: &'a A<'b>,
 }
 
+#[derive(BorshSerialize)]
+struct F1<'a, 'b> {
+    aa: &'a [&'a A<'b>],
+}
+
+#[derive(BorshDeserialize)]
+struct F2<'b> {
+    aa: Vec<A<'b>>,
+}
+
 #[test]
 fn test_simple_struct() {
     let mut map: HashMap<String, String> = HashMap::new();
@@ -103,12 +113,12 @@ fn test_simple_struct() {
             c: C::C5(D { x: 1 }),
         },
         y: 4.0,
-        z: a.z,
+        z: a.z.clone(),
         t: ("Hello".to_string(), 10),
         m: map.clone(),
         s: set.clone(),
-        v: a.v,
-        w: a.w,
+        v: a.v.clone(),
+        w: a.w.clone(),
         box_str: Box::from("asd"),
         i: a.i,
         u: Ok("Hello".to_string()),
@@ -122,4 +132,13 @@ fn test_simple_struct() {
     };
 
     assert_eq!(expected_a, decoded_a);
+
+    let f1 = F1 { aa: &[&a, &a] };
+    let encoded_f1 = f1.try_to_vec().unwrap();
+    let decoded_f2 = F2::try_from_slice(&encoded_f1).unwrap();
+    assert_eq!(decoded_f2.aa.len(), 2);
+    assert!(decoded_f2
+        .aa
+        .iter()
+        .all(|f2_a| f2_a == &expected_a));
 }

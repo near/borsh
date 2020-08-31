@@ -1,7 +1,12 @@
-# 0.7.1
+# Changelog
+
+## 0.7.2
+- Implement `BorshSerialize` for reference fields (`&T`)
+
+## 0.7.1
 - Implement `BorshSerialize` for `&T` if `T` implements `BorshSerialize`.
 
-# 0.7.0
+## 0.7.0
 
 - Extended `Box<T>` implementation for `?Sized` types (`[T]`, `str`, ...).
 - Added support for `std::borrow::Cow`
