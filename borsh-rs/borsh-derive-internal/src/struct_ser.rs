@@ -2,15 +2,21 @@ use std::convert::TryFrom;
 
 use quote::quote;
 use syn::export::{Span, TokenStream2};
-use syn::{Fields, Index, ItemStruct};
+use syn::{Fields, Index, ItemStruct, WhereClause};
 
 use crate::attribute_helpers::contains_skip;
 
 pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
     let name = &input.ident;
-    let generics = &input.generics;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    let mut where_clause = where_clause.map_or_else(
+        || WhereClause {
+            where_token: Default::default(),
+            predicates: Default::default(),
+        },
+        Clone::clone,
+    );
     let mut body = TokenStream2::new();
-    let mut serializable_field_types = TokenStream2::new();
     match &input.fields {
         Fields::Named(fields) => {
             for field in &fields.named {
@@ -24,9 +30,9 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
                 body.extend(delta);
 
                 let field_type = &field.ty;
-                serializable_field_types.extend(quote! {
-                    #field_type: borsh::ser::BorshSerialize,
-                });
+                where_clause.predicates.push(syn::parse2(quote! {
+                    #field_type: borsh::ser::BorshSerialize
+                }).unwrap());
             }
         }
         Fields::Unnamed(fields) => {
@@ -44,7 +50,7 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
         Fields::Unit => {}
     }
     Ok(quote! {
-        impl #generics borsh::ser::BorshSerialize for #name #generics where #serializable_field_types {
+        impl #impl_generics borsh::ser::BorshSerialize for #name #ty_generics #where_clause {
             fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                 #body
                 Ok(())
