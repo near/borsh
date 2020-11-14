@@ -83,7 +83,7 @@ mod tests {
             impl borsh::ser::BorshSerialize for A
             where
                 u64: borsh::ser::BorshSerialize,
-                String: borsh::ser::BorshSerialize,
+                String: borsh::ser::BorshSerialize
             {
                 fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                     borsh::BorshSerialize::serialize(&self.x, writer)?;
@@ -109,7 +109,7 @@ mod tests {
             impl<K, V> borsh::ser::BorshSerialize for A<K, V>
             where
                 HashMap<K, V>: borsh::ser::BorshSerialize,
-                String: borsh::ser::BorshSerialize,
+                String: borsh::ser::BorshSerialize
             {
                 fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
                     borsh::BorshSerialize::serialize(&self.x, writer)?;
