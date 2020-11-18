@@ -2,16 +2,22 @@ use std::convert::TryFrom;
 
 use quote::quote;
 use syn::export::TokenStream2;
-use syn::{Fields, ItemEnum};
+use syn::{Fields, ItemEnum, WhereClause};
 
 use crate::attribute_helpers::{contains_initialize_with, contains_skip};
 
 pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     let name = &input.ident;
-    let generics = &input.generics;
+    let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
+    let mut where_clause = where_clause.map_or_else(
+        || WhereClause {
+            where_token: Default::default(),
+            predicates: Default::default(),
+        },
+        Clone::clone,
+    );
     let init_method = contains_initialize_with(&input.attrs)?;
     let mut variant_arms = TokenStream2::new();
-    let mut deserializable_field_types = TokenStream2::new();
     for (variant_idx, variant) in input.variants.iter().enumerate() {
         let variant_idx = u8::try_from(variant_idx).expect("up to 256 enum variants are supported");
         let variant_ident = &variant.ident;
@@ -26,9 +32,9 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         });
                     } else {
                         let field_type = &field.ty;
-                        deserializable_field_types.extend(quote! {
-                            #field_type: borsh::BorshDeserialize,
-                        });
+                        where_clause.predicates.push(syn::parse2(quote! {
+                            #field_type: borsh::BorshDeserialize
+                        }).unwrap());
 
                         variant_header.extend(quote! {
                             #field_name: borsh::BorshDeserialize::deserialize(buf)?,
@@ -43,9 +49,9 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         variant_header.extend(quote! { Default::default(), });
                     } else {
                         let field_type = &field.ty;
-                        deserializable_field_types.extend(quote! {
-                            #field_type: borsh::BorshDeserialize,
-                        });
+                        where_clause.predicates.push(syn::parse2(quote! {
+                            #field_type: borsh::BorshDeserialize
+                        }).unwrap());
 
                         variant_header
                             .extend(quote! { borsh::BorshDeserialize::deserialize(buf)?, });
@@ -64,7 +70,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     };
     if let Some(method_ident) = init_method {
         Ok(quote! {
-            impl #generics borsh::de::BorshDeserialize for #name #generics where  #deserializable_field_types {
+            impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
                 fn deserialize(buf: &mut &[u8]) -> std::result::Result<Self, std::io::Error> {
                     #variant_idx
                     let mut return_value = match variant_idx {
@@ -82,7 +88,7 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
         })
     } else {
         Ok(quote! {
-            impl #generics borsh::de::BorshDeserialize for #name #generics where  #deserializable_field_types {
+            impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
                 fn deserialize(buf: &mut &[u8]) -> std::result::Result<Self, std::io::Error> {
                     #variant_idx
                     let return_value = match variant_idx {
