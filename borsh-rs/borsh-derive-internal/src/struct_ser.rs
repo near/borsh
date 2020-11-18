@@ -120,4 +120,31 @@ mod tests {
         };
         assert_eq(expected, actual);
     }
+
+    #[test]
+    fn bound_generics() {
+        let item_struct: ItemStruct = syn::parse2(quote!{
+            struct A<K: Key, V> where V: Value {
+                x: HashMap<K, V>,
+                y: String,
+            }
+        }).unwrap();
+
+        let actual = struct_ser(&item_struct).unwrap();
+        let expected = quote!{
+            impl<K: Key, V> borsh::ser::BorshSerialize for A<K, V>
+            where
+                V: Value,
+                HashMap<K, V>: borsh::ser::BorshSerialize,
+                String: borsh::ser::BorshSerialize
+            {
+                fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
+                    borsh::BorshSerialize::serialize(&self.x, writer)?;
+                    borsh::BorshSerialize::serialize(&self.y, writer)?;
+                    Ok(())
+                }
+            }
+        };
+        assert_eq(expected, actual);
+    }
 }
