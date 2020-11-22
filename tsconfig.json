@@ -9,7 +9,7 @@
     "module": "commonjs",
     "target": "esnext",
     "moduleResolution": "node",
-    "outDir": "./borsh-js",
+    "outDir": "./borsh-ts/lib",
     "declaration": true,
     "preserveSymlinks": true,
     "preserveWatchOutput": true,

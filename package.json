@@ -1,14 +1,16 @@
 {
   "name": "borsh",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "description": "Binary Object Representation Serializer for Hashing",
-  "main": "borsh-js/index.js",
-  "types": "borsh-js/index.d.ts",
+  "main": "borsh-ts/lib/index.js",
+  "types": "borsh-ts/lib/index.d.ts",
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
     "test": "jest test --runInBand",
     "dev": "yarn build -w",
-    "pretest": "yarn build"
+    "pretest": "yarn build",
+    "format": "prettier --write \"borsh-ts/**/*.ts\" \"borsh-ts/**/*.js\"",
+    "lint": "tslint -p tsconfig.json"
   },
   "repository": {
     "type": "git",
@@ -33,10 +35,16 @@
     "@types/babel__template": "^7.0.2",
     "@types/node": "^12.7.3",
     "jest": "^24.9.0",
-    "typescript": "^3.6.2"
+    "typescript": "^3.6.2",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "prettier": "^2.2.0"
   },
   "dependencies": {
     "@types/bn.js": "^4.11.5",
     "bn.js": "^5.0.0"
-  }
+  },
+  "files": [
+    "borsh-ts/lib/**/*"
+  ]
 }
