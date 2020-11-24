@@ -54,48 +54,48 @@ class BinaryWriter {
         this.buf = Buffer.alloc(INITIAL_LENGTH);
         this.length = 0;
     }
-    maybe_resize() {
+    maybeResize() {
         if (this.buf.length < 16 + this.length) {
             this.buf = Buffer.concat([this.buf, Buffer.alloc(INITIAL_LENGTH)]);
         }
     }
-    write_u8(value) {
-        this.maybe_resize();
+    writeU8(value) {
+        this.maybeResize();
         this.buf.writeUInt8(value, this.length);
         this.length += 1;
     }
-    write_u32(value) {
-        this.maybe_resize();
+    writeU32(value) {
+        this.maybeResize();
         this.buf.writeUInt32LE(value, this.length);
         this.length += 4;
     }
-    write_u64(value) {
-        this.maybe_resize();
-        this.write_buffer(Buffer.from(new bn_js_1.default(value).toArray('le', 8)));
+    writeU64(value) {
+        this.maybeResize();
+        this.writeBuffer(Buffer.from(new bn_js_1.default(value).toArray('le', 8)));
     }
-    write_u128(value) {
-        this.maybe_resize();
-        this.write_buffer(Buffer.from(new bn_js_1.default(value).toArray('le', 16)));
+    writeU128(value) {
+        this.maybeResize();
+        this.writeBuffer(Buffer.from(new bn_js_1.default(value).toArray('le', 16)));
     }
-    write_buffer(buffer) {
+    writeBuffer(buffer) {
         // Buffer.from is needed as this.buf.subarray can return plain Uint8Array in browser
         this.buf = Buffer.concat([Buffer.from(this.buf.subarray(0, this.length)), buffer, Buffer.alloc(INITIAL_LENGTH)]);
         this.length += buffer.length;
     }
-    write_string(str) {
-        this.maybe_resize();
+    writeString(str) {
+        this.maybeResize();
         const b = Buffer.from(str, 'utf8');
-        this.write_u32(b.length);
-        this.write_buffer(b);
+        this.writeU32(b.length);
+        this.writeBuffer(b);
     }
-    write_fixed_array(array) {
-        this.write_buffer(Buffer.from(array));
+    writeFixedArray(array) {
+        this.writeBuffer(Buffer.from(array));
     }
-    write_array(array, fn) {
-        this.maybe_resize();
-        this.write_u32(array.length);
+    writeArray(array, fn) {
+        this.maybeResize();
+        this.writeU32(array.length);
         for (const elem of array) {
-            this.maybe_resize();
+            this.maybeResize();
             fn(elem);
         }
     }
@@ -126,25 +126,25 @@ class BinaryReader {
         this.buf = buf;
         this.offset = 0;
     }
-    read_u8() {
+    readU8() {
         const value = this.buf.readUInt8(this.offset);
         this.offset += 1;
         return value;
     }
-    read_u32() {
+    readU32() {
         const value = this.buf.readUInt32LE(this.offset);
         this.offset += 4;
         return value;
     }
-    read_u64() {
-        const buf = this.read_buffer(8);
+    readU64() {
+        const buf = this.readBuffer(8);
         return new bn_js_1.default(buf, 'le');
     }
-    read_u128() {
-        const buf = this.read_buffer(16);
+    readU128() {
+        const buf = this.readBuffer(16);
         return new bn_js_1.default(buf, 'le');
     }
-    read_buffer(len) {
+    readBuffer(len) {
         if ((this.offset + len) > this.buf.length) {
             throw new BorshError(`Expected buffer length ${len} isn't within bounds`);
         }
@@ -152,9 +152,9 @@ class BinaryReader {
         this.offset += len;
         return result;
     }
-    read_string() {
-        const len = this.read_u32();
-        const buf = this.read_buffer(len);
+    readString() {
+        const len = this.readU32();
+        const buf = this.readBuffer(len);
         try {
             // NOTE: Using TextDecoder to fail on invalid UTF-8
             return textDecoder.decode(buf);
@@ -163,11 +163,11 @@ class BinaryReader {
             throw new BorshError(`Error decoding UTF-8 string: ${e}`);
         }
     }
-    read_fixed_array(len) {
-        return new Uint8Array(this.read_buffer(len));
+    readFixedArray(len) {
+        return new Uint8Array(this.readBuffer(len));
     }
-    read_array(fn) {
-        const len = this.read_u32();
+    readArray(fn) {
+        const len = this.readU32();
         const result = Array();
         for (let i = 0; i < len; ++i) {
             result.push(fn());
@@ -177,51 +177,54 @@ class BinaryReader {
 }
 __decorate([
     handlingRangeError
-], BinaryReader.prototype, "read_u8", null);
+], BinaryReader.prototype, "readU8", null);
 __decorate([
     handlingRangeError
-], BinaryReader.prototype, "read_u32", null);
+], BinaryReader.prototype, "readU32", null);
 __decorate([
     handlingRangeError
-], BinaryReader.prototype, "read_u64", null);
+], BinaryReader.prototype, "readU64", null);
 __decorate([
     handlingRangeError
-], BinaryReader.prototype, "read_u128", null);
+], BinaryReader.prototype, "readU128", null);
 __decorate([
     handlingRangeError
-], BinaryReader.prototype, "read_string", null);
+], BinaryReader.prototype, "readString", null);
 __decorate([
     handlingRangeError
-], BinaryReader.prototype, "read_fixed_array", null);
+], BinaryReader.prototype, "readFixedArray", null);
 __decorate([
     handlingRangeError
-], BinaryReader.prototype, "read_array", null);
+], BinaryReader.prototype, "readArray", null);
 exports.BinaryReader = BinaryReader;
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
 function serializeField(schema, fieldName, value, fieldType, writer) {
     try {
         // TODO: Handle missing values properly (make sure they never result in just skipped write)
         if (typeof fieldType === 'string') {
-            writer[`write_${fieldType}`](value);
+            writer[`write${capitalizeFirstLetter(fieldType)}`](value);
         }
         else if (fieldType instanceof Array) {
             if (typeof fieldType[0] === 'number') {
                 if (value.length !== fieldType[0]) {
                     throw new BorshError(`Expecting byte array of length ${fieldType[0]}, but got ${value.length} bytes`);
                 }
-                writer.write_fixed_array(value);
+                writer.writeFixedArray(value);
             }
             else {
-                writer.write_array(value, (item) => { serializeField(schema, fieldName, item, fieldType[0], writer); });
+                writer.writeArray(value, (item) => { serializeField(schema, fieldName, item, fieldType[0], writer); });
             }
         }
         else if (fieldType.kind !== undefined) {
             switch (fieldType.kind) {
                 case 'option': {
                     if (value === null) {
-                        writer.write_u8(0);
+                        writer.writeU8(0);
                     }
                     else {
-                        writer.write_u8(1);
+                        writer.writeU8(1);
                         serializeField(schema, fieldName, value, fieldType.type, writer);
                     }
                     break;
@@ -255,7 +258,7 @@ function serializeStruct(schema, obj, writer) {
         for (let idx = 0; idx < structSchema.values.length; ++idx) {
             const [fieldName, fieldType] = structSchema.values[idx];
             if (fieldName === name) {
-                writer.write_u8(idx);
+                writer.writeU8(idx);
                 serializeField(schema, fieldName, obj[fieldName], fieldType, writer);
                 break;
             }
@@ -276,13 +279,13 @@ exports.serialize = serialize;
 function deserializeField(schema, fieldName, fieldType, reader) {
     try {
         if (typeof fieldType === 'string') {
-            return reader[`read_${fieldType}`]();
+            return reader[`read${capitalizeFirstLetter(fieldType)}`]();
         }
         if (fieldType instanceof Array) {
             if (typeof fieldType[0] === 'number') {
-                return reader.read_fixed_array(fieldType[0]);
+                return reader.readFixedArray(fieldType[0]);
             }
-            return reader.read_array(() => deserializeField(schema, fieldName, fieldType[0], reader));
+            return reader.readArray(() => deserializeField(schema, fieldName, fieldType[0], reader));
         }
         return deserializeStruct(schema, fieldType, reader);
     }
@@ -306,7 +309,7 @@ function deserializeStruct(schema, classType, reader) {
         return new classType(result);
     }
     if (structSchema.kind === 'enum') {
-        const idx = reader.read_u8();
+        const idx = reader.readU8();
         if (idx >= structSchema.values.length) {
             throw new BorshError(`Enum index: ${idx} is out of range`);
         }
