@@ -1,9 +1,14 @@
+extern crate alloc;
+
 pub use borsh_derive::{BorshDeserialize, BorshSchema, BorshSerialize};
 
 pub mod de;
 pub mod schema;
 pub mod schema_helpers;
 pub mod ser;
+pub mod error;
+#[cfg(not(feature = "std"))]
+mod write;
 
 pub use de::BorshDeserialize;
 pub use schema::BorshSchema;
