@@ -1,4 +1,4 @@
-const borsh = require('../../borsh-js/index');
+const borsh = require('../../lib/index');
 
 class Assignable {
     constructor(properties) {
