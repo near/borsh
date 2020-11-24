@@ -9,8 +9,8 @@
     "test": "jest test --runInBand",
     "dev": "yarn build -w",
     "pretest": "yarn build",
-    "format": "prettier --write \"borsh-ts/**/*.ts\" \"borsh-ts/**/*.js\"",
-    "lint": "tslint -p tsconfig.json"
+    "lint": "eslint borsh-ts/**/*.ts",
+    "fix": "eslint borsh-ts/**/*.ts --fix"
   },
   "repository": {
     "type": "git",
@@ -34,11 +34,11 @@
     "@types/babel__core": "^7.1.2",
     "@types/babel__template": "^7.0.2",
     "@types/node": "^12.7.3",
+    "@typescript-eslint/eslint-plugin": "^2.18.0",
+    "@typescript-eslint/parser": "^2.18.0",
     "jest": "^24.9.0",
     "typescript": "^3.6.2",
-    "tslint": "^6.1.3",
-    "tslint-config-prettier": "^1.18.0",
-    "prettier": "^2.2.0"
+    "eslint": "^6.5.1"
   },
   "dependencies": {
     "@types/bn.js": "^4.11.5",

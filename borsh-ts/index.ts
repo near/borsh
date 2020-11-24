@@ -204,16 +204,16 @@ function serializeField(schema: Schema, fieldName: string, value: any, fieldType
             }
         } else if (fieldType.kind !== undefined) {
             switch (fieldType.kind) {
-                case 'option': {
-                    if (value === null) {
-                        writer.writeU8(0);
-                    } else {
-                        writer.writeU8(1);
-                        serializeField(schema, fieldName, value, fieldType.type, writer);
-                    }
-                    break;
+            case 'option': {
+                if (value === null) {
+                    writer.writeU8(0);
+                } else {
+                    writer.writeU8(1);
+                    serializeField(schema, fieldName, value, fieldType.type, writer);
                 }
-                default: throw new BorshError(`FieldType ${fieldType} unrecognized`);
+                break;
+            }
+            default: throw new BorshError(`FieldType ${fieldType} unrecognized`);
             }
         } else {
             serializeStruct(schema, value, writer);
