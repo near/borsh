@@ -18,6 +18,7 @@ Cargo.lock
 **/node_modules/
 package-lock.json
 yarn.lock
+.nyc_output
 
 # Borsh schema file
 **/schema_schema.dat
