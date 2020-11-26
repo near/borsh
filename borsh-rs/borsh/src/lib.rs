@@ -1,14 +1,16 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
 pub use borsh_derive::{BorshDeserialize, BorshSchema, BorshSerialize};
 
+mod custom_std;
 pub mod de;
 pub mod schema;
 pub mod schema_helpers;
 pub mod ser;
-pub mod error;
-#[cfg(not(feature = "std"))]
-mod write;
+// pub mod error;
 
 pub use de::BorshDeserialize;
 pub use schema::BorshSchema;

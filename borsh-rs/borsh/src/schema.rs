@@ -292,12 +292,13 @@ impl_tuple!(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hashbrown::HashMap;
 
     macro_rules! map(
-    () => { ::std::collections::HashMap::new() };
+    () => { ::hashbrown::HashMap::new() };
     { $($key:expr => $value:expr),+ } => {
         {
-            let mut m = ::std::collections::HashMap::new();
+            let mut m = ::hashbrown::HashMap::new();
             $(
                 m.insert($key.to_string(), $value);
             )+

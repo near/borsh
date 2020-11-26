@@ -1,3 +1,6 @@
+const ERROR_NOT_ALL_BYTES_READ: &str = "Not all bytes read";
+const ERROR_UNEXPECTED_LENGTH_OF_INPUT: &str = "Unexpected length of input";
+
 #[cfg(feature = "std", derive(Debug))]
 pub struct Error {
     kind: ErrorKind,

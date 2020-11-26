@@ -1,12 +1,10 @@
-use core::borrow::Cow;
-#[cfg(feature = "alloc")]
-use core::collections::{BTreeMap, HashSet};
+use crate::custom_std::borrow::Cow;
+use crate::custom_std::collections::{BTreeMap, HashSet};
 #[cfg(feature = "std")]
-use std::collections::HashMap;
-use core::convert::TryInto;
-use alloc::mem::{forget, size_of};
-
-use crate::error::{Error, ErrorKind, Result};
+use crate::custom_std::collections::HashMap;
+use crate::custom_std::convert::TryInto;
+use crate::custom_std::mem::{forget, size_of};
+use crate::custom_std::io::{Error, ErrorKind, Result};
 
 mod hint;
 
@@ -312,6 +310,26 @@ where
         let len = u32::deserialize(buf)?;
         // TODO(16): return capacity allocation when we can safely do that.
         let mut result = HashMap::new();
+        for _ in 0..len {
+            let key = K::deserialize(buf)?;
+            let value = V::deserialize(buf)?;
+            result.insert(key, value);
+        }
+        Ok(result)
+    }
+}
+
+
+impl<K, V> BorshDeserialize for hashbrown::HashMap<K, V>
+    where
+        K: BorshDeserialize + Eq + core::hash::Hash,
+        V: BorshDeserialize,
+{
+    #[inline]
+    fn deserialize(buf: &mut &[u8]) -> Result<Self> {
+        let len = u32::deserialize(buf)?;
+        // TODO(16): return capacity allocation when we can safely do that.
+        let mut result = hashbrown::HashMap::new();
         for _ in 0..len {
             let key = K::deserialize(buf)?;
             let value = V::deserialize(buf)?;

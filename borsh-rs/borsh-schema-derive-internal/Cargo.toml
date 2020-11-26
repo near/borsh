@@ -15,3 +15,4 @@ Schema Generator for Borsh
 proc-macro2 = "1"
 syn = {version = "1", features = ["full", "fold"] }
 quote = "1"
+hashbrown = "0.9.1"

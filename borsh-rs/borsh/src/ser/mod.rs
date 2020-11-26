@@ -1,19 +1,14 @@
-use alloc::borrow::Cow;
+use crate::custom_std::borrow::Cow;
 #[cfg(any(feature = "alloc", feature = "std"))]
-use alloc::collections::{BTreeMap, HashSet};
+use crate::custom_std::collections::{BTreeMap, HashSet};
 #[cfg(feature = "std")]
-use std::collections::HashMap;
-use core::convert::TryFrom;
-use core::mem::size_of;
-
-use crate::error::{Error, ErrorKind, Result};
+use crate::custom_std::collections::HashMap;
+use crate::custom_std::convert::TryFrom;
+use crate::custom_std::mem::size_of;
+use crate::custom_std::io::{Write, Error, ErrorKind, Result};
+use crate::custom_std::Vec;
 
 const DEFAULT_SERIALIZER_CAPACITY: usize = 1024;
-
-#[cfg(not(feature = "std"))]
-use crate::write::Write;
-#[cfg(feature = "std")]
-use std::Write;
 
 /// A data-structure that can be serialized into binary format by NBOR.
 pub trait BorshSerialize {
@@ -54,7 +49,8 @@ macro_rules! impl_for_integer {
         impl BorshSerialize for $type {
             #[inline]
             fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
-                writer.write_all(&self.to_le_bytes())
+                let bytes = self.to_le_bytes();
+                writer.write_all(&bytes)
             }
         }
     };
@@ -224,6 +220,26 @@ impl<K, V> BorshSerialize for HashMap<K, V>
 where
     K: BorshSerialize + PartialOrd,
     V: BorshSerialize,
+{
+    #[inline]
+    fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
+        let mut vec = self.iter().collect::<Vec<_>>();
+        vec.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
+        u32::try_from(vec.len())
+            .map_err(|_| ErrorKind::InvalidInput)?
+            .serialize(writer)?;
+        for (key, value) in vec {
+            key.serialize(writer)?;
+            value.serialize(writer)?;
+        }
+        Ok(())
+    }
+}
+
+impl<K, V> BorshSerialize for hashbrown::HashMap<K, V>
+    where
+        K: BorshSerialize + PartialOrd,
+        V: BorshSerialize,
 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {

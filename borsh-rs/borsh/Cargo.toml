@@ -22,6 +22,8 @@ path = "src/generate_schema_schema.rs"
 
 [dependencies]
 borsh-derive = { path = "../borsh-derive", version = "0.7.2" }
+bare-io = "0.2.1"
+hashbrown = "0.9.1"
 
 [features]
 default = ["std"]

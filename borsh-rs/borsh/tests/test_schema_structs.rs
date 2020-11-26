@@ -1,10 +1,10 @@
 use borsh::schema::*;
 
 macro_rules! map(
-    () => { ::std::collections::HashMap::new() };
+    () => { ::hashbrown::HashMap::new() };
     { $($key:expr => $value:expr),+ } => {
         {
-            let mut m = ::std::collections::HashMap::new();
+            let mut m = ::hashbrown::HashMap::new();
             $(
                 m.insert($key.to_string(), $value);
             )+
@@ -105,7 +105,7 @@ pub fn tuple_struct_params() {
 pub fn simple_generics() {
     #[derive(borsh::BorshSchema)]
     struct A<K, V> {
-        _f1: std::collections::HashMap<K, V>,
+        _f1: hashbrown::HashMap<K, V>,
         _f2: String,
     };
     assert_eq!(
