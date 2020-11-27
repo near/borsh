@@ -136,20 +136,17 @@ impl BorshDeserialize for bool {
         } else if b == 1 {
             Ok(true)
         } else {
-            #[cfg(feature = "std")]
             let msg = format!("Invalid bool representation: {}", b);
-
-            #[cfg(not(feature = "std"))]
-            let msg = "Invalid bool representation";
-
 
             Err(Error::new(
                 ErrorKind::InvalidInput,
-                msg,
+                crate::string_to_static_str(msg),
             ))
         }
     }
 }
+
+
 
 impl<T> BorshDeserialize for Option<T>
 where
@@ -170,18 +167,14 @@ where
         } else if flag == 1 {
             Ok(Some(T::deserialize(buf)?))
         } else {
-            #[cfg(feature = "std")]
             let msg = format!(
                 "Invalid Option representation: {}. The first byte must be 0 or 1",
                 flag
             );
 
-            #[cfg(not(feature = "std"))]
-            let msg = "Invalid Option representation. The first byte must be 0 or 1";
-
             Err(Error::new(
                 ErrorKind::InvalidInput,
-                msg,
+                crate::string_to_static_str(msg),
             ))
         }
     }
@@ -207,18 +200,14 @@ where
         } else if flag == 1 {
             Ok(Ok(T::deserialize(buf)?))
         } else {
-            #[cfg(feature = "std")]
             let msg = format!(
                 "Invalid Result representation: {}. The first byte must be 0 or 1",
                 flag
             );
 
-            #[cfg(not(feature = "std"))]
-            let msg = "Invalid Result representation. The first byte must be 0 or 1";
-
             Err(Error::new(
                 ErrorKind::InvalidInput,
-                msg,
+                crate::string_to_static_str(msg),
             ))
         }
     }
@@ -228,14 +217,9 @@ impl BorshDeserialize for String {
     #[inline]
     fn deserialize(buf: &mut &[u8]) -> Result<Self> {
         String::from_utf8(Vec::<u8>::deserialize(buf)?)
-            .map_err(|#[allow(unused_variables)] err| {
-                #[cfg(feature = "std")]
+            .map_err(|#[allow(unused_variables)] err| {     
                 let msg = err.to_string();
-
-                #[cfg(not(feature = "std"))]
-                let msg = "Invalid UTF8 string";
-
-                Error::new(ErrorKind::InvalidData, msg)
+                Error::new(ErrorKind::InvalidData, crate::string_to_static_str(msg))
             })
     }
 }
