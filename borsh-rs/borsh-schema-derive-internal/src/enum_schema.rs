@@ -6,13 +6,13 @@ use syn::{
     Visibility,
 };
 
-pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
+pub fn process_enum(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let name_str = name.to_token_stream().to_string();
     let generics = &input.generics;
     let (impl_generics, ty_generics, _) = generics.split_for_impl();
     // Generate function that returns the name of the type.
-    let (declaration, where_clause) = declaration(&name_str, &input.generics);
+    let (declaration, where_clause) = declaration(&name_str, &input.generics, cratename.clone());
 
     // Generate function that returns the schema for variants.
     // Definitions of the variants.
@@ -92,7 +92,7 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
             }
         }
         anonymous_defs.extend(quote! {
-            #[derive(borsh::BorshSchema)]
+            #[derive(#cratename::BorshSchema)]
             #anonymous_struct
         });
         add_recursive_defs.extend(quote! {
@@ -104,11 +104,11 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
     }
 
     let type_definitions = quote! {
-        fn add_definitions_recursively(definitions: &mut borsh::lib::HashMap<borsh::schema::Declaration, borsh::schema::Definition>) {
+        fn add_definitions_recursively(definitions: &mut #cratename::lib::HashMap<#cratename::schema::Declaration, #cratename::schema::Definition>) {
             #anonymous_defs
             #add_recursive_defs
             let variants = vec![#(#variants_defs),*];
-            let definition = borsh::schema::Definition::Enum{variants};
+            let definition = #cratename::schema::Definition::Enum{variants};
             Self::add_definition(Self::declaration(), definition, definitions);
         }
     };
@@ -118,8 +118,8 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
         TokenStream2::new()
     };
     Ok(quote! {
-        impl #impl_generics borsh::BorshSchema for #name #ty_generics #where_clause {
-            fn declaration() -> borsh::schema::Declaration {
+        impl #impl_generics #cratename::BorshSchema for #name #ty_generics #where_clause {
+            fn declaration() -> #cratename::schema::Declaration {
                 #declaration
             }
             #type_definitions
@@ -146,7 +146,7 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = process_enum(&item_enum).unwrap();
+        let actual = process_enum(&item_enum, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A {
                 fn declaration() -> borsh::schema::Declaration {
@@ -184,7 +184,7 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = process_enum(&item_enum).unwrap();
+        let actual = process_enum(&item_enum, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A {
                 fn declaration() -> borsh::schema::Declaration {
@@ -219,7 +219,7 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = process_enum(&item_enum).unwrap();
+        let actual = process_enum(&item_enum, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A {
                 fn declaration() -> borsh::schema::Declaration {
@@ -271,7 +271,7 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = process_enum(&item_enum).unwrap();
+        let actual = process_enum(&item_enum, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl<C, W> borsh::BorshSchema for A<C, W>
             where

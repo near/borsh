@@ -2,11 +2,11 @@ use core::convert::TryFrom;
 
 use quote::quote;
 use syn::export::{Span, TokenStream2};
-use syn::{Fields, Index, ItemStruct, WhereClause};
+use syn::{Fields, Ident, Index, ItemStruct, WhereClause};
 
 use crate::attribute_helpers::contains_skip;
 
-pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
+pub fn struct_ser(input: &ItemStruct, cratename: Ident) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let mut where_clause = where_clause.map_or_else(
@@ -25,13 +25,13 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
                 }
                 let field_name = field.ident.as_ref().unwrap();
                 let delta = quote! {
-                    borsh::BorshSerialize::serialize(&self.#field_name, writer)?;
+                    #cratename::BorshSerialize::serialize(&self.#field_name, writer)?;
                 };
                 body.extend(delta);
 
                 let field_type = &field.ty;
                 where_clause.predicates.push(syn::parse2(quote! {
-                    #field_type: borsh::ser::BorshSerialize
+                    #field_type: #cratename::ser::BorshSerialize
                 }).unwrap());
             }
         }
@@ -42,7 +42,7 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
                     span: Span::call_site(),
                 };
                 let delta = quote! {
-                    borsh::BorshSerialize::serialize(&self.#field_idx, writer)?;
+                    #cratename::BorshSerialize::serialize(&self.#field_idx, writer)?;
                 };
                 body.extend(delta);
             }
@@ -50,8 +50,8 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
         Fields::Unit => {}
     }
     Ok(quote! {
-        impl #impl_generics borsh::ser::BorshSerialize for #name #ty_generics #where_clause {
-            fn serialize<W: borsh::lib::Write>(&self, writer: &mut W) -> core::result::Result<(), borsh::error::Error> {
+        impl #impl_generics #cratename::ser::BorshSerialize for #name #ty_generics #where_clause {
+            fn serialize<W: #cratename::lib::Write>(&self, writer: &mut W) -> core::result::Result<(), #cratename::error::Error> {
                 #body
                 Ok(())
             }
@@ -78,7 +78,7 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = struct_ser(&item_struct).unwrap();
+        let actual = struct_ser(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::ser::BorshSerialize for A
             where
@@ -104,7 +104,7 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = struct_ser(&item_struct).unwrap();
+        let actual = struct_ser(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl<K, V> borsh::ser::BorshSerialize for A<K, V>
             where
@@ -130,7 +130,7 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = struct_ser(&item_struct).unwrap();
+        let actual = struct_ser(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl<K: Key, V> borsh::ser::BorshSerialize for A<K, V>
             where

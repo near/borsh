@@ -1,15 +1,15 @@
 use crate::helpers::{contains_skip, declaration};
 use quote::quote;
 use syn::export::{ToTokens, TokenStream2};
-use syn::{Fields, ItemStruct};
+use syn::{Fields, ItemStruct, Ident};
 
-pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
+pub fn process_struct(input: &ItemStruct, cratename: Ident) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let name_str = name.to_token_stream().to_string();
     let generics = &input.generics;
     let (impl_generics, ty_generics, _) = generics.split_for_impl();
     // Generate function that returns the name of the type.
-    let (declaration, mut where_clause) = declaration(&name_str, &input.generics);
+    let (declaration, mut where_clause) = declaration(&name_str, &input.generics, cratename.clone());
 
     // Generate function that returns the schema of required types.
     let mut fields_vec = vec![];
@@ -30,12 +30,12 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
                     <#field_type>::add_definitions_recursively(definitions);
                 });
                 where_clause.push(quote! {
-                    #field_type: borsh::BorshSchema
+                    #field_type: #cratename::BorshSchema
                 });
             }
             if !fields_vec.is_empty() {
                 struct_fields = quote! {
-                    let fields = borsh::schema::Fields::NamedFields(vec![#(#fields_vec),*]);
+                    let fields = #cratename::schema::Fields::NamedFields(vec![#(#fields_vec),*]);
                 };
             }
         }
@@ -52,12 +52,12 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
                     <#field_type>::add_definitions_recursively(definitions);
                 });
                 where_clause.push(quote! {
-                    #field_type: borsh::BorshSchema
+                    #field_type: #cratename::BorshSchema
                 });
             }
             if !fields_vec.is_empty() {
                 struct_fields = quote! {
-                    let fields = borsh::schema::Fields::UnnamedFields(vec![#(#fields_vec),*]);
+                    let fields = #cratename::schema::Fields::UnnamedFields(vec![#(#fields_vec),*]);
                 };
             }
         }
@@ -66,14 +66,14 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
 
     if fields_vec.is_empty() {
         struct_fields = quote! {
-            let fields = borsh::schema::Fields::Empty;
+            let fields = #cratename::schema::Fields::Empty;
         };
     }
 
     let add_definitions_recursively = quote! {
-        fn add_definitions_recursively(definitions: &mut borsh::lib::HashMap<borsh::schema::Declaration, borsh::schema::Definition>) {
+        fn add_definitions_recursively(definitions: &mut #cratename::lib::HashMap<#cratename::schema::Declaration, #cratename::schema::Definition>) {
             #struct_fields
-            let definition = borsh::schema::Definition::Struct { fields };
+            let definition = #cratename::schema::Definition::Struct { fields };
             Self::add_definition(Self::declaration(), definition, definitions);
             #add_definitions_recursively_rec
         }
@@ -84,8 +84,8 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
         TokenStream2::new()
     };
     Ok(quote! {
-        impl #impl_generics borsh::BorshSchema for #name #ty_generics #where_clause {
-            fn declaration() -> borsh::schema::Declaration {
+        impl #impl_generics #cratename::BorshSchema for #name #ty_generics #where_clause {
+            fn declaration() -> #cratename::schema::Declaration {
                 #declaration
             }
             #add_definitions_recursively
@@ -110,7 +110,7 @@ mod tests {
         })
         .unwrap();
 
-        let actual = process_struct(&item_struct).unwrap();
+        let actual = process_struct(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A
             {
@@ -134,7 +134,7 @@ mod tests {
         })
         .unwrap();
 
-        let actual = process_struct(&item_struct).unwrap();
+        let actual = process_struct(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl<T> borsh::BorshSchema for A<T>
             where
@@ -168,7 +168,7 @@ mod tests {
         })
         .unwrap();
 
-        let actual = process_struct(&item_struct).unwrap();
+        let actual = process_struct(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A
             where
@@ -205,7 +205,7 @@ mod tests {
         })
         .unwrap();
 
-        let actual = process_struct(&item_struct).unwrap();
+        let actual = process_struct(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl<K, V> borsh::BorshSchema for A<K, V>
             where
@@ -246,7 +246,7 @@ mod tests {
         })
         .unwrap();
 
-        let actual = process_struct(&item_struct).unwrap();
+        let actual = process_struct(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A
             where
@@ -286,7 +286,7 @@ mod tests {
         })
         .unwrap();
 
-        let actual = process_struct(&item_struct).unwrap();
+        let actual = process_struct(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl<K, V> borsh::BorshSchema for A<K, V>
             where
@@ -326,7 +326,7 @@ mod tests {
         })
         .unwrap();
 
-        let actual = process_struct(&item_struct).unwrap();
+        let actual = process_struct(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A {
                 fn declaration() -> borsh::schema::Declaration {
@@ -354,7 +354,7 @@ mod tests {
         })
         .unwrap();
 
-        let actual = process_struct(&item_struct).unwrap();
+        let actual = process_struct(&item_struct, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A
             where
