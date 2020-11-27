@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use quote::quote;
 use syn::export::TokenStream2;
@@ -71,15 +71,15 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     if let Some(method_ident) = init_method {
         Ok(quote! {
             impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) -> std::result::Result<Self, std::io::Error> {
+                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, borsh::custom_std::io::Error> {
                     #variant_idx
                     let mut return_value = match variant_idx {
                         #variant_arms
                         _ =>
-                        return Err(std::io::Error::new(
-                                   std::io::ErrorKind::InvalidInput,
-                                   format!("Unexpected variant index: {:?}", variant_idx),
-                                  )),
+                        return Err(borsh::custom_std::io::Error::new(
+                            borsh::custom_std::io::ErrorKind::InvalidInput,
+                            format!("Unexpected variant index: {:?}", variant_idx),
+                        )),
                     };
                     return_value.#method_ident();
                     Ok(return_value)
@@ -89,13 +89,13 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     } else {
         Ok(quote! {
             impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) -> std::result::Result<Self, std::io::Error> {
+                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, borsh::custom_std::io::Error> {
                     #variant_idx
                     let return_value = match variant_idx {
                         #variant_arms
                         _ =>
-                        return Err(std::io::Error::new(
-                                   std::io::ErrorKind::InvalidInput,
+                        return Err(borsh::custom_std::io::Error::new(
+                                   borsh::custom_std::io::ErrorKind::InvalidInput,
                                    format!("Unexpected variant index: {:?}", variant_idx),
                                   )),
                     };

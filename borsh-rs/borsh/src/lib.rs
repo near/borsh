@@ -5,7 +5,7 @@ extern crate alloc;
 
 pub use borsh_derive::{BorshDeserialize, BorshSchema, BorshSerialize};
 
-mod custom_std;
+pub mod custom_std;
 pub mod de;
 pub mod schema;
 pub mod schema_helpers;

@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use quote::quote;
 use syn::export::{Span, TokenStream2};
@@ -79,7 +79,7 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
     }
     Ok(quote! {
         impl #impl_generics borsh::ser::BorshSerialize for #name #ty_generics #where_clause {
-            fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
+            fn serialize<W: borsh::custom_std::io::Write>(&self, writer: &mut W) -> core::result::Result<(), borsh::custom_std::io::Error> {
                 match self {
                     #body
                 }
