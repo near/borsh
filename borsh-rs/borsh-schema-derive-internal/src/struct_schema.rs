@@ -36,7 +36,7 @@ pub fn process_struct(input: &ItemStruct, cratename: Ident) -> syn::Result<Token
             }
             if !fields_vec.is_empty() {
                 struct_fields = quote! {
-                    let fields = #cratename::schema::Fields::NamedFields(vec![#(#fields_vec),*]);
+                    let fields = #cratename::schema::Fields::NamedFields(#cratename::lib::vec![#(#fields_vec),*]);
                 };
             }
         }
@@ -58,7 +58,7 @@ pub fn process_struct(input: &ItemStruct, cratename: Ident) -> syn::Result<Token
             }
             if !fields_vec.is_empty() {
                 struct_fields = quote! {
-                    let fields = #cratename::schema::Fields::UnnamedFields(vec![#(#fields_vec),*]);
+                    let fields = #cratename::schema::Fields::UnnamedFields(#cratename::lib::vec![#(#fields_vec),*]);
                 };
             }
         }
@@ -143,7 +143,7 @@ mod tests {
                 T: borsh::BorshSchema
             {
                 fn declaration() -> borsh::schema::Declaration {
-                    let params = vec![<T>::declaration()];
+                    let params = borsh::lib::vec![<T>::declaration()];
                     format!(r#"{}<{}>"#, "A", params.join(", "))
                 }
                 fn add_definitions_recursively(
@@ -152,7 +152,7 @@ mod tests {
                         borsh::schema::Definition
                     >
                 ) {
-                    let fields = borsh::schema::Fields::UnnamedFields(vec![<T>::declaration()]);
+                    let fields = borsh::schema::Fields::UnnamedFields(borsh::lib::vec![<T>::declaration()]);
                     let definition = borsh::schema::Definition::Struct { fields };
                     Self::add_definition(Self::declaration(), definition, definitions);
                     <T>::add_definitions_recursively(definitions);
@@ -185,7 +185,7 @@ mod tests {
                         borsh::schema::Definition
                     >
                 ) {
-                    let fields = borsh::schema::Fields::UnnamedFields(vec![
+                    let fields = borsh::schema::Fields::UnnamedFields(borsh::lib::vec![
                         <u64>::declaration(),
                         <String>::declaration()
                     ]);
@@ -216,7 +216,7 @@ mod tests {
                 V: borsh::BorshSchema
             {
                 fn declaration() -> borsh::schema::Declaration {
-                    let params = vec![<K>::declaration(), <V>::declaration()];
+                    let params = borsh::lib::vec![<K>::declaration(), <V>::declaration()];
                     format!(r#"{}<{}>"#, "A", params.join(", "))
                 }
                 fn add_definitions_recursively(
@@ -226,7 +226,7 @@ mod tests {
                     >
                 ) {
                     let fields =
-                        borsh::schema::Fields::UnnamedFields(vec![<K>::declaration(), <V>::declaration()]);
+                        borsh::schema::Fields::UnnamedFields(borsh::lib::vec![<K>::declaration(), <V>::declaration()]);
                     let definition = borsh::schema::Definition::Struct { fields };
                     Self::add_definition(Self::declaration(), definition, definitions);
                     <K>::add_definitions_recursively(definitions);
@@ -263,7 +263,7 @@ mod tests {
                         borsh::schema::Definition
                     >
                 ) {
-                    let fields = borsh::schema::Fields::NamedFields(vec![
+                    let fields = borsh::schema::Fields::NamedFields(borsh::lib::vec![
                         ("x".to_string(), <u64>::declaration()),
                         ("y".to_string(), <String>::declaration())
                     ]);
@@ -297,7 +297,7 @@ mod tests {
                 String: borsh::BorshSchema
             {
                 fn declaration() -> borsh::schema::Declaration {
-                    let params = vec![<K>::declaration(), <V>::declaration()];
+                    let params = borsh::lib::vec![<K>::declaration(), <V>::declaration()];
                     format!(r#"{}<{}>"#, "A", params.join(", "))
                 }
                 fn add_definitions_recursively(
@@ -306,7 +306,7 @@ mod tests {
                         borsh::schema::Definition
                     >
                 ) {
-                    let fields = borsh::schema::Fields::NamedFields(vec![
+                    let fields = borsh::schema::Fields::NamedFields(borsh::lib::vec![
                         ("x".to_string(), <HashMap<K, V> >::declaration()),
                         ("y".to_string(), <String>::declaration())
                     ]);
@@ -370,7 +370,7 @@ mod tests {
                         borsh::schema::Definition
                     >
                 ) {
-                    let fields = borsh::schema::Fields::UnnamedFields(vec![<String>::declaration()]);
+                    let fields = borsh::schema::Fields::UnnamedFields(borsh::lib::vec![<String>::declaration()]);
                     let definition = borsh::schema::Definition::Struct { fields };
                     Self::add_definition(Self::declaration(), definition, definitions);
                     <String>::add_definitions_recursively(definitions);

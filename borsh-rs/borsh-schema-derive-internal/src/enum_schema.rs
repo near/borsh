@@ -107,7 +107,7 @@ pub fn process_enum(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStre
         fn add_definitions_recursively(definitions: &mut #cratename::lib::HashMap<#cratename::schema::Declaration, #cratename::schema::Definition>) {
             #anonymous_defs
             #add_recursive_defs
-            let variants = vec![#(#variants_defs),*];
+            let variants = #cratename::lib::vec![#(#variants_defs),*];
             let definition = #cratename::schema::Definition::Enum{variants};
             Self::add_definition(Self::declaration(), definition, definitions);
         }
@@ -164,7 +164,7 @@ mod tests {
                     struct AEggs;
                     <ABacon>::add_definitions_recursively(definitions);
                     <AEggs>::add_definitions_recursively(definitions);
-                    let variants = vec![
+                    let variants = borsh::lib::vec![
                         ("Bacon".to_string(), <ABacon>::declaration()),
                         ("Eggs".to_string(), <AEggs>::declaration())
                     ];
@@ -199,7 +199,7 @@ mod tests {
                     #[derive(borsh :: BorshSchema)]
                     struct ABacon;
                     <ABacon>::add_definitions_recursively(definitions);
-                    let variants = vec![("Bacon".to_string(), <ABacon>::declaration())];
+                    let variants = borsh::lib::vec![("Bacon".to_string(), <ABacon>::declaration())];
                     let definition = borsh::schema::Definition::Enum { variants };
                     Self::add_definition(Self::declaration(), definition, definitions);
                 }
@@ -246,7 +246,7 @@ mod tests {
                     <AEggs>::add_definitions_recursively(definitions);
                     <ASalad>::add_definitions_recursively(definitions);
                     <ASausage>::add_definitions_recursively(definitions);
-                    let variants = vec![
+                    let variants = borsh::lib::vec![
                         ("Bacon".to_string(), <ABacon>::declaration()),
                         ("Eggs".to_string(), <AEggs>::declaration()),
                         ("Salad".to_string(), <ASalad>::declaration()),
@@ -279,7 +279,7 @@ mod tests {
                 W: borsh::BorshSchema
             {
                 fn declaration() -> borsh::schema::Declaration {
-                    let params = vec![<C>::declaration(), <W>::declaration()];
+                    let params = borsh::lib::vec![<C>::declaration(), <W>::declaration()];
                     format!(r#"{}<{}>"#, "A", params.join(", "))
                 }
                 fn add_definitions_recursively(
@@ -310,7 +310,7 @@ mod tests {
                     <AEggs<C, W> >::add_definitions_recursively(definitions);
                     <ASalad<C, W> >::add_definitions_recursively(definitions);
                     <ASausage<C, W> >::add_definitions_recursively(definitions);
-                    let variants = vec![
+                    let variants = borsh::lib::vec![
                         ("Bacon".to_string(), <ABacon<C, W> >::declaration()),
                         ("Eggs".to_string(), <AEggs<C, W> >::declaration()),
                         ("Salad".to_string(), <ASalad<C, W> >::declaration()),
