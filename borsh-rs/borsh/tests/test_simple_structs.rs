@@ -9,7 +9,9 @@ struct A<'a> {
     y: f32,
     z: String,
     t: (String, u64),
+    #[cfg(feature = "std")]
     m: HashMap<String, String>,
+    #[cfg(feature = "std")]
     s: HashSet<u64>,
     v: Vec<String>,
     w: Box<[u8]>,
@@ -87,7 +89,9 @@ fn test_simple_struct() {
         y: 4.0,
         z: "123".to_string(),
         t: ("Hello".to_string(), 10),
+        #[cfg(feature = "std")]
         m: map.clone(),
+        #[cfg(feature = "std")]
         s: set.clone(),
         v: vec!["qwe".to_string(), "zxc".to_string()],
         w: vec![0].into_boxed_slice(),
@@ -115,7 +119,9 @@ fn test_simple_struct() {
         y: 4.0,
         z: a.z.clone(),
         t: ("Hello".to_string(), 10),
+        #[cfg(feature = "std")]
         m: map.clone(),
+        #[cfg(feature = "std")]
         s: set.clone(),
         v: a.v.clone(),
         w: a.w.clone(),
