@@ -58,4 +58,10 @@ pub mod lib {
     pub use bare_io::Write;
 
     pub use alloc::{vec, format};
+
+    pub use hashbrown::HashMap;
+
+    pub mod hash_map {
+        pub use hashbrown::hash_map::Entry;
+    }
 }

@@ -3,10 +3,10 @@ use borsh::schema::*;
 use borsh::schema_helpers::{try_from_slice_with_schema, try_to_vec_with_schema};
 
 macro_rules! map(
-    () => { ::hashbrown::HashMap::new() };
+    () => { borsh::lib::HashMap::new() };
     { $($key:expr => $value:expr),+ } => {
         {
-            let mut m = ::hashbrown::HashMap::new();
+            let mut m = borsh::lib::HashMap::new();
             $(
                 m.insert($key.to_string(), $value);
             )+

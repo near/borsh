@@ -71,7 +71,7 @@ pub fn process_struct(input: &ItemStruct) -> syn::Result<TokenStream2> {
     }
 
     let add_definitions_recursively = quote! {
-        fn add_definitions_recursively(definitions: &mut ::hashbrown::HashMap<borsh::schema::Declaration, borsh::schema::Definition>) {
+        fn add_definitions_recursively(definitions: &mut borsh::lib::HashMap<borsh::schema::Declaration, borsh::schema::Definition>) {
             #struct_fields
             let definition = borsh::schema::Definition::Struct { fields };
             Self::add_definition(Self::declaration(), definition, definitions);
@@ -117,7 +117,7 @@ mod tests {
                 fn declaration() -> borsh::schema::Declaration {
                     "A".to_string()
                 }
-                fn add_definitions_recursively(definitions: &mut ::hashbrown::HashMap<borsh::schema::Declaration, borsh::schema::Definition>) {
+                fn add_definitions_recursively(definitions: &mut borsh::lib::HashMap<borsh::schema::Declaration, borsh::schema::Definition>) {
                     let fields = borsh::schema::Fields::Empty;
                     let definition = borsh::schema::Definition::Struct { fields };
                     Self::add_definition(Self::declaration(), definition, definitions);
@@ -146,7 +146,7 @@ mod tests {
                     format!(r#"{}<{}>"#, "A", params.join(", "))
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -179,7 +179,7 @@ mod tests {
                     "A".to_string()
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -219,7 +219,7 @@ mod tests {
                     format!(r#"{}<{}>"#, "A", params.join(", "))
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -257,7 +257,7 @@ mod tests {
                     "A".to_string()
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -300,7 +300,7 @@ mod tests {
                     format!(r#"{}<{}>"#, "A", params.join(", "))
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -333,7 +333,7 @@ mod tests {
                     "A".to_string()
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -364,7 +364,7 @@ mod tests {
                     "A".to_string()
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >

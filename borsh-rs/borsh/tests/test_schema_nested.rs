@@ -2,10 +2,10 @@
 use borsh::schema::*;
 
 macro_rules! map(
-    () => { ::hashbrown::HashMap::new() };
+    () => { borsh::lib::HashMap::new() };
     { $($key:expr => $value:expr),+ } => {
         {
-            let mut m = ::hashbrown::HashMap::new();
+            let mut m = borsh::lib::HashMap::new();
             $(
                 m.insert($key.to_string(), $value);
             )+
@@ -23,7 +23,7 @@ pub fn duplicated_instantiations() {
     struct Cucumber;
     #[derive(borsh::BorshSchema)]
     struct Oil<K, V> {
-        seeds: hashbrown::HashMap<K, V>,
+        seeds: borsh::lib::HashMap<K, V>,
         liquid: Option<K>,
     };
     #[derive(borsh::BorshSchema)]

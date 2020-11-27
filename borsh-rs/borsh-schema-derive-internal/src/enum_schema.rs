@@ -104,7 +104,7 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
     }
 
     let type_definitions = quote! {
-        fn add_definitions_recursively(definitions: &mut ::hashbrown::HashMap<borsh::schema::Declaration, borsh::schema::Definition>) {
+        fn add_definitions_recursively(definitions: &mut borsh::lib::HashMap<borsh::schema::Declaration, borsh::schema::Definition>) {
             #anonymous_defs
             #add_recursive_defs
             let variants = vec![#(#variants_defs),*];
@@ -153,7 +153,7 @@ mod tests {
                     "A".to_string()
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -191,7 +191,7 @@ mod tests {
                     "A".to_string()
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -226,7 +226,7 @@ mod tests {
                     "A".to_string()
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -283,7 +283,7 @@ mod tests {
                     format!(r#"{}<{}>"#, "A", params.join(", "))
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::hashbrown::HashMap<
+                    definitions: &mut borsh::lib::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >

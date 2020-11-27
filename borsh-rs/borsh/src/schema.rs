@@ -14,8 +14,7 @@
 use crate as borsh; // For `#[derive(BorshSerialize, BorshDeserialize)]`.
 use crate::{BorshDeserialize, BorshSchema as BorshSchemaMacro, BorshSerialize};
 use crate::lib::*;
-use hashbrown::HashMap;
-use hashbrown::hash_map::Entry;
+use crate::lib::hash_map::Entry;
 
 /// The type that we use to represent the declaration of the Borsh type.
 pub type Declaration = String;
@@ -293,13 +292,13 @@ impl_tuple!(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use hashbrown::HashMap;
+    use borsh::lib::HashMap;
 
     macro_rules! map(
-    () => { ::hashbrown::HashMap::new() };
+    () => { borsh::lib::HashMap::new() };
     { $($key:expr => $value:expr),+ } => {
         {
-            let mut m = ::hashbrown::HashMap::new();
+            let mut m = borsh::lib::HashMap::new();
             $(
                 m.insert($key.to_string(), $value);
             )+
