@@ -9,6 +9,7 @@
   <p>
     <a href="https://npmjs.com/borsh"><img alt="npm" src="https://img.shields.io/npm/v/borsh.svg?style=flat-square"></a>
     <a href="https://npmjs.com/borsh"><img alt="npm" src="https://img.shields.io/bundlephobia/minzip/borsh.svg?style=flat-square"></a>
+<a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fnear%2Fborsh?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnear%2Fborsh.svg?type=shield"/></a>
     <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/v/borsh.svg?style=flat-square" alt="Crates.io version" /></a>
     <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/d/borsh.svg?style=flat-square" alt="Download" /></a>
     <a href="https://discord.gg/gBtUFKR"><img src="https://img.shields.io/discord/490367152054992913.svg" alt="Join the community on Discord" /></a>
@@ -40,6 +41,9 @@ Why do we need yet another serialization format? Borsh is the first serializer t
 * Speed. In Rust, Borsh achieves high performance by opting out from [Serde](https://serde.rs) which makes it faster
   than [bincode](https://github.com/servo/bincode) in some cases; which also reduces the code size.
   
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fnear%2Fborsh.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fnear%2Fborsh?ref=badge_large)
+
 ## Example
 
 ```rust
