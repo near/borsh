@@ -60,7 +60,7 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         vis: Visibility::Inherited,
                         ident: Some(Ident::new("borsh_schema_phantom_data", Span::call_site())),
                         colon_token: None,
-                        ty: parse_quote! {::std::marker::PhantomData<(#generic_params)>},
+                        ty: parse_quote! {::core::marker::PhantomData<(#generic_params)>},
                     });
                 }
                 Fields::Unnamed(unnamed) => {
@@ -69,7 +69,7 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         vis: Visibility::Inherited,
                         ident: None,
                         colon_token: None,
-                        ty: parse_quote! {::std::marker::PhantomData<(#generic_params)>},
+                        ty: parse_quote! {::core::marker::PhantomData<(#generic_params)>},
                     });
                 }
                 Fields::Unit => {
@@ -86,7 +86,7 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     vis: Visibility::Inherited,
                     ident: None,
                     colon_token: None,
-                    ty: parse_quote! {::std::marker::PhantomData<(#generic_params)>},
+                    ty: parse_quote! {::core::marker::PhantomData<(#generic_params)>},
                 });
                 anonymous_struct.fields = Fields::Unnamed(fields);
             }
@@ -289,22 +289,22 @@ mod tests {
                     >
                 ) {
                     #[derive(borsh :: BorshSchema)]
-                    struct ABacon<C, W>(#[borsh_skip] ::std::marker::PhantomData<(C, W)>);
+                    struct ABacon<C, W>(#[borsh_skip] ::core::marker::PhantomData<(C, W)>);
                     #[derive(borsh :: BorshSchema)]
-                    struct AEggs<C, W>(#[borsh_skip] ::std::marker::PhantomData<(C, W)>);
+                    struct AEggs<C, W>(#[borsh_skip] ::core::marker::PhantomData<(C, W)>);
                     #[derive(borsh :: BorshSchema)]
                     struct ASalad<C, W>(
                         Tomatoes,
                         C,
                         Oil,
-                        #[borsh_skip] ::std::marker::PhantomData<(C, W)>
+                        #[borsh_skip] ::core::marker::PhantomData<(C, W)>
                     );
                     #[derive(borsh :: BorshSchema)]
                     struct ASausage<C, W> {
                         wrapper: W,
                         filling: Filling,
                         #[borsh_skip]
-                        borsh_schema_phantom_data: ::std::marker::PhantomData<(C, W)>
+                        borsh_schema_phantom_data: ::core::marker::PhantomData<(C, W)>
                     }
                     <ABacon<C, W> >::add_definitions_recursively(definitions);
                     <AEggs<C, W> >::add_definitions_recursively(definitions);

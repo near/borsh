@@ -1,12 +1,11 @@
-use crate::custom_std::borrow::Cow;
-#[cfg(any(feature = "alloc", feature = "std"))]
-use crate::custom_std::collections::{BTreeMap, HashSet};
+use crate::lib::*;
+
+use core::convert::TryFrom;
+use core::mem::size_of;
+use alloc::collections::BTreeMap;
 #[cfg(feature = "std")]
-use crate::custom_std::collections::HashMap;
-use crate::custom_std::convert::TryFrom;
-use crate::custom_std::mem::size_of;
-use crate::custom_std::io::{Write, Error, ErrorKind, Result};
-use crate::custom_std::Vec;
+use std::collections::{HashMap, HashSet};
+use crate::error::{ErrorKind, Result};
 
 const DEFAULT_SERIALIZER_CAPACITY: usize = 1024;
 
@@ -35,7 +34,7 @@ pub trait BorshSerialize {
 impl BorshSerialize for u8 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
-        writer.write_all(std::slice::from_ref(self))
+        writer.write_all(core::slice::from_ref(self))
     }
 
     #[inline]
@@ -109,7 +108,7 @@ where
     }
 }
 
-impl<T, E> BorshSerialize for std::result::Result<T, E>
+impl<T, E> BorshSerialize for core::result::Result<T, E>
 where
     T: BorshSerialize,
     E: BorshSerialize,
@@ -157,7 +156,7 @@ where
             // The size of the memory should match because `size_of::<T>() == size_of::<u8>()`.
             //
             // `T::is_u8()` is a workaround for not being able to implement `Vec<u8>` separately.
-            let buf = unsafe { std::slice::from_raw_parts(self.as_ptr() as *const u8, self.len()) };
+            let buf = unsafe { core::slice::from_raw_parts(self.as_ptr() as *const u8, self.len()) };
             writer.write_all(buf)?;
         } else {
             for item in self {
@@ -177,7 +176,7 @@ impl<T: BorshSerialize + ?Sized> BorshSerialize for &T {
 
 impl<T> BorshSerialize for Cow<'_, T>
 where
-    T: BorshSerialize + std::borrow::ToOwned + ?Sized,
+    T: BorshSerialize + alloc::borrow::ToOwned + ?Sized,
 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
@@ -185,7 +184,6 @@ where
     }
 }
 
-#[cfg(any(feature = "alloc", feature = "std"))]
 impl<T> BorshSerialize for Vec<T>
 where
     T: BorshSerialize,
@@ -196,7 +194,7 @@ where
     }
 }
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "std")]
 impl<T> BorshSerialize for HashSet<T>
 where
     T: BorshSerialize + PartialOrd,
@@ -256,7 +254,6 @@ impl<K, V> BorshSerialize for hashbrown::HashMap<K, V>
     }
 }
 
-#[cfg(any(feature = "alloc", feature = "std"))]
 impl<K, V> BorshSerialize for BTreeMap<K, V>
 where
     K: BorshSerialize + PartialOrd,
@@ -345,7 +342,7 @@ macro_rules! impl_arrays {
                     // The size of the memory should match because `size_of::<T>() == size_of::<u8>()`.
                     //
                     // `T::is_u8()` is a workaround for not being able to implement `[u8; *]` separately.
-                    let buf = unsafe { std::slice::from_raw_parts(self.as_ptr() as *const u8, self.len()) };
+                    let buf = unsafe { core::slice::from_raw_parts(self.as_ptr() as *const u8, self.len()) };
                     writer.write_all(buf)?;
                 } else {
                     for el in self.iter() {

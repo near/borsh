@@ -1,10 +1,10 @@
-use crate::custom_std::borrow::Cow;
-use crate::custom_std::collections::{BTreeMap, HashSet};
+use crate::lib::*;
+
 #[cfg(feature = "std")]
-use crate::custom_std::collections::HashMap;
-use crate::custom_std::convert::TryInto;
-use crate::custom_std::mem::{forget, size_of};
-use crate::custom_std::io::{Error, ErrorKind, Result};
+use std::collections::HashMap;
+use core::convert::TryInto;
+use core::mem::{forget, size_of};
+use crate::error::{Error, ErrorKind, Result};
 
 mod hint;
 
@@ -140,7 +140,7 @@ impl BorshDeserialize for bool {
         } else {
             Err(Error::new(
                 ErrorKind::InvalidInput,
-                format!("Invalid bool representation: {}", b),
+                &format!("Invalid bool representation: {}", b),
             ))
         }
     }
@@ -167,7 +167,7 @@ where
         } else {
             Err(Error::new(
                 ErrorKind::InvalidInput,
-                format!(
+                &format!(
                     "Invalid Option representation: {}. The first byte must be 0 or 1",
                     flag
                 ),
@@ -176,7 +176,7 @@ where
     }
 }
 
-impl<T, E> BorshDeserialize for std::result::Result<T, E>
+impl<T, E> BorshDeserialize for core::result::Result<T, E>
 where
     T: BorshDeserialize,
     E: BorshDeserialize,
@@ -198,7 +198,7 @@ where
         } else {
             Err(Error::new(
                 ErrorKind::InvalidInput,
-                format!(
+                &format!(
                     "Invalid Result representation: {}. The first byte must be 0 or 1",
                     flag
                 ),
@@ -211,11 +211,10 @@ impl BorshDeserialize for String {
     #[inline]
     fn deserialize(buf: &mut &[u8]) -> Result<Self> {
         String::from_utf8(Vec::<u8>::deserialize(buf)?)
-            .map_err(|err| Error::new(ErrorKind::InvalidData, err.to_string()))
+            .map_err(|err| Error::new(ErrorKind::InvalidData, &err.to_string()))
     }
 }
 
-#[cfg(any(feature = "alloc", feature = "std"))]
 impl<T> BorshDeserialize for Vec<T>
 where
     T: BorshDeserialize,
@@ -246,7 +245,7 @@ where
             // `T::is_u8()` is a workaround for not being able to implement `Vec<u8>` separately.
             let result = unsafe {
                 // Ensure the original vector is not dropped.
-                let mut v_clone = std::mem::ManuallyDrop::new(result);
+                let mut v_clone = core::mem::ManuallyDrop::new(result);
                 Vec::from_raw_parts(
                     v_clone.as_mut_ptr() as *mut T,
                     v_clone.len(),
@@ -278,7 +277,7 @@ where
 
 impl<T> BorshDeserialize for Cow<'_, T>
 where
-    T: std::borrow::ToOwned + ?Sized,
+    T: alloc::borrow::ToOwned + ?Sized,
     T::Owned: BorshDeserialize,
 {
     #[inline]
@@ -339,10 +338,9 @@ impl<K, V> BorshDeserialize for hashbrown::HashMap<K, V>
     }
 }
 
-#[cfg(any(feature = "alloc", feature = "std"))]
 impl<K, V> BorshDeserialize for BTreeMap<K, V>
 where
-    K: BorshDeserialize + Ord + std::hash::Hash,
+    K: BorshDeserialize + Ord + core::hash::Hash,
     V: BorshDeserialize,
 {
     #[inline]
@@ -358,7 +356,7 @@ where
     }
 }
 
-#[cfg(any(feature = "alloc", feature = "std"))]
+#[cfg(feature = "std")]
 impl BorshDeserialize for std::net::SocketAddr {
     #[inline]
     fn deserialize(buf: &mut &[u8]) -> Result<Self> {
@@ -428,11 +426,10 @@ impl BorshDeserialize for std::net::Ipv6Addr {
     }
 }
 
-#[cfg(any(feature = "alloc", feature = "std"))]
 impl<T, U> BorshDeserialize for Box<T>
 where
-    U: Into<Box<T>> + std::borrow::Borrow<T>,
-    T: std::borrow::ToOwned<Owned = U> + ?Sized,
+    U: Into<Box<T>> + alloc::borrow::Borrow<T>,
+    T: alloc::borrow::ToOwned<Owned = U> + ?Sized,
     T::Owned: BorshDeserialize,
 {
     fn deserialize(buf: &mut &[u8]) -> Result<Self> {
@@ -459,7 +456,7 @@ macro_rules! impl_arrays {
                     }
                     // The size of the memory should match because `size_of::<T>() == size_of::<u8>()`.
                     // `T::is_u8()` is a workaround for not being able to implement `[u8; *]` separately.
-                    result.copy_from_slice(unsafe { std::slice::from_raw_parts(buf.as_ptr() as *const T, $len) });
+                    result.copy_from_slice(unsafe { core::slice::from_raw_parts(buf.as_ptr() as *const T, $len) });
                     *buf = &buf[$len..];
                 } else {
                     for i in 0..$len {

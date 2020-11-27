@@ -51,7 +51,7 @@ pub fn struct_ser(input: &ItemStruct) -> syn::Result<TokenStream2> {
     }
     Ok(quote! {
         impl #impl_generics borsh::ser::BorshSerialize for #name #ty_generics #where_clause {
-            fn serialize<W: borsh::custom_std::io::Write>(&self, writer: &mut W) -> core::result::Result<(), borsh::custom_std::io::Error> {
+            fn serialize<W: borsh::lib::Write>(&self, writer: &mut W) -> core::result::Result<(), borsh::error::Error> {
                 #body
                 Ok(())
             }
@@ -85,7 +85,7 @@ mod tests {
                 u64: borsh::ser::BorshSerialize,
                 String: borsh::ser::BorshSerialize
             {
-                fn serialize<W: borsh::custom_std::io::Write>(&self, writer: &mut W) -> core::result::Result<(), borsh::custom_std::io::Error> {
+                fn serialize<W: borsh::lib::Write>(&self, writer: &mut W) -> core::result::Result<(), borsh::error::Error> {
                     borsh::BorshSerialize::serialize(&self.x, writer)?;
                     borsh::BorshSerialize::serialize(&self.y, writer)?;
                     Ok(())
@@ -111,7 +111,7 @@ mod tests {
                 HashMap<K, V>: borsh::ser::BorshSerialize,
                 String: borsh::ser::BorshSerialize
             {
-                fn serialize<W: borsh::custom_std::io::Write>(&self, writer: &mut W) -> core::result::Result<(), borsh::custom_std::io::Error> {
+                fn serialize<W: borsh::lib::Write>(&self, writer: &mut W) -> core::result::Result<(), borsh::error::Error> {
                     borsh::BorshSerialize::serialize(&self.x, writer)?;
                     borsh::BorshSerialize::serialize(&self.y, writer)?;
                     Ok(())
@@ -138,7 +138,7 @@ mod tests {
                 HashMap<K, V>: borsh::ser::BorshSerialize,
                 String: borsh::ser::BorshSerialize
             {
-                fn serialize<W: borsh::custom_std::io::Write>(&self, writer: &mut W) -> core::result::Result<(), borsh::custom_std::io::Error> {
+                fn serialize<W: borsh::lib::Write>(&self, writer: &mut W) -> core::result::Result<(), borsh::error::Error> {
                     borsh::BorshSerialize::serialize(&self.x, writer)?;
                     borsh::BorshSerialize::serialize(&self.y, writer)?;
                     Ok(())

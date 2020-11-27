@@ -71,14 +71,14 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     if let Some(method_ident) = init_method {
         Ok(quote! {
             impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, borsh::custom_std::io::Error> {
+                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, borsh::error::Error> {
                     #variant_idx
                     let mut return_value = match variant_idx {
                         #variant_arms
                         _ =>
-                        return Err(borsh::custom_std::io::Error::new(
-                            borsh::custom_std::io::ErrorKind::InvalidInput,
-                            format!("Unexpected variant index: {:?}", variant_idx),
+                        return Err(borsh::error::Error::new(
+                            borsh::error::ErrorKind::InvalidInput,
+                            &format!("Unexpected variant index: {:?}", variant_idx),
                         )),
                     };
                     return_value.#method_ident();
@@ -89,15 +89,15 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
     } else {
         Ok(quote! {
             impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, borsh::custom_std::io::Error> {
+                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, borsh::error::Error> {
                     #variant_idx
                     let return_value = match variant_idx {
                         #variant_arms
                         _ =>
-                        return Err(borsh::custom_std::io::Error::new(
-                                   borsh::custom_std::io::ErrorKind::InvalidInput,
-                                   format!("Unexpected variant index: {:?}", variant_idx),
-                                  )),
+                        return Err(borsh::error::Error::new(
+                            borsh::error::ErrorKind::InvalidInput,
+                            &format!("Unexpected variant index: {:?}", variant_idx),
+                        )),
                     };
                     Ok(return_value)
                 }

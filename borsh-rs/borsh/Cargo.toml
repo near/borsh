@@ -27,7 +27,4 @@ hashbrown = "0.9.1"
 
 [features]
 default = ["std"]
-
-# Provides impls for common standard library types like Vec<T>.
-# Requires a dependency on the Rust standard library.
 std = []

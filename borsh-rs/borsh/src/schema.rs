@@ -13,6 +13,7 @@
 #![allow(dead_code)]  // Unclear why rust check complains on fields of `Definition` variants.
 use crate as borsh; // For `#[derive(BorshSerialize, BorshDeserialize)]`.
 use crate::{BorshDeserialize, BorshSchema as BorshSchemaMacro, BorshSerialize};
+use crate::lib::*;
 use hashbrown::HashMap;
 use hashbrown::hash_map::Entry;
 
@@ -181,7 +182,7 @@ where
     }
 }
 
-impl<T, E> BorshSchema for std::result::Result<T, E>
+impl<T, E> BorshSchema for core::result::Result<T, E>
 where
     T: BorshSchema,
     E: BorshSchema,

@@ -1,6 +1,11 @@
+use crate::lib::*;
+
+#[cfg(feature = "std")]
+use alloc::io::{Error, ErrorKind, Result};
+#[cfg(not(feature = "std"))]
+use bare_io::{Error, ErrorKind, Result};
 use crate::schema::BorshSchemaContainer;
 use crate::{BorshDeserialize, BorshSchema, BorshSerialize};
-use crate::custom_std::io::{Error, ErrorKind, Result};
 
 /// Deserialize this instance from a slice of bytes, but assume that at the beginning we have
 /// bytes describing the schema of the type. We deserialize this schema and verify that it is

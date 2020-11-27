@@ -60,7 +60,7 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
     if let Some(method_ident) = init_method {
         Ok(quote! {
             impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) ->  core::result::Result<Self, borsh::custom_std::io::Error> {
+                fn deserialize(buf: &mut &[u8]) ->  core::result::Result<Self, borsh::error::Error> {
                     let mut return_value = #return_value;
                     return_value.#method_ident();
                     Ok(return_value)
@@ -70,7 +70,7 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
     } else {
         Ok(quote! {
             impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, borsh::custom_std::io::Error> {
+                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, borsh::error::Error> {
                     Ok(#return_value)
                 }
             }
