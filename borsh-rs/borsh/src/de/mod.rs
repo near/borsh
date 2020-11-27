@@ -1,7 +1,5 @@
 use crate::lib::*;
 
-#[cfg(feature = "std")]
-use std::collections::HashMap;
 use core::convert::TryInto;
 use core::mem::{forget, size_of};
 use crate::error::{Error, ErrorKind, Result};
@@ -314,19 +312,19 @@ where
 }
 
 #[cfg(feature = "std")]
-impl<T> BorshDeserialize for HashSet<T>
+impl<T> BorshDeserialize for std::collections::HashSet<T>
 where
     T: BorshDeserialize + Eq + std::hash::Hash,
 {
     #[inline]
     fn deserialize(buf: &mut &[u8]) -> Result<Self> {
         let vec = <Vec<T>>::deserialize(buf)?;
-        Ok(vec.into_iter().collect::<HashSet<T>>())
+        Ok(vec.into_iter().collect::<std::collections::HashSet<T>>())
     }
 }
 
 #[cfg(feature = "std")]
-impl<K, V> BorshDeserialize for HashMap<K, V>
+impl<K, V> BorshDeserialize for std::collections::HashMap<K, V>
 where
     K: BorshDeserialize + Eq + std::hash::Hash,
     V: BorshDeserialize,
@@ -335,7 +333,7 @@ where
     fn deserialize(buf: &mut &[u8]) -> Result<Self> {
         let len = u32::deserialize(buf)?;
         // TODO(16): return capacity allocation when we can safely do that.
-        let mut result = HashMap::new();
+        let mut result = std::collections::HashMap::new();
         for _ in 0..len {
             let key = K::deserialize(buf)?;
             let value = V::deserialize(buf)?;
