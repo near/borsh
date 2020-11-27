@@ -1,7 +1,4 @@
 matrix:
-  fast_finish: true
-  allow_failures:
-    - rust: nightly
   include:
     - language: rust
       rust:
@@ -9,10 +6,6 @@ matrix:
         - beta
         - nightly-2019-05-22
         - nightly
-
-      branches:
-        only:
-          - master
 
       install:
         - cargo build --verbose --manifest-path=borsh-rs/Cargo.toml
@@ -51,7 +44,3 @@ matrix:
     - language: node_js
       node_js:
         - 12
-
-      branches:
-        only:
-          - master
