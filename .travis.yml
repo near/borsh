@@ -5,10 +5,6 @@ rust:
   - nightly-2019-05-22
   - nightly
 
-language: node_js
-node_js:
-  - 12
-
 matrix:
   allow_failures:
     - rust: nightly
