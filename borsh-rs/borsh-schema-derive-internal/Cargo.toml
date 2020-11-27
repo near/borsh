@@ -1,6 +1,6 @@
 [package]
 name = "borsh-schema-derive-internal"
-version = "0.7.2"
+version = "0.8.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -15,4 +15,3 @@ Schema Generator for Borsh
 proc-macro2 = "1"
 syn = {version = "1", features = ["full", "fold"] }
 quote = "1"
-hashbrown = "0.9.1"

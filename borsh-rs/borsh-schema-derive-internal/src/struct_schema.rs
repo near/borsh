@@ -2,6 +2,7 @@ use crate::helpers::{contains_skip, declaration};
 use quote::quote;
 use syn::export::{ToTokens, TokenStream2};
 use syn::{Fields, ItemStruct, Ident};
+use proc_macro2::Span;
 
 pub fn process_struct(input: &ItemStruct, cratename: Ident) -> syn::Result<TokenStream2> {
     let name = &input.ident;
