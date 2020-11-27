@@ -1,9 +1,6 @@
 use crate::lib::*;
 
-#[cfg(feature = "std")]
-use alloc::io::{Error, ErrorKind, Result};
-#[cfg(not(feature = "std"))]
-use bare_io::{Error, ErrorKind, Result};
+use crate::error::{Error, ErrorKind, Result};
 use crate::schema::BorshSchemaContainer;
 use crate::{BorshDeserialize, BorshSchema, BorshSerialize};
 

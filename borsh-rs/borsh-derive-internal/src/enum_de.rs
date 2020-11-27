@@ -75,11 +75,18 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     #variant_idx
                     let mut return_value = match variant_idx {
                         #variant_arms
-                        _ =>
-                        return Err(borsh::error::Error::new(
-                            borsh::error::ErrorKind::InvalidInput,
-                            &format!("Unexpected variant index: {:?}", variant_idx),
-                        )),
+                        _ => {
+                            #[cfg(feature = "std")]
+                            let msg = format!("Unexpected variant index: {:?}", variant_idx);
+
+                            #[cfg(not(feature = "std"))]
+                            let msg = "Unexpected variant index";
+
+                            return Err(borsh::error::Error::new(
+                                borsh::error::ErrorKind::InvalidInput,
+                                msg,
+                            ));
+                        }
                     };
                     return_value.#method_ident();
                     Ok(return_value)
@@ -93,11 +100,18 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     #variant_idx
                     let return_value = match variant_idx {
                         #variant_arms
-                        _ =>
-                        return Err(borsh::error::Error::new(
-                            borsh::error::ErrorKind::InvalidInput,
-                            &format!("Unexpected variant index: {:?}", variant_idx),
-                        )),
+                        _ => {
+                            #[cfg(feature = "std")]
+                            let msg = format!("Unexpected variant index: {:?}", variant_idx);
+
+                            #[cfg(not(feature = "std"))]
+                            let msg = "Unexpected variant index";
+
+                            return Err(borsh::error::Error::new(
+                                borsh::error::ErrorKind::InvalidInput,
+                                msg,
+                            ));
+                        }
                     };
                     Ok(return_value)
                 }
