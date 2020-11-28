@@ -22,7 +22,6 @@ path = "src/generate_schema_schema.rs"
 
 [dependencies]
 borsh-derive = { path = "../borsh-derive", version = "0.8.0" }
-bare-io = { version = "0.2.1", features = ["alloc"] }
 hashbrown = "0.9.1"
 
 [features]

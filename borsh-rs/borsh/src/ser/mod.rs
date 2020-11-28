@@ -234,6 +234,7 @@ where
     }
 }
 
+#[cfg(not(feature = "std"))]
 impl<K, V> BorshSerialize for hashbrown::HashMap<K, V>
     where
         K: BorshSerialize + PartialOrd,

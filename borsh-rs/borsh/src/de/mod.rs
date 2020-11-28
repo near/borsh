@@ -140,7 +140,7 @@ impl BorshDeserialize for bool {
 
             Err(Error::new(
                 ErrorKind::InvalidInput,
-                crate::string_to_static_str(msg),
+                msg,
             ))
         }
     }
@@ -174,7 +174,7 @@ where
 
             Err(Error::new(
                 ErrorKind::InvalidInput,
-                crate::string_to_static_str(msg),
+                msg,
             ))
         }
     }
@@ -207,7 +207,7 @@ where
 
             Err(Error::new(
                 ErrorKind::InvalidInput,
-                crate::string_to_static_str(msg),
+                msg,
             ))
         }
     }
@@ -219,7 +219,7 @@ impl BorshDeserialize for String {
         String::from_utf8(Vec::<u8>::deserialize(buf)?)
             .map_err(|#[allow(unused_variables)] err| {     
                 let msg = err.to_string();
-                Error::new(ErrorKind::InvalidData, crate::string_to_static_str(msg))
+                Error::new(ErrorKind::InvalidData, msg)
             })
     }
 }
@@ -327,7 +327,7 @@ where
     }
 }
 
-
+#[cfg(not(feature = "std"))]
 impl<K, V> BorshDeserialize for hashbrown::HashMap<K, V>
     where
         K: BorshDeserialize + Eq + core::hash::Hash,

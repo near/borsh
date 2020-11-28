@@ -12,15 +12,12 @@ pub mod schema;
 pub mod schema_helpers;
 pub mod ser;
 pub mod error;
+mod write;
 
 pub use de::BorshDeserialize;
 pub use schema::BorshSchema;
 pub use schema_helpers::{try_from_slice_with_schema, try_to_vec_with_schema};
 pub use ser::BorshSerialize;
-
-pub fn string_to_static_str(s: lib::String) -> &'static str {
-    lib::Box::leak(s.into_boxed_str())
-}
 
 /// A facade around all the types we need from the `std`, `core`, and `alloc`
 /// crates. This avoids elaborate import wrangling having to happen in every
@@ -84,7 +81,7 @@ pub mod lib {
     pub use alloc::sync::{Arc, Weak as ArcWeak};
     pub use alloc::collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque};
 
-    pub use bare_io::Write;
+    pub use crate::write::Write;
     pub use alloc::{vec, format};
     pub use hashbrown::HashMap;
 

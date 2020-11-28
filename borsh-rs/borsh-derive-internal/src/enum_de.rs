@@ -80,7 +80,7 @@ pub fn enum_de(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2> 
 
                             return Err(#cratename::error::Error::new(
                                 #cratename::error::ErrorKind::InvalidInput,
-                                #cratename::string_to_static_str(msg),
+                                msg,
                             ));
                         }
                     };
@@ -101,7 +101,7 @@ pub fn enum_de(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2> 
 
                             return Err(#cratename::error::Error::new(
                                 #cratename::error::ErrorKind::InvalidInput,
-                                #cratename::string_to_static_str(msg),
+                                msg,
                             ));
                         }
                     };

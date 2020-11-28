@@ -1,0 +1,345 @@
+//! Taken from https://github.com/bbqsrc/bare-io (with adjustments)
+
+use core::{cmp, fmt};
+use crate::error::{Error, ErrorKind, Result};
+
+/// A trait for objects which are byte-oriented sinks.
+///
+/// Implementors of the `Write` trait are sometimes called 'writers'.
+///
+/// Writers are defined by two required methods, [`write`] and [`flush`]:
+///
+/// * The [`write`] method will attempt to write some data into the object,
+///   returning how many bytes were successfully written.
+///
+/// * The [`flush`] method is useful for adaptors and explicit buffers
+///   themselves for ensuring that all buffered data has been pushed out to the
+///   'true sink'.
+///
+/// Writers are intended to be composable with one another. Many implementors
+/// throughout [`std::io`] take and provide types which implement the `Write`
+/// trait.
+///
+/// [`write`]: Write::write
+/// [`flush`]: Write::flush
+/// [`std::io`]: self
+///
+/// # Examples
+///
+/// ```no_run
+/// use std::io::prelude::*;
+/// use std::fs::File;
+///
+/// fn main() -> std::io::Result<()> {
+///     let data = b"some bytes";
+///
+///     let mut pos = 0;
+///     let mut buffer = File::create("foo.txt")?;
+///
+///     while pos < data.len() {
+///         let bytes_written = buffer.write(&data[pos..])?;
+///         pos += bytes_written;
+///     }
+///     Ok(())
+/// }
+/// ```
+///
+/// The trait also provides convenience methods like [`write_all`], which calls
+/// `write` in a loop until its entire input has been written.
+///
+/// [`write_all`]: Write::write_all
+pub trait Write {
+    /// Write a buffer into this writer, returning how many bytes were written.
+    ///
+    /// This function will attempt to write the entire contents of `buf`, but
+    /// the entire write may not succeed, or the write may also generate an
+    /// error. A call to `write` represents *at most one* attempt to write to
+    /// any wrapped object.
+    ///
+    /// Calls to `write` are not guaranteed to block waiting for data to be
+    /// written, and a write which would otherwise block can be indicated through
+    /// an [`Err`] variant.
+    ///
+    /// If the return value is [`Ok(n)`] then it must be guaranteed that
+    /// `n <= buf.len()`. A return value of `0` typically means that the
+    /// underlying object is no longer able to accept bytes and will likely not
+    /// be able to in the future as well, or that the buffer provided is empty.
+    ///
+    /// # Errors
+    ///
+    /// Each call to `write` may generate an I/O error indicating that the
+    /// operation could not be completed. If an error is returned then no bytes
+    /// in the buffer were written to this writer.
+    ///
+    /// It is **not** considered an error if the entire buffer could not be
+    /// written to this writer.
+    ///
+    /// An error of the [`ErrorKind::Interrupted`] kind is non-fatal and the
+    /// write operation should be retried if there is nothing else to do.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::io::prelude::*;
+    /// use std::fs::File;
+    ///
+    /// fn main() -> std::io::Result<()> {
+    ///     let mut buffer = File::create("foo.txt")?;
+    ///
+    ///     // Writes some prefix of the byte string, not necessarily all of it.
+    ///     buffer.write(b"some bytes")?;
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// [`Ok(n)`]: Ok
+    fn write(&mut self, buf: &[u8]) -> Result<usize>;
+
+    /// Flush this output stream, ensuring that all intermediately buffered
+    /// contents reach their destination.
+    ///
+    /// # Errors
+    ///
+    /// It is considered an error if not all bytes could be written due to
+    /// I/O errors or EOF being reached.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::io::prelude::*;
+    /// use std::io::BufWriter;
+    /// use std::fs::File;
+    ///
+    /// fn main() -> std::io::Result<()> {
+    ///     let mut buffer = BufWriter::new(File::create("foo.txt")?);
+    ///
+    ///     buffer.write_all(b"some bytes")?;
+    ///     buffer.flush()?;
+    ///     Ok(())
+    /// }
+    /// ```
+    fn flush(&mut self) -> Result<()>;
+
+    /// Attempts to write an entire buffer into this writer.
+    ///
+    /// This method will continuously call [`write`] until there is no more data
+    /// to be written or an error of non-[`ErrorKind::Interrupted`] kind is
+    /// returned. This method will not return until the entire buffer has been
+    /// successfully written or such an error occurs. The first error that is
+    /// not of [`ErrorKind::Interrupted`] kind generated from this method will be
+    /// returned.
+    ///
+    /// If the buffer contains no data, this will never call [`write`].
+    ///
+    /// # Errors
+    ///
+    /// This function will return the first error of
+    /// non-[`ErrorKind::Interrupted`] kind that [`write`] returns.
+    ///
+    /// [`write`]: Write::write
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::io::prelude::*;
+    /// use std::fs::File;
+    ///
+    /// fn main() -> std::io::Result<()> {
+    ///     let mut buffer = File::create("foo.txt")?;
+    ///
+    ///     buffer.write_all(b"some bytes")?;
+    ///     Ok(())
+    /// }
+    /// ```
+    fn write_all(&mut self, mut buf: &[u8]) -> Result<()> {
+        while !buf.is_empty() {
+            match self.write(buf) {
+                Ok(0) => {
+                    return Err(Error::new(
+                        ErrorKind::WriteZero,
+                        "failed to write whole buffer",
+                    ));
+                }
+                Ok(n) => buf = &buf[n..],
+                Err(ref e) if e.kind() == ErrorKind::Interrupted => {}
+                Err(e) => return Err(e),
+            }
+        }
+        Ok(())
+    }
+    /// Writes a formatted string into this writer, returning any error
+    /// encountered.
+    ///
+    /// This method is primarily used to interface with the
+    /// [`format_args!()`] macro, but it is rare that this should
+    /// explicitly be called. The [`write!()`] macro should be favored to
+    /// invoke this method instead.
+    ///
+    /// This function internally uses the [`write_all`] method on
+    /// this trait and hence will continuously write data so long as no errors
+    /// are received. This also means that partial writes are not indicated in
+    /// this signature.
+    ///
+    /// [`write_all`]: Write::write_all
+    ///
+    /// # Errors
+    ///
+    /// This function will return any I/O error reported while formatting.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::io::prelude::*;
+    /// use std::fs::File;
+    ///
+    /// fn main() -> std::io::Result<()> {
+    ///     let mut buffer = File::create("foo.txt")?;
+    ///
+    ///     // this call
+    ///     write!(buffer, "{:.*}", 2, 1.234567)?;
+    ///     // turns into this:
+    ///     buffer.write_fmt(format_args!("{:.*}", 2, 1.234567))?;
+    ///     Ok(())
+    /// }
+    /// ```
+    fn write_fmt(&mut self, fmt: fmt::Arguments<'_>) -> Result<()> {
+        // Create a shim which translates a Write to a fmt::Write and saves
+        // off I/O errors. instead of discarding them
+        struct Adaptor<'a, T: ?Sized + 'a> {
+            inner: &'a mut T,
+            error: Result<()>,
+        }
+
+        impl<T: Write + ?Sized> fmt::Write for Adaptor<'_, T> {
+            fn write_str(&mut self, s: &str) -> fmt::Result {
+                match self.inner.write_all(s.as_bytes()) {
+                    Ok(()) => Ok(()),
+                    Err(e) => {
+                        self.error = Err(e);
+                        Err(fmt::Error)
+                    }
+                }
+            }
+        }
+
+        let mut output = Adaptor {
+            inner: self,
+            error: Ok(()),
+        };
+        match fmt::write(&mut output, fmt) {
+            Ok(()) => Ok(()),
+            Err(..) => {
+                // check if the error came from the underlying `Write` or not
+                if output.error.is_err() {
+                    output.error
+                } else {
+                    Err(Error::new(ErrorKind::Other, "formatter error"))
+                }
+            }
+        }
+    }
+
+    /// Creates a "by reference" adaptor for this instance of `Write`.
+    ///
+    /// The returned adaptor also implements `Write` and will simply borrow this
+    /// current writer.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use std::io::Write;
+    /// use std::fs::File;
+    ///
+    /// fn main() -> std::io::Result<()> {
+    ///     let mut buffer = File::create("foo.txt")?;
+    ///
+    ///     let reference = buffer.by_ref();
+    ///
+    ///     // we can use reference just like our original buffer
+    ///     reference.write_all(b"some bytes")?;
+    ///     Ok(())
+    /// }
+    /// ```
+    fn by_ref(&mut self) -> &mut Self
+        where
+            Self: Sized,
+    {
+        self
+    }
+}
+
+impl<W: Write + ?Sized> Write for &mut W {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        (**self).write(buf)
+    }
+
+    #[inline]
+    fn flush(&mut self) -> Result<()> {
+        (**self).flush()
+    }
+
+    #[inline]
+    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+        (**self).write_all(buf)
+    }
+
+    #[inline]
+    fn write_fmt(&mut self, fmt: fmt::Arguments<'_>) -> Result<()> {
+        (**self).write_fmt(fmt)
+    }
+}
+
+/// Write is implemented for `&mut [u8]` by copying into the slice, overwriting
+/// its data.
+///
+/// Note that writing updates the slice to point to the yet unwritten part.
+/// The slice will be empty when it has been completely overwritten.
+impl Write for &mut [u8] {
+    #[inline]
+    fn write(&mut self, data: &[u8]) -> Result<usize> {
+        let amt = cmp::min(data.len(), self.len());
+        let (a, b) = core::mem::replace(self, &mut []).split_at_mut(amt);
+        a.copy_from_slice(&data[..amt]);
+        *self = b;
+        Ok(amt)
+    }
+
+    #[inline]
+    fn write_all(&mut self, data: &[u8]) -> Result<()> {
+        if self.write(data)? == data.len() {
+            Ok(())
+        } else {
+            Err(Error::new(
+                ErrorKind::WriteZero,
+                "failed to write whole buffer",
+            ))
+        }
+    }
+
+    #[inline]
+    fn flush(&mut self) -> Result<()> {
+        Ok(())
+    }
+}
+
+/// Write is implemented for `Vec<u8>` by appending to the vector.
+/// The vector will grow as needed.
+impl Write for alloc::vec::Vec<u8> {
+    #[inline]
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        self.extend_from_slice(buf);
+        Ok(buf.len())
+    }
+
+    #[inline]
+    fn write_all(&mut self, buf: &[u8]) -> Result<()> {
+        self.extend_from_slice(buf);
+        Ok(())
+    }
+
+    #[inline]
+    fn flush(&mut self) -> Result<()> {
+        Ok(())
+    }
+}
