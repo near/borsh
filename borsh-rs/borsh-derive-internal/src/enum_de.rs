@@ -71,15 +71,15 @@ pub fn enum_de(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2> 
     if let Some(method_ident) = init_method {
         Ok(quote! {
             impl #impl_generics #cratename::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, #cratename::error::Error> {
+                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, #cratename::maybestd::io::Error> {
                     #variant_idx
                     let mut return_value = match variant_idx {
                         #variant_arms
                         _ => {
-                            let msg = #cratename::lib::format!("Unexpected variant index: {:?}", variant_idx);
+                            let msg = #cratename::maybestd::format!("Unexpected variant index: {:?}", variant_idx);
 
-                            return Err(#cratename::error::Error::new(
-                                #cratename::error::ErrorKind::InvalidInput,
+                            return Err(#cratename::maybestd::io::Error::new(
+                                #cratename::maybestd::io::ErrorKind::InvalidInput,
                                 msg,
                             ));
                         }
@@ -92,15 +92,15 @@ pub fn enum_de(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2> 
     } else {
         Ok(quote! {
             impl #impl_generics #cratename::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, #cratename::error::Error> {
+                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, #cratename::maybestd::io::Error> {
                     #variant_idx
                     let return_value = match variant_idx {
                         #variant_arms
                         _ => {
-                            let msg = #cratename::lib::format!("Unexpected variant index: {:?}", variant_idx);
+                            let msg = #cratename::maybestd::format!("Unexpected variant index: {:?}", variant_idx);
 
-                            return Err(#cratename::error::Error::new(
-                                #cratename::error::ErrorKind::InvalidInput,
+                            return Err(#cratename::maybestd::io::Error::new(
+                                #cratename::maybestd::io::ErrorKind::InvalidInput,
                                 msg,
                             ));
                         }

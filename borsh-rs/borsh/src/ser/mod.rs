@@ -1,11 +1,14 @@
-use crate::lib::*;
-
 use core::convert::TryFrom;
 use core::mem::size_of;
-use alloc::collections::BTreeMap;
-#[cfg(feature = "std")]
-use std::collections::{HashMap, HashSet};
-use crate::error::{ErrorKind, Result};
+
+use crate::maybestd::{
+    io::{ErrorKind, Result, Write},
+    collections::{HashMap, HashSet},
+    borrow::{ToOwned, Cow},
+    string::String,
+    boxed::Box,
+    vec::Vec
+};
 
 const DEFAULT_SERIALIZER_CAPACITY: usize = 1024;
 
@@ -176,7 +179,7 @@ impl<T: BorshSerialize + ?Sized> BorshSerialize for &T {
 
 impl<T> BorshSerialize for Cow<'_, T>
 where
-    T: BorshSerialize + alloc::borrow::ToOwned + ?Sized,
+    T: BorshSerialize + ToOwned + ?Sized,
 {
     #[inline]
     fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
@@ -194,26 +197,6 @@ where
     }
 }
 
-#[cfg(feature = "std")]
-impl<T> BorshSerialize for HashSet<T>
-where
-    T: BorshSerialize + PartialOrd,
-{
-    #[inline]
-    fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
-        let mut vec = self.iter().collect::<Vec<_>>();
-        vec.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        u32::try_from(vec.len())
-            .map_err(|_| ErrorKind::InvalidInput)?
-            .serialize(writer)?;
-        for item in vec {
-            item.serialize(writer)?;
-        }
-        Ok(())
-    }
-}
-
-#[cfg(feature = "std")]
 impl<K, V> BorshSerialize for HashMap<K, V>
 where
     K: BorshSerialize + PartialOrd,
@@ -234,29 +217,8 @@ where
     }
 }
 
-#[cfg(not(feature = "std"))]
-impl<K, V> BorshSerialize for hashbrown::HashMap<K, V>
-    where
-        K: BorshSerialize + PartialOrd,
-        V: BorshSerialize,
-{
-    #[inline]
-    fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
-        let mut vec = self.iter().collect::<Vec<_>>();
-        vec.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap());
-        u32::try_from(vec.len())
-            .map_err(|_| ErrorKind::InvalidInput)?
-            .serialize(writer)?;
-        for (key, value) in vec {
-            key.serialize(writer)?;
-            value.serialize(writer)?;
-        }
-        Ok(())
-    }
-}
 
-#[cfg(not(feature = "std"))]
-impl<T> BorshSerialize for hashbrown::HashSet<T>
+impl<T> BorshSerialize for HashSet<T>
     where
         T: BorshSerialize + PartialOrd,
 {
@@ -274,23 +236,6 @@ impl<T> BorshSerialize for hashbrown::HashSet<T>
     }
 }
 
-impl<K, V> BorshSerialize for BTreeMap<K, V>
-where
-    K: BorshSerialize + PartialOrd,
-    V: BorshSerialize,
-{
-    #[inline]
-    fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
-        u32::try_from(self.len())
-            .map_err(|_| ErrorKind::InvalidInput)?
-            .serialize(writer)?;
-        for (key, value) in self.iter() {
-            key.serialize(writer)?;
-            value.serialize(writer)?;
-        }
-        Ok(())
-    }
-}
 
 #[cfg(feature = "std")]
 impl BorshSerialize for std::net::SocketAddr {

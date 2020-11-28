@@ -79,7 +79,7 @@ pub fn enum_ser(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2>
     }
     Ok(quote! {
         impl #impl_generics #cratename::ser::BorshSerialize for #name #ty_generics #where_clause {
-            fn serialize<W: #cratename::lib::Write>(&self, writer: &mut W) -> core::result::Result<(), #cratename::error::Error> {
+            fn serialize<W: #cratename::maybestd::io::Write>(&self, writer: &mut W) -> core::result::Result<(), #cratename::maybestd::io::Error> {
                 match self {
                     #body
                 }

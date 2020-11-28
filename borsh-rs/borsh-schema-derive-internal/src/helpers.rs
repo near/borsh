@@ -37,7 +37,7 @@ pub fn declaration(ident_str: &String, generics: &Generics, cratename: Ident) ->
         }
     } else {
         quote! {
-                let params = #cratename::lib::vec![#(#declaration_params),*];
+                let params = #cratename::maybestd::vec![#(#declaration_params),*];
                 format!(r#"{}<{}>"#, #ident_str, params.join(", "))
         }
     };

@@ -1,8 +1,23 @@
-use crate::lib::*;
+use core::{
+    convert::TryInto,
+    hash::Hash,
+    mem::{forget, size_of}
+};
 
-use core::convert::TryInto;
-use core::mem::{forget, size_of};
-use crate::error::{Error, ErrorKind, Result};
+use crate::maybestd::{
+    io::{Error, ErrorKind, Result},
+    borrow::{
+        Cow,
+        ToOwned,
+        Borrow
+    },
+    collections::{BTreeMap, HashMap, HashSet},
+    format,
+    string::{String, ToString},
+    vec::Vec,
+    boxed::Box
+};
+
 
 mod hint;
 
@@ -286,7 +301,7 @@ where
 
 impl<T> BorshDeserialize for Cow<'_, T>
 where
-    T: alloc::borrow::ToOwned + ?Sized,
+    T: ToOwned + ?Sized,
     T::Owned: BorshDeserialize,
 {
     #[inline]
@@ -295,29 +310,29 @@ where
     }
 }
 
-#[cfg(feature = "std")]
-impl<T> BorshDeserialize for std::collections::HashSet<T>
+
+impl<T> BorshDeserialize for HashSet<T>
 where
-    T: BorshDeserialize + Eq + std::hash::Hash,
+    T: BorshDeserialize + Eq + Hash,
 {
     #[inline]
     fn deserialize(buf: &mut &[u8]) -> Result<Self> {
         let vec = <Vec<T>>::deserialize(buf)?;
-        Ok(vec.into_iter().collect::<std::collections::HashSet<T>>())
+        Ok(vec.into_iter().collect::<HashSet<T>>())
     }
 }
 
-#[cfg(feature = "std")]
-impl<K, V> BorshDeserialize for std::collections::HashMap<K, V>
+
+impl<K, V> BorshDeserialize for HashMap<K, V>
 where
-    K: BorshDeserialize + Eq + std::hash::Hash,
+    K: BorshDeserialize + Eq + Hash,
     V: BorshDeserialize,
 {
     #[inline]
     fn deserialize(buf: &mut &[u8]) -> Result<Self> {
         let len = u32::deserialize(buf)?;
         // TODO(16): return capacity allocation when we can safely do that.
-        let mut result = std::collections::HashMap::new();
+        let mut result = HashMap::new();
         for _ in 0..len {
             let key = K::deserialize(buf)?;
             let value = V::deserialize(buf)?;
@@ -327,37 +342,6 @@ where
     }
 }
 
-#[cfg(not(feature = "std"))]
-impl<K, V> BorshDeserialize for hashbrown::HashMap<K, V>
-    where
-        K: BorshDeserialize + Eq + core::hash::Hash,
-        V: BorshDeserialize,
-{
-    #[inline]
-    fn deserialize(buf: &mut &[u8]) -> Result<Self> {
-        let len = u32::deserialize(buf)?;
-        // TODO(16): return capacity allocation when we can safely do that.
-        let mut result = hashbrown::HashMap::new();
-        for _ in 0..len {
-            let key = K::deserialize(buf)?;
-            let value = V::deserialize(buf)?;
-            result.insert(key, value);
-        }
-        Ok(result)
-    }
-}
-
-#[cfg(not(feature = "std"))]
-impl<T> BorshDeserialize for hashbrown::HashSet<T>
-    where
-        T: BorshDeserialize + Eq + core::hash::Hash,
-{
-    #[inline]
-    fn deserialize(buf: &mut &[u8]) -> Result<Self> {
-        let vec = <Vec<T>>::deserialize(buf)?;
-        Ok(vec.into_iter().collect::<hashbrown::HashSet<T>>())
-    }
-}
 
 impl<K, V> BorshDeserialize for BTreeMap<K, V>
 where
@@ -449,8 +433,8 @@ impl BorshDeserialize for std::net::Ipv6Addr {
 
 impl<T, U> BorshDeserialize for Box<T>
 where
-    U: Into<Box<T>> + alloc::borrow::Borrow<T>,
-    T: alloc::borrow::ToOwned<Owned = U> + ?Sized,
+    U: Into<Box<T>> + Borrow<T>,
+    T: ToOwned<Owned = U> + ?Sized,
     T::Owned: BorshDeserialize,
 {
     fn deserialize(buf: &mut &[u8]) -> Result<Self> {
