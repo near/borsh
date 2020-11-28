@@ -76,7 +76,7 @@ pub fn enum_de(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2> 
                     let mut return_value = match variant_idx {
                         #variant_arms
                         _ => {
-                            let msg = format!("Unexpected variant index: {:?}", variant_idx);
+                            let msg = #cratename::lib::format!("Unexpected variant index: {:?}", variant_idx);
 
                             return Err(#cratename::error::Error::new(
                                 #cratename::error::ErrorKind::InvalidInput,
@@ -97,7 +97,7 @@ pub fn enum_de(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2> 
                     let return_value = match variant_idx {
                         #variant_arms
                         _ => {
-                            let msg = format!("Unexpected variant index: {:?}", variant_idx);
+                            let msg = #cratename::lib::format!("Unexpected variant index: {:?}", variant_idx);
 
                             return Err(#cratename::error::Error::new(
                                 #cratename::error::ErrorKind::InvalidInput,
