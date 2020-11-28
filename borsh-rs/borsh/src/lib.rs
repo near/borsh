@@ -12,6 +12,7 @@ pub mod schema;
 pub mod schema_helpers;
 pub mod ser;
 pub mod error;
+#[cfg(not(feature = "std"))]
 mod write;
 
 pub use de::BorshDeserialize;
@@ -49,7 +50,7 @@ pub mod lib {
     pub use std::io::Write;
 
     pub use std::{vec, format};
-    pub use std::collections::HashMap;
+    pub use std::collections::{HashMap, HashSet};
     pub mod hash_map {
         pub use std::collections::hash_map::Entry;
     }
@@ -83,7 +84,7 @@ pub mod lib {
 
     pub use crate::write::Write;
     pub use alloc::{vec, format};
-    pub use hashbrown::HashMap;
+    pub use hashbrown::{HashMap, HashSet};
 
     pub mod hash_map {
         pub use hashbrown::hash_map::Entry;

@@ -347,6 +347,18 @@ impl<K, V> BorshDeserialize for hashbrown::HashMap<K, V>
     }
 }
 
+#[cfg(not(feature = "std"))]
+impl<T> BorshDeserialize for hashbrown::HashSet<T>
+    where
+        T: BorshDeserialize + Eq + core::hash::Hash,
+{
+    #[inline]
+    fn deserialize(buf: &mut &[u8]) -> Result<Self> {
+        let vec = <Vec<T>>::deserialize(buf)?;
+        Ok(vec.into_iter().collect::<hashbrown::HashSet<T>>())
+    }
+}
+
 impl<K, V> BorshDeserialize for BTreeMap<K, V>
 where
     K: BorshDeserialize + Ord + core::hash::Hash,

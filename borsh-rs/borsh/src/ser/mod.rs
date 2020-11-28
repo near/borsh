@@ -255,6 +255,25 @@ impl<K, V> BorshSerialize for hashbrown::HashMap<K, V>
     }
 }
 
+#[cfg(not(feature = "std"))]
+impl<T> BorshSerialize for hashbrown::HashSet<T>
+    where
+        T: BorshSerialize + PartialOrd,
+{
+    #[inline]
+    fn serialize<W: Write>(&self, writer: &mut W) -> Result<()> {
+        let mut vec = self.iter().collect::<Vec<_>>();
+        vec.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        u32::try_from(vec.len())
+            .map_err(|_| ErrorKind::InvalidInput)?
+            .serialize(writer)?;
+        for item in vec {
+            item.serialize(writer)?;
+        }
+        Ok(())
+    }
+}
+
 impl<K, V> BorshSerialize for BTreeMap<K, V>
 where
     K: BorshSerialize + PartialOrd,
