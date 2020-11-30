@@ -1,4 +1,4 @@
-jobs:
+matrix:
   include:
     - language: rust
       rust:
