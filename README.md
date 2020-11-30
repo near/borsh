@@ -268,6 +268,11 @@ Run tests:
 ```bash
 yarn test
 ```
+
+Run linter
+```bash
+yarn lint
+```
 ## Publish
 
 Prepare `dist` version by running:
