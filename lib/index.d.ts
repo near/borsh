@@ -1,6 +1,12 @@
 /// <reference types="node" />
 import BN from 'bn.js';
 export declare type Schema = Map<Function, any>;
+export declare class BorshError extends Error {
+    originalMessage: string;
+    fieldPath: string[];
+    constructor(message: string);
+    addToFieldPath(fieldName: string): void;
+}
 export declare class BinaryWriter {
     buf: Buffer;
     length: number;

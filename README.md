@@ -249,3 +249,35 @@ Make sure you are on the master branch, then tag the code and push the tag:
 git tag -a v9.9.9 -m "My superawesome change."
 git push origin v9.9.9
 ```
+
+# TypeScript/JavaScript
+
+## Contributing
+
+Install dependencies:
+```bash
+yarn install
+```
+
+Continuesly build with:
+```bash
+yarn dev
+```
+
+Run tests:
+```bash
+yarn test
+```
+
+Run linter
+```bash
+yarn lint
+```
+## Publish
+
+Prepare `dist` version by running:
+```bash
+yarn build
+```
+
+When publishing to npm use [np](https://github.com/sindresorhus/np).
