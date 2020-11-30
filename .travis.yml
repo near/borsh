@@ -7,9 +7,10 @@ jobs:
         - nightly-2019-05-22
         - nightly
 
-      branches:
-        only:
-          - master
+      matrix:
+        allow_failures:
+          - rust: nightly
+        fast_finish: true
 
       install:
         - cargo build --verbose --manifest-path=borsh-rs/Cargo.toml
