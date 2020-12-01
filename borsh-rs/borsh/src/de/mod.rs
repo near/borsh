@@ -232,7 +232,7 @@ impl BorshDeserialize for String {
     #[inline]
     fn deserialize(buf: &mut &[u8]) -> Result<Self> {
         String::from_utf8(Vec::<u8>::deserialize(buf)?)
-            .map_err(|#[allow(unused_variables)] err| {     
+            .map_err(|err| {     
                 let msg = err.to_string();
                 Error::new(ErrorKind::InvalidData, msg)
             })
