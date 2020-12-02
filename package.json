@@ -1,14 +1,17 @@
 {
   "name": "borsh",
-  "version": "0.2.6",
+  "version": "0.3.0",
   "description": "Binary Object Representation Serializer for Hashing",
-  "main": "borsh-js/index.js",
-  "types": "borsh-js/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
     "test": "jest test --runInBand",
+    "fuzz": "jsfuzz borsh-ts/test/fuzz/borsh-roundtrip.js borsh-ts/test/fuzz/corpus/",
     "dev": "yarn build -w",
-    "pretest": "yarn build"
+    "pretest": "yarn build",
+    "lint": "eslint borsh-ts/**/*.ts",
+    "fix": "eslint borsh-ts/**/*.ts --fix"
   },
   "repository": {
     "type": "git",
@@ -32,11 +35,18 @@
     "@types/babel__core": "^7.1.2",
     "@types/babel__template": "^7.0.2",
     "@types/node": "^12.7.3",
-    "jest": "^24.9.0",
-    "typescript": "^3.6.2"
+    "@typescript-eslint/eslint-plugin": "^2.18.0",
+    "@typescript-eslint/parser": "^2.18.0",
+    "eslint": "^6.5.1",
+    "jest": "^26.0.1",
+    "jsfuzz": "^1.0.14",
+    "typescript": "^3.6.2",
+    "bs58": "^4.0.0",
+    "js-sha256": "^0.9.0"
   },
   "dependencies": {
     "@types/bn.js": "^4.11.5",
-    "bn.js": "^5.0.0"
+    "bn.js": "^5.0.0",
+    "text-encoding-utf-8": "^1.0.2"
   }
 }
