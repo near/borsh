@@ -20,7 +20,7 @@ install:
 script:
   - cargo build --verbose --manifest-path=borsh-rs/Cargo.toml
   - cargo test --verbose --manifest-path=borsh-rs/Cargo.toml
-  - cargo test --verbose --manifest-path=borsh-rs/Cargo.toml -Zpackage-features --package borsh --no-default-features
+  - cd borsh-rs/borsh && cargo test --verbose --no-default-features
 
 addons:
   apt:
