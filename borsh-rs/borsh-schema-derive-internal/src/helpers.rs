@@ -1,6 +1,6 @@
 use quote::{quote, ToTokens};
 use syn::export::TokenStream2;
-use syn::{Attribute, Generics, Meta};
+use syn::{Attribute, Generics, Meta, Ident};
 
 pub fn contains_skip(attrs: &[Attribute]) -> bool {
     for attr in attrs.iter() {
@@ -13,7 +13,7 @@ pub fn contains_skip(attrs: &[Attribute]) -> bool {
     false
 }
 
-pub fn declaration(ident_str: &String, generics: &Generics) -> (TokenStream2, Vec<TokenStream2>) {
+pub fn declaration(ident_str: &String, generics: &Generics, cratename: Ident) -> (TokenStream2, Vec<TokenStream2>) {
     let (_, _, where_clause_generics) = generics.split_for_impl();
     // Generate function that returns the name of the type.
     let mut declaration_params = vec![];
@@ -28,7 +28,7 @@ pub fn declaration(ident_str: &String, generics: &Generics) -> (TokenStream2, Ve
             <#type_param_name>::declaration()
         });
         where_clause.push(quote! {
-            #type_param_name: borsh::BorshSchema
+            #type_param_name: #cratename::BorshSchema
         });
     }
     let result = if declaration_params.is_empty() {
@@ -37,7 +37,7 @@ pub fn declaration(ident_str: &String, generics: &Generics) -> (TokenStream2, Ve
         }
     } else {
         quote! {
-                let params = vec![#(#declaration_params),*];
+                let params = #cratename::maybestd::vec![#(#declaration_params),*];
                 format!(r#"{}<{}>"#, #ident_str, params.join(", "))
         }
     };

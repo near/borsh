@@ -1,6 +1,6 @@
 [package]
 name = "borsh"
-version = "0.7.2"
+version = "0.8.0"
 authors = ["Near Inc <hello@nearprotocol.com>"]
 edition = "2018"
 license = "Apache-2.0"
@@ -21,11 +21,9 @@ name = "generate_schema_schema"
 path = "src/generate_schema_schema.rs"
 
 [dependencies]
-borsh-derive = { path = "../borsh-derive", version = "0.7.2" }
+borsh-derive = { path = "../borsh-derive", version = "0.8.0" }
+hashbrown = "0.9.1"
 
 [features]
 default = ["std"]
-
-# Provides impls for common standard library types like Vec<T>.
-# Requires a dependency on the Rust standard library.
 std = []

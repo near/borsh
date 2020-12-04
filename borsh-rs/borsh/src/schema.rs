@@ -13,8 +13,13 @@
 #![allow(dead_code)]  // Unclear why rust check complains on fields of `Definition` variants.
 use crate as borsh; // For `#[derive(BorshSerialize, BorshDeserialize)]`.
 use crate::{BorshDeserialize, BorshSchema as BorshSchemaMacro, BorshSerialize};
-use std::collections::hash_map::Entry;
-use std::collections::*;
+use crate::maybestd::{
+    collections::{hash_map::Entry, HashMap},
+    string::{ToString, String},
+    vec::Vec, vec,
+    boxed::Box,
+    format
+};
 
 /// The type that we use to represent the declaration of the Borsh type.
 pub type Declaration = String;
@@ -181,7 +186,7 @@ where
     }
 }
 
-impl<T, E> BorshSchema for std::result::Result<T, E>
+impl<T, E> BorshSchema for core::result::Result<T, E>
 where
     T: BorshSchema,
     E: BorshSchema,
@@ -292,12 +297,13 @@ impl_tuple!(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::maybestd::collections::HashMap;
 
     macro_rules! map(
-    () => { ::std::collections::HashMap::new() };
+    () => { HashMap::new() };
     { $($key:expr => $value:expr),+ } => {
         {
-            let mut m = ::std::collections::HashMap::new();
+            let mut m = HashMap::new();
             $(
                 m.insert($key.to_string(), $value);
             )+

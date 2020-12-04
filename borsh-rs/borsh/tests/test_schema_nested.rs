@@ -1,11 +1,12 @@
 #![allow(dead_code)]  // Local structures do not have their fields used.
 use borsh::schema::*;
+use borsh::maybestd::collections::HashMap;
 
 macro_rules! map(
-    () => { ::std::collections::HashMap::new() };
+    () => { HashMap::new() };
     { $($key:expr => $value:expr),+ } => {
         {
-            let mut m = ::std::collections::HashMap::new();
+            let mut m = HashMap::new();
             $(
                 m.insert($key.to_string(), $value);
             )+
@@ -23,7 +24,7 @@ pub fn duplicated_instantiations() {
     struct Cucumber;
     #[derive(borsh::BorshSchema)]
     struct Oil<K, V> {
-        seeds: std::collections::HashMap<K, V>,
+        seeds: HashMap<K, V>,
         liquid: Option<K>,
     };
     #[derive(borsh::BorshSchema)]

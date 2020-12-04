@@ -11,7 +11,7 @@ bench = false
 [dependencies]
 rand_xorshift = "0.2.0"
 rand = "0.7.0"
-borsh = { path = "../borsh" }
+borsh = { path = "../borsh", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 speedy-derive = "0.5"
 speedy = "0.5"
@@ -25,3 +25,6 @@ serde_cbor = "0.10"
 [[bench]]
 name = "bench"
 harness = false
+
+[features]
+default = ["borsh/std"]

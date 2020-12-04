@@ -1,4 +1,4 @@
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use quote::quote;
 use syn::export::{Span, TokenStream2};
@@ -6,7 +6,7 @@ use syn::{Fields, Ident, ItemEnum, WhereClause};
 
 use crate::attribute_helpers::contains_skip;
 
-pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
+pub fn enum_ser(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let mut where_clause = where_clause.map_or_else(
@@ -32,12 +32,12 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     } else {
                         let field_type = &field.ty;
                         where_clause.predicates.push(syn::parse2(quote! {
-                            #field_type: borsh::ser::BorshSerialize
+                            #field_type: #cratename::ser::BorshSerialize
                         }).unwrap());
                         variant_header.extend(quote! { #field_name, });
                     }
                     variant_body.extend(quote! {
-                         borsh::BorshSerialize::serialize(#field_name, writer)?;
+                         #cratename::BorshSerialize::serialize(#field_name, writer)?;
                     })
                 }
                 variant_header = quote! { { #variant_header }};
@@ -54,14 +54,14 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     } else {
                         let field_type = &field.ty;
                         where_clause.predicates.push(syn::parse2(quote! {
-                            #field_type: borsh::ser::BorshSerialize
+                            #field_type: #cratename::ser::BorshSerialize
                         }).unwrap());
 
                         let field_ident =
                             Ident::new(format!("id{}", field_idx).as_str(), Span::call_site());
                         variant_header.extend(quote! { #field_ident, });
                         variant_body.extend(quote! {
-                            borsh::BorshSerialize::serialize(#field_ident, writer)?;
+                            #cratename::BorshSerialize::serialize(#field_ident, writer)?;
                         })
                     }
                 }
@@ -78,8 +78,8 @@ pub fn enum_ser(input: &ItemEnum) -> syn::Result<TokenStream2> {
         ))
     }
     Ok(quote! {
-        impl #impl_generics borsh::ser::BorshSerialize for #name #ty_generics #where_clause {
-            fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::result::Result<(), std::io::Error> {
+        impl #impl_generics #cratename::ser::BorshSerialize for #name #ty_generics #where_clause {
+            fn serialize<W: #cratename::maybestd::io::Write>(&self, writer: &mut W) -> core::result::Result<(), #cratename::maybestd::io::Error> {
                 match self {
                     #body
                 }

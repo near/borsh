@@ -1,12 +1,12 @@
-use std::convert::TryFrom;
+use core::convert::TryFrom;
 
 use quote::quote;
 use syn::export::TokenStream2;
-use syn::{Fields, ItemEnum, WhereClause};
+use syn::{Fields, Ident, ItemEnum, WhereClause};
 
 use crate::attribute_helpers::{contains_initialize_with, contains_skip};
 
-pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
+pub fn enum_de(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let mut where_clause = where_clause.map_or_else(
@@ -33,11 +33,11 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     } else {
                         let field_type = &field.ty;
                         where_clause.predicates.push(syn::parse2(quote! {
-                            #field_type: borsh::BorshDeserialize
+                            #field_type: #cratename::BorshDeserialize
                         }).unwrap());
 
                         variant_header.extend(quote! {
-                            #field_name: borsh::BorshDeserialize::deserialize(buf)?,
+                            #field_name: #cratename::BorshDeserialize::deserialize(buf)?,
                         });
                     }
                 }
@@ -50,11 +50,11 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     } else {
                         let field_type = &field.ty;
                         where_clause.predicates.push(syn::parse2(quote! {
-                            #field_type: borsh::BorshDeserialize
+                            #field_type: #cratename::BorshDeserialize
                         }).unwrap());
 
                         variant_header
-                            .extend(quote! { borsh::BorshDeserialize::deserialize(buf)?, });
+                            .extend(quote! { #cratename::BorshDeserialize::deserialize(buf)?, });
                     }
                 }
                 variant_header = quote! { ( #variant_header )};
@@ -66,20 +66,23 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
         });
     }
     let variant_idx = quote! {
-        let variant_idx: u8 = borsh::BorshDeserialize::deserialize(buf)?;
+        let variant_idx: u8 = #cratename::BorshDeserialize::deserialize(buf)?;
     };
     if let Some(method_ident) = init_method {
         Ok(quote! {
-            impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) -> std::result::Result<Self, std::io::Error> {
+            impl #impl_generics #cratename::de::BorshDeserialize for #name #ty_generics #where_clause {
+                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, #cratename::maybestd::io::Error> {
                     #variant_idx
                     let mut return_value = match variant_idx {
                         #variant_arms
-                        _ =>
-                        return Err(std::io::Error::new(
-                                   std::io::ErrorKind::InvalidInput,
-                                   format!("Unexpected variant index: {:?}", variant_idx),
-                                  )),
+                        _ => {
+                            let msg = #cratename::maybestd::format!("Unexpected variant index: {:?}", variant_idx);
+
+                            return Err(#cratename::maybestd::io::Error::new(
+                                #cratename::maybestd::io::ErrorKind::InvalidInput,
+                                msg,
+                            ));
+                        }
                     };
                     return_value.#method_ident();
                     Ok(return_value)
@@ -88,16 +91,19 @@ pub fn enum_de(input: &ItemEnum) -> syn::Result<TokenStream2> {
         })
     } else {
         Ok(quote! {
-            impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) -> std::result::Result<Self, std::io::Error> {
+            impl #impl_generics #cratename::de::BorshDeserialize for #name #ty_generics #where_clause {
+                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, #cratename::maybestd::io::Error> {
                     #variant_idx
                     let return_value = match variant_idx {
                         #variant_arms
-                        _ =>
-                        return Err(std::io::Error::new(
-                                   std::io::ErrorKind::InvalidInput,
-                                   format!("Unexpected variant index: {:?}", variant_idx),
-                                  )),
+                        _ => {
+                            let msg = #cratename::maybestd::format!("Unexpected variant index: {:?}", variant_idx);
+
+                            return Err(#cratename::maybestd::io::Error::new(
+                                #cratename::maybestd::io::ErrorKind::InvalidInput,
+                                msg,
+                            ));
+                        }
                     };
                     Ok(return_value)
                 }

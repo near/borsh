@@ -1,9 +1,9 @@
 use crate::attribute_helpers::{contains_initialize_with, contains_skip};
 use quote::quote;
 use syn::export::TokenStream2;
-use syn::{Fields, ItemStruct, WhereClause};
+use syn::{Fields, Ident, ItemStruct, WhereClause};
 
-pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
+pub fn struct_de(input: &ItemStruct, cratename: Ident) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let (impl_generics, ty_generics, where_clause) = input.generics.split_for_impl();
     let mut where_clause = where_clause.map_or_else(
@@ -26,11 +26,11 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
                 } else {
                     let field_type = &field.ty;
                     where_clause.predicates.push(syn::parse2(quote! {
-                        #field_type: borsh::BorshDeserialize
+                        #field_type: #cratename::BorshDeserialize
                     }).unwrap());
 
                     quote! {
-                        #field_name: borsh::BorshDeserialize::deserialize(buf)?,
+                        #field_name: #cratename::BorshDeserialize::deserialize(buf)?,
                     }
                 };
                 body.extend(delta);
@@ -43,7 +43,7 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
             let mut body = TokenStream2::new();
             for _ in 0..fields.unnamed.len() {
                 let delta = quote! {
-                    borsh::BorshDeserialize::deserialize(buf)?,
+                    #cratename::BorshDeserialize::deserialize(buf)?,
                 };
                 body.extend(delta);
             }
@@ -59,8 +59,8 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
     };
     if let Some(method_ident) = init_method {
         Ok(quote! {
-            impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) ->  std::result::Result<Self, std::io::Error> {
+            impl #impl_generics #cratename::de::BorshDeserialize for #name #ty_generics #where_clause {
+                fn deserialize(buf: &mut &[u8]) ->  core::result::Result<Self, #cratename::maybestd::io::Error> {
                     let mut return_value = #return_value;
                     return_value.#method_ident();
                     Ok(return_value)
@@ -69,8 +69,8 @@ pub fn struct_de(input: &ItemStruct) -> syn::Result<TokenStream2> {
         })
     } else {
         Ok(quote! {
-            impl #impl_generics borsh::de::BorshDeserialize for #name #ty_generics #where_clause {
-                fn deserialize(buf: &mut &[u8]) -> std::result::Result<Self, std::io::Error> {
+            impl #impl_generics #cratename::de::BorshDeserialize for #name #ty_generics #where_clause {
+                fn deserialize(buf: &mut &[u8]) -> core::result::Result<Self, #cratename::maybestd::io::Error> {
                     Ok(#return_value)
                 }
             }

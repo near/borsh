@@ -2,7 +2,7 @@ language: rust
 rust:
   - stable
   - beta
-  - nightly-2019-05-22
+  - nightly-2020-05-15
   - nightly
 
 matrix:
@@ -20,6 +20,7 @@ install:
 script:
   - cargo build --verbose --manifest-path=borsh-rs/Cargo.toml
   - cargo test --verbose --manifest-path=borsh-rs/Cargo.toml
+  - cd borsh-rs/borsh && cargo test --verbose --no-default-features
 
 addons:
   apt:

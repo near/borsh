@@ -6,13 +6,13 @@ use syn::{
     Visibility,
 };
 
-pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
+pub fn process_enum(input: &ItemEnum, cratename: Ident) -> syn::Result<TokenStream2> {
     let name = &input.ident;
     let name_str = name.to_token_stream().to_string();
     let generics = &input.generics;
     let (impl_generics, ty_generics, _) = generics.split_for_impl();
     // Generate function that returns the name of the type.
-    let (declaration, where_clause) = declaration(&name_str, &input.generics);
+    let (declaration, where_clause) = declaration(&name_str, &input.generics, cratename.clone());
 
     // Generate function that returns the schema for variants.
     // Definitions of the variants.
@@ -60,7 +60,7 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         vis: Visibility::Inherited,
                         ident: Some(Ident::new("borsh_schema_phantom_data", Span::call_site())),
                         colon_token: None,
-                        ty: parse_quote! {::std::marker::PhantomData<(#generic_params)>},
+                        ty: parse_quote! {::core::marker::PhantomData<(#generic_params)>},
                     });
                 }
                 Fields::Unnamed(unnamed) => {
@@ -69,7 +69,7 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
                         vis: Visibility::Inherited,
                         ident: None,
                         colon_token: None,
-                        ty: parse_quote! {::std::marker::PhantomData<(#generic_params)>},
+                        ty: parse_quote! {::core::marker::PhantomData<(#generic_params)>},
                     });
                 }
                 Fields::Unit => {
@@ -86,13 +86,13 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
                     vis: Visibility::Inherited,
                     ident: None,
                     colon_token: None,
-                    ty: parse_quote! {::std::marker::PhantomData<(#generic_params)>},
+                    ty: parse_quote! {::core::marker::PhantomData<(#generic_params)>},
                 });
                 anonymous_struct.fields = Fields::Unnamed(fields);
             }
         }
         anonymous_defs.extend(quote! {
-            #[derive(borsh::BorshSchema)]
+            #[derive(#cratename::BorshSchema)]
             #anonymous_struct
         });
         add_recursive_defs.extend(quote! {
@@ -104,11 +104,11 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
     }
 
     let type_definitions = quote! {
-        fn add_definitions_recursively(definitions: &mut ::std::collections::HashMap<borsh::schema::Declaration, borsh::schema::Definition>) {
+        fn add_definitions_recursively(definitions: &mut #cratename::maybestd::collections::HashMap<#cratename::schema::Declaration, #cratename::schema::Definition>) {
             #anonymous_defs
             #add_recursive_defs
-            let variants = vec![#(#variants_defs),*];
-            let definition = borsh::schema::Definition::Enum{variants};
+            let variants = #cratename::maybestd::vec![#(#variants_defs),*];
+            let definition = #cratename::schema::Definition::Enum{variants};
             Self::add_definition(Self::declaration(), definition, definitions);
         }
     };
@@ -118,8 +118,8 @@ pub fn process_enum(input: &ItemEnum) -> syn::Result<TokenStream2> {
         TokenStream2::new()
     };
     Ok(quote! {
-        impl #impl_generics borsh::BorshSchema for #name #ty_generics #where_clause {
-            fn declaration() -> borsh::schema::Declaration {
+        impl #impl_generics #cratename::BorshSchema for #name #ty_generics #where_clause {
+            fn declaration() -> #cratename::schema::Declaration {
                 #declaration
             }
             #type_definitions
@@ -146,14 +146,14 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = process_enum(&item_enum).unwrap();
+        let actual = process_enum(&item_enum, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A {
                 fn declaration() -> borsh::schema::Declaration {
                     "A".to_string()
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::std::collections::HashMap<
+                    definitions: &mut borsh::maybestd::collections::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -164,7 +164,7 @@ mod tests {
                     struct AEggs;
                     <ABacon>::add_definitions_recursively(definitions);
                     <AEggs>::add_definitions_recursively(definitions);
-                    let variants = vec![
+                    let variants = borsh::maybestd::vec![
                         ("Bacon".to_string(), <ABacon>::declaration()),
                         ("Eggs".to_string(), <AEggs>::declaration())
                     ];
@@ -184,14 +184,14 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = process_enum(&item_enum).unwrap();
+        let actual = process_enum(&item_enum, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A {
                 fn declaration() -> borsh::schema::Declaration {
                     "A".to_string()
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::std::collections::HashMap<
+                    definitions: &mut borsh::maybestd::collections::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -199,7 +199,7 @@ mod tests {
                     #[derive(borsh :: BorshSchema)]
                     struct ABacon;
                     <ABacon>::add_definitions_recursively(definitions);
-                    let variants = vec![("Bacon".to_string(), <ABacon>::declaration())];
+                    let variants = borsh::maybestd::vec![("Bacon".to_string(), <ABacon>::declaration())];
                     let definition = borsh::schema::Definition::Enum { variants };
                     Self::add_definition(Self::declaration(), definition, definitions);
                 }
@@ -219,14 +219,14 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = process_enum(&item_enum).unwrap();
+        let actual = process_enum(&item_enum, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl borsh::BorshSchema for A {
                 fn declaration() -> borsh::schema::Declaration {
                     "A".to_string()
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::std::collections::HashMap<
+                    definitions: &mut borsh::maybestd::collections::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
@@ -246,7 +246,7 @@ mod tests {
                     <AEggs>::add_definitions_recursively(definitions);
                     <ASalad>::add_definitions_recursively(definitions);
                     <ASausage>::add_definitions_recursively(definitions);
-                    let variants = vec![
+                    let variants = borsh::maybestd::vec![
                         ("Bacon".to_string(), <ABacon>::declaration()),
                         ("Eggs".to_string(), <AEggs>::declaration()),
                         ("Salad".to_string(), <ASalad>::declaration()),
@@ -271,7 +271,7 @@ mod tests {
             }
         }).unwrap();
 
-        let actual = process_enum(&item_enum).unwrap();
+        let actual = process_enum(&item_enum, Ident::new("borsh", Span::call_site())).unwrap();
         let expected = quote!{
             impl<C, W> borsh::BorshSchema for A<C, W>
             where
@@ -279,38 +279,38 @@ mod tests {
                 W: borsh::BorshSchema
             {
                 fn declaration() -> borsh::schema::Declaration {
-                    let params = vec![<C>::declaration(), <W>::declaration()];
+                    let params = borsh::maybestd::vec![<C>::declaration(), <W>::declaration()];
                     format!(r#"{}<{}>"#, "A", params.join(", "))
                 }
                 fn add_definitions_recursively(
-                    definitions: &mut ::std::collections::HashMap<
+                    definitions: &mut borsh::maybestd::collections::HashMap<
                         borsh::schema::Declaration,
                         borsh::schema::Definition
                     >
                 ) {
                     #[derive(borsh :: BorshSchema)]
-                    struct ABacon<C, W>(#[borsh_skip] ::std::marker::PhantomData<(C, W)>);
+                    struct ABacon<C, W>(#[borsh_skip] ::core::marker::PhantomData<(C, W)>);
                     #[derive(borsh :: BorshSchema)]
-                    struct AEggs<C, W>(#[borsh_skip] ::std::marker::PhantomData<(C, W)>);
+                    struct AEggs<C, W>(#[borsh_skip] ::core::marker::PhantomData<(C, W)>);
                     #[derive(borsh :: BorshSchema)]
                     struct ASalad<C, W>(
                         Tomatoes,
                         C,
                         Oil,
-                        #[borsh_skip] ::std::marker::PhantomData<(C, W)>
+                        #[borsh_skip] ::core::marker::PhantomData<(C, W)>
                     );
                     #[derive(borsh :: BorshSchema)]
                     struct ASausage<C, W> {
                         wrapper: W,
                         filling: Filling,
                         #[borsh_skip]
-                        borsh_schema_phantom_data: ::std::marker::PhantomData<(C, W)>
+                        borsh_schema_phantom_data: ::core::marker::PhantomData<(C, W)>
                     }
                     <ABacon<C, W> >::add_definitions_recursively(definitions);
                     <AEggs<C, W> >::add_definitions_recursively(definitions);
                     <ASalad<C, W> >::add_definitions_recursively(definitions);
                     <ASausage<C, W> >::add_definitions_recursively(definitions);
-                    let variants = vec![
+                    let variants = borsh::maybestd::vec![
                         ("Bacon".to_string(), <ABacon<C, W> >::declaration()),
                         ("Eggs".to_string(), <AEggs<C, W> >::declaration()),
                         ("Salad".to_string(), <ASalad<C, W> >::declaration()),
