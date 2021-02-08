@@ -33,10 +33,10 @@ Why do we need yet another serialization format? Borsh is the first serializer t
 
 | Platform                          | Repository                                   | Latest Release                                                                                                                                 |
 | --------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rust                              | [borsh-rs](https://github.com/near/borsh-rs) | <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/v/borsh.svg?style=flat-square" alt="Crates.io version" /></a> |
-| TypeScript, JavaScript            | [borsh-js](https://github.com/near/borsh-js) | <a href="https://npmjs.com/borsh"><img alt="npm" src="https://img.shields.io/npm/v/borsh.svg?style=flat-square"></a>                           |
+| Rust                              | [borsh-rs](https://github.com/near/borsh-rs) | <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/v/borsh.svg?style=flat-square" alt="Latest released version" /></a> |
+| TypeScript, JavaScript            | [borsh-js](https://github.com/near/borsh-js) | <a href="https://npmjs.com/borsh"><img src="https://img.shields.io/npm/v/borsh.svg?style=flat-square" alt="Latest released version"></a>                           |
 | Java, Kotlin, Scala, Clojure, etc | [borshj](https://github.com/near/borshj)     |                                                                                                                                                |
-| Go                                | [borsh-go](https://github.com/ouromoros/borsh-go) | Beta |
+| Go                                | [borsh-go](https://github.com/near/borsh-go) | <a href="https://github.com/near/borsh-go"><img src="https://img.shields.io/github/v/release/near/borsh-go?sort=semver&style=flat-square" alt="Latest released version" /></a> |
 | Python                            | [borsh-py](https://github.com/near/borsh-py) | Work-in-progress                                                                                                                               |
 
 ## Benchmarks
