@@ -106,6 +106,17 @@ Formal specification:
       <td>We do not write anything</td>
     </tr>
     <tr>
+      <td>Bool</td>
+      <td>boolean_type: "bool"</td>
+      <td>
+        if x {<br/>
+        &nbsp; repr(1 as u8)<br/>
+        } else {<br/>
+        &nbsp; repr(0 as u8)<br/>
+        }
+      </td>
+    </tr>
+    <tr>
       <td>Fixed sized arrays</td>
       <td>array_type: '[' ident ';' literal ']'</td>
       <td>
