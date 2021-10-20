@@ -37,7 +37,7 @@ Why do we need yet another serialization format? Borsh is the first serializer t
 | TypeScript, JavaScript            | [borsh-js](https://github.com/near/borsh-js) | <a href="https://npmjs.com/borsh"><img src="https://img.shields.io/npm/v/borsh.svg?style=flat-square" alt="Latest released version"></a>                           |
 | Java, Kotlin, Scala, Clojure, etc | [borshj](https://github.com/near/borshj)     |                                                                                                                                                |
 | Go                                | [borsh-go](https://github.com/near/borsh-go) | <a href="https://github.com/near/borsh-go"><img src="https://img.shields.io/github/v/release/near/borsh-go?sort=semver&style=flat-square" alt="Latest released version" /></a> |
-| Python                            | [borsh-py](https://github.com/near/borsh-py) | Work-in-progress                                                                                                                               |
+| Python                            | [borsh-construct-py](https://github.com/near/borsh-construct-py) | <a href="https://pypi.org/project/borsh-construct/"><img src="https://img.shields.io/pypi/v/borsh-construct.svg?style=flat-square" alt="Latest released version" /></a>                                                                                                                               |
 | Assemblyscript                    | [borsh-as](https://github.com/gagdiez/serial-as/tree/main/borsh) | <a href="https://www.npmjs.com/package/@serial-as/borsh"><img src="https://img.shields.io/npm/v/@serial-as/borsh?style=flat-square" alt="Latest released version" /></a> |
 
 ## Benchmarks
