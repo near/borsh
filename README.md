@@ -39,6 +39,7 @@ Why do we need yet another serialization format? Borsh is the first serializer t
 | Go                                | [borsh-go](https://github.com/near/borsh-go) | <a href="https://github.com/near/borsh-go"><img src="https://img.shields.io/github/v/release/near/borsh-go?sort=semver&style=flat-square" alt="Latest released version" /></a> |
 | Python                            | [borsh-construct-py](https://github.com/near/borsh-construct-py) | <a href="https://pypi.org/project/borsh-construct/"><img src="https://img.shields.io/pypi/v/borsh-construct.svg?style=flat-square" alt="Latest released version" /></a>                                                                                                                               |
 | Assemblyscript                    | [borsh-as](https://github.com/gagdiez/serial-as/tree/main/borsh) | <a href="https://www.npmjs.com/package/@serial-as/borsh"><img src="https://img.shields.io/npm/v/@serial-as/borsh?style=flat-square" alt="Latest released version" /></a> |
+| C#                                | [Hexarc.Borsh](https://github.com/hexarc-software/hexarc-borsh) | <a href="https://www.nuget.org/packages/Hexarc.Borsh"><img src="https://img.shields.io/nuget/v/Hexarc.Borsh.svg?style=flat-square" alt="Latest released version" /></a> |
 | C++                    | [borsh-cpp](https://github.com/Stolkerve/borsh-cpp) | *(work-in-progress)* |
 
 ## Benchmarks
