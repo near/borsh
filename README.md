@@ -96,6 +96,33 @@ Formal specification:
       <td>little_endian(x)</td>
     </tr>
     <tr>
+      <td>Unsigned big integers</td>
+      <td>integer_type: ["BigUint" ]</td>
+      <td>
+        bytes = little_endian(x).trim_trailing_zeroes()<br/>
+        bytes_length = <a href="https://github.com/multiformats/unsigned-varint">unsigned_varint</a>(bytes.len() as u32)<br/>
+        for byte in bytes_length <br/>
+        &nbsp; repr(byte as u8)<br/>
+        for byte in bytes <br/>
+        &nbsp; repr(byte as u8)
+      </td>
+    </tr>
+    <tr>
+      <td>Signed big integers</td>
+      <td>integer_type: ["BigInt" ]</td>
+      <td>
+        if x &equals;&equals; 0 {<br/>
+        &nbsp; repr(1 as u8)<br/>
+        } else if x &lt; 0 {<br/>
+        &nbsp; repr(0 as u8) <br/>
+        &nbsp; repr(x.magnitude() as BigUint) <br/>
+        } else {
+        &nbsp; repr(2 as u8) <br/>
+        &nbsp; repr(x.magnitude() as BigUint) <br/>
+        }
+      </td>
+    </tr>
+    <tr>
       <td>Floats</td>
       <td>float_type: ["f32" | "f64" ]</td>
       <td>
