@@ -216,8 +216,8 @@ fn test_simple_struct() {
         x: 3301,
         y: "liber primus".to_string(),
     };
-    let encoded_a = a.try_to_vec().unwrap();
-    let decoded_a = A::try_from_slice(&encoded_a).unwrap();
+    let encoded_a = borsh::to_vec(a).unwrap();
+    let decoded_a = borsh::from_slice::<A>(&encoded_a).unwrap();
     assert_eq!(a, decoded_a);
 }
 </code></pre>
