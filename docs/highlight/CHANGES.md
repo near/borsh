@@ -1849,7 +1849,7 @@ Highlight.js is a parser, not just a couple of regular expressions. That said
 I'm glad to announce that in the new version 2.9 has support for:
 
 - in-string substitutions for Ruby -- `#{...}`
-- strings from from numeric symbol codes (like #XX) for Delphi
+- strings from numeric symbol codes (like #XX) for Delphi
 
 
 ## Version 2.8
