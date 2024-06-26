@@ -455,6 +455,19 @@ fn test_simple_struct() {
                     </td>
                   </tr>
                   <tr>
+                    <td>Result</td>
+                    <td>result_type: "Result&lt;" ident '&gt;'</td>
+                    <td>
+                      if x.is_ok() { <br />
+                      &nbsp; repr(1 as u8) <br />
+                      &nbsp; repr(x.unwrap() as ident) <br />
+                      } else { <br />
+                      &nbsp; repr(0 as u8) <br />
+                      &nbsp; repr(x.unwrap_err() as ident) <br />
+                      }
+                    </td>
+                  </tr>
+                  <tr>
                     <td>String</td>
                     <td>string_type: "String"</td>
                     <td>
