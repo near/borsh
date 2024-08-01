@@ -31,19 +31,20 @@ Why do we need yet another serialization format? Borsh is the first serializer t
 
 ## Implementations
 
-| Platform                          | Repository                                   | Latest Release                                                                                                                                 |
-| --------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Rust                              | [borsh-rs](https://github.com/near/borsh-rs) | <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/v/borsh.svg?style=flat-square" alt="Latest released version" /></a> |
-| TypeScript, JavaScript            | [borsh-js](https://github.com/near/borsh-js) | <a href="https://npmjs.com/borsh"><img src="https://img.shields.io/npm/v/borsh.svg?style=flat-square" alt="Latest released version"></a>                           |
-| TypeScript | [borsh-ts](https://github.com/dao-xyz/borsh-ts) | <a href="https://npmjs.com/package/@dao-xyz/borsh"><img src="https://img.shields.io/npm/v/@dao-xyz/borsh.svg?style=flat-square" alt="Latest released version"></a> |
-| Java, Kotlin, Scala, Clojure, etc | [borshj](https://github.com/near/borshj)     |                                                                                                                                                |
-| Go                                | [borsh-go](https://github.com/near/borsh-go) | <a href="https://github.com/near/borsh-go"><img src="https://img.shields.io/github/v/release/near/borsh-go?sort=semver&style=flat-square" alt="Latest released version" /></a> |
-| Python                            | [borsh-construct-py](https://github.com/near/borsh-construct-py) | <a href="https://pypi.org/project/borsh-construct/"><img src="https://img.shields.io/pypi/v/borsh-construct.svg?style=flat-square" alt="Latest released version" /></a>                                                                                                                               |
-| Assemblyscript                    | [borsh-as](https://github.com/gagdiez/serial-as/tree/main/borsh) | <a href="https://www.npmjs.com/package/@serial-as/borsh"><img src="https://img.shields.io/npm/v/@serial-as/borsh?style=flat-square" alt="Latest released version" /></a> |
-| C#                                | [Hexarc.Borsh](https://github.com/hexarc-software/hexarc-borsh) | <a href="https://www.nuget.org/packages/Hexarc.Borsh"><img src="https://img.shields.io/nuget/v/Hexarc.Borsh.svg?style=flat-square" alt="Latest released version" /></a> |
-| C++                    | [borsh-cpp](https://github.com/Stolkerve/borsh-cpp) | *(work-in-progress)* |
-| C++20                    | [borsh-cpp20](https://github.com/israelidanny/borsh-cpp20) | *(work-in-progress)* |
-| Elixir                    | [borsh-ex](https://github.com/alexfilatov/borsh) | <a href="https://hex.pm/packages/borsh"><img src="https://img.shields.io/hexpm/v/borsh.svg?style=flat-square" alt="Latest released version" /></a> |
+| Platform                          | Repository                                                                    | Latest Release |
+| --------------------------------- | ----------------------------------------------------------------------------- | -------------- |
+| Rust                              | [borsh-rs](https://github.com/near/borsh-rs)                                  | <a href="https://crates.io/crates/borsh"><img src="https://img.shields.io/crates/v/borsh.svg?style=flat-square" alt="Latest released version" /></a> |
+| TypeScript, JavaScript            | [borsh-js](https://github.com/near/borsh-js)                                  | <a href="https://npmjs.com/borsh"><img src="https://img.shields.io/npm/v/borsh.svg?style=flat-square" alt="Latest released version"></a> |
+| TypeScript                        | [borsh-ts](https://github.com/dao-xyz/borsh-ts)                               | <a href="https://npmjs.com/package/@dao-xyz/borsh"><img src="https://img.shields.io/npm/v/@dao-xyz/borsh.svg?style=flat-square" alt="Latest released version"></a> |
+| Java, Kotlin, Scala, Clojure, etc | [borshj](https://github.com/near/borshj)                                      | |
+| Go                                | [borsh-go](https://github.com/near/borsh-go)                                  | <a href="https://github.com/near/borsh-go"><img src="https://img.shields.io/github/v/release/near/borsh-go?sort=semver&style=flat-square" alt="Latest released version" /></a> |
+| Python                            | [borsh-construct-py](https://github.com/near/borsh-construct-py)              | <a href="https://pypi.org/project/borsh-construct/"><img src="https://img.shields.io/pypi/v/borsh-construct.svg?style=flat-square" alt="Latest released version" /></a> |
+| Assemblyscript                    | [borsh-as](https://github.com/gagdiez/serial-as/tree/main/borsh)              | <a href="https://www.npmjs.com/package/@serial-as/borsh"><img src="https://img.shields.io/npm/v/@serial-as/borsh?style=flat-square" alt="Latest released version" /></a> |
+| C#                                | [Hexarc.Borsh](https://github.com/hexarc-software/hexarc-borsh)               | <a href="https://www.nuget.org/packages/Hexarc.Borsh"><img src="https://img.shields.io/nuget/v/Hexarc.Borsh.svg?style=flat-square" alt="Latest released version" /></a> |
+| C++                               | [borsh-cpp](https://github.com/Stolkerve/borsh-cpp)                           | *(work-in-progress)* |
+| C++20                             | [borsh-cpp20](https://github.com/israelidanny/borsh-cpp20)                    | *(work-in-progress)* |
+| Dart                              | [espresso-cash-public](https://github.com/espresso-cash/espresso-cash-public) | <a href="https://pub.dev/packages/borsh"><img src="https://img.shields.io/pub/v/borsh.svg?style=flat-square" alt="Latest released version" /></a> |
+| Elixir                            | [borsh-ex](https://github.com/alexfilatov/borsh)                              | <a href="https://hex.pm/packages/borsh"><img src="https://img.shields.io/hexpm/v/borsh.svg?style=flat-square" alt="Latest released version" /></a> |
 
 ## Benchmarks
 
