@@ -42,7 +42,8 @@ Why do we need yet another serialization format? Borsh is the first serializer t
 | Assemblyscript                    | [borsh-as](https://github.com/gagdiez/serial-as/tree/main/borsh) | <a href="https://www.npmjs.com/package/@serial-as/borsh"><img src="https://img.shields.io/npm/v/@serial-as/borsh?style=flat-square" alt="Latest released version" /></a> |
 | C#                                | [Hexarc.Borsh](https://github.com/hexarc-software/hexarc-borsh) | <a href="https://www.nuget.org/packages/Hexarc.Borsh"><img src="https://img.shields.io/nuget/v/Hexarc.Borsh.svg?style=flat-square" alt="Latest released version" /></a> |
 | C++                    | [borsh-cpp](https://github.com/Stolkerve/borsh-cpp) | *(work-in-progress)* |
-| C++20                    | [borsh-cpp20](https://github.com/israelidanny/borsh-cpp20) | *(work-in-progress)* |
+| C++20                    | [borsh-cpp20](https://github.com/etodanik/borsh-cpp20) | *(work-in-progress)* |
+| Unreal Engine 5.x                    | [BorshUnreal](https://github.com/etodanik/BorshUnreal) | *(work-in-progress)* |
 | Elixir                    | [borsh-ex](https://github.com/alexfilatov/borsh) | <a href="https://hex.pm/packages/borsh"><img src="https://img.shields.io/hexpm/v/borsh.svg?style=flat-square" alt="Latest released version" /></a> |
 | Ruby | [borsh.rb](https://github.com/dryruby/borsh.rb) | <a href="https://rubygems.org/gems/borsh"><img src="https://img.shields.io/gem/v/borsh?style=flat-square" alt="Latest released version" /></a> |
 
