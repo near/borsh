@@ -82,9 +82,9 @@ General principles:
 
 - integers are little endian;
 - sizes of dynamic containers are written before values as `u32`;
-- all unordered containers (hashmap/hashset) are ordered in lexicographic order by key (in tie breaker case on value);
+- all unordered containers (hashmap/hashset) are written with their keys in strictly ascending order of the key type's `Ord`, not of the encoded bytes (see [Key order](#key-order));
 - structs are serialized in the order of fields in the struct;
-- enums are serialized with using `u8` for the enum ordinal and then storing data inside the enum value (if present).
+- enums are serialized with using `u8` for the variant's tag (its declaration index, or its discriminant if `#[borsh(use_discriminant = true)]` is set) and then storing data inside the enum value (if present).
 
 Formal specification:
 
@@ -105,7 +105,7 @@ Formal specification:
       <td>float_type: ["f32" | "f64" ]</td>
       <td>
         err_if_nan(x)<br/>
-        little_endian(x as integer_type)
+        little_endian(x.to_bits())
       </td>
     </tr>
     <tr>
@@ -178,7 +178,7 @@ Formal specification:
         variant: ident [ fields ] ?
       </td>
       <td>
-        Suppose X is the number of the variant that the enum takes.<br/>
+        Suppose X is the tag of the variant that the enum takes.<br/>
         repr(X as u8)<br/>
         repr(x.X as fieldsX)
       </td>
@@ -210,7 +210,7 @@ Formal specification:
       <td>
         if x.is_some() {<br/>
         &nbsp; repr(1 as u8)<br/>
-        &nbsp; repr(x.unwrap() as ident <br/>
+        &nbsp; repr(x.unwrap() as ident)<br/>
         } else {<br/>
         &nbsp; repr(0 as u8)<br/>
         }
@@ -233,3 +233,26 @@ Note:
 - Some parts of Rust grammar are not yet formalized, like enums and variants. We backwards derive EBNF forms of Rust grammar from [syn types](https://github.com/dtolnay/syn);
 - We had to extend repetitions of EBNF and instead of defining them as `[ ident_field ':' ident_type ',' ] *` we define them as `ident_field0 ':' ident_type0 ',' ident_field1 ':' ident_type1 ',' ...` so that we can refer to individual elements in the pseudocode;
 - We use `repr()` function to denote that we are writing the representation of the given element into an imaginary buffer.
+
+### Key order
+
+- Map keys and set elements are compared with the key type's `Ord`. For `i32`, `-1 < 0`, so `-1` (`ff ff ff ff`) is written before `0` (`00 00 00 00`).
+- The canonical form has keys strictly ascending, with no duplicates. `BTreeMap` and `BTreeSet` are encoded the same way as `HashMap` and `HashSet`.
+- For enum keys, `Ord` is the derived one: variants compare by discriminant, then by payload. This can differ from tag order. `Result<T, E>` is written as tag `0` for `Err` and tag `1` for `Ok`, but `Ok < Err`, so `BTreeSet<Result<u8, u8>>` `{Ok(5), Err(1)}` is written `02000000 0105 0001`. Likewise `enum { A = 5, B = 2 }` with `use_discriminant = false` has tags `A = 0`, `B = 1` but `B < A`.
+
+### Decoding rules
+
+An implementation must reject:
+
+- a `bool` byte other than `0` or `1`, and an `Option` or `Result` tag other than `0` or `1`;
+- an enum tag that does not belong to a variant;
+- a zero value for a `NonZero*` integer;
+- a `String` that is not valid UTF-8 (as checked by `core::str::from_utf8`);
+- NaN floats, on decode and on encode. Floats are written as their IEEE-754 bit pattern, so `0.0` and `-0.0` are encoded differently;
+- a `Vec`, set or map whose element (for maps, key) type has zero encoded size, such as `Vec<()>`, on decode and on encode. borsh-rs approximates this with `size_of::<T>() == 0`;
+- input that ends before the value is complete, and a container length that does not fit in `u32` on encode;
+- bytes left over after the value, when decoding a whole input. borsh-rs `from_slice`, `try_from_slice`, `from_reader` and `try_from_reader` reject them, but `BorshDeserialize::deserialize` leaves them in the buffer.
+
+`isize` and `usize` are written as `i64` and `u64`.
+
+Decoding keys out of order or with duplicates is not an error in borsh-rs unless its `de_strict_order` feature is enabled. Without it, the collection is built from the decoded entries (for maps, the last of the duplicate keys wins), and encoding it again gives the sorted form. The one-to-one mapping between objects and bytes described above therefore needs `de_strict_order` and a check for trailing bytes.
