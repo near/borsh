@@ -1,8 +1,8 @@
 import BorshSpec.Encode
-import BorshSpec.Lenient
-import BorshSpec.Cost
-import BorshSpec.Hex
-import BorshSpec.Parse
+import BorshSpec.Tooling.Lenient
+import BorshSpec.Tooling.Cost
+import BorshSpec.Tooling.Hex
+import BorshSpec.Tooling.Parse
 import BorshSpec.Grammar
 
 /-!
@@ -63,6 +63,17 @@ def lenientHex (s hex : String) : Option (String × Nat) :=
 #guard strictHex "(enum (1 u8) (0 string))" "0107" == some ("0107", 0)
 #guard strictHex "(enum (1 u8) (0 string))" "00010000006e" == some ("00010000006e", 0)
 #guard strictHex "(enum (1 u8) (0 string))" "02" == none
+-- The readable codec of `Spec.lean` gives the same answers as the internal codec.
+#guard Spec.decode (sch "(enum (1 u8) (0 u8))") [1, 7] == decode (sch "(enum (1 u8) (0 u8))") [1, 7]
+#guard Spec.decode (sch "(set u8)") [2, 0, 0, 0, 1, 1] == decode (sch "(set u8)") [2, 0, 0, 0, 1, 1]
+#guard Spec.decode (sch "(map u8 string)") [1, 0, 0, 0, 1, 1, 0, 0, 0, 0x61] ==
+  decode (sch "(map u8 string)") [1, 0, 0, 0, 1, 1, 0, 0, 0, 0x61]
+#guard Spec.decode (sch "string") [2, 0, 0, 0, 0xc0, 0x80] == none
+#guard Spec.decode .f32 [0, 0, 0xc0, 0x7f] == none
+#guard Spec.decode (sch "bool") [2] == none
+#guard Spec.encode (sch "(vec string)") (.vec [.string [0x68, 0x69]]) ==
+  encode (sch "(vec string)") (.vec [.string [0x68, 0x69]])
+#guard Spec.encode (sch "(set u8)") (.set [.uint 2, .uint 1]) == none
 -- The decoded value carries the variant index, not the tag.
 #guard decode (sch "(enum (1 u8) (0 u8))") [1, 7] == some (.enum 0 (.uint 7), [])
 #guard decode (sch "(enum (1 u8) (0 u8))") [0, 7] == some (.enum 1 (.uint 7), [])

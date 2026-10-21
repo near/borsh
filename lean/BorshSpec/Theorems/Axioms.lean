@@ -1,13 +1,14 @@
 import BorshSpec.Theorems.RoundTrip
 import BorshSpec.Theorems.Grammar
 import BorshSpec.Theorems.Resources
+import BorshSpec.Theorems.SpecEquiv
 
 /-!
 # Axiom footprint
 
-Every theorem listed here (the headline results of `RoundTrip.lean`, `Grammar.lean` and
-`Resources.lean`) depends only on the three standard axioms of Lean's classical logic
-(`propext`, `Classical.choice`, `Quot.sound`), or on fewer.  None depends on the
+Every theorem listed here (the headline results of `RoundTrip.lean`, `Grammar.lean`,
+`Resources.lean` and `SpecEquiv.lean`) depends only on the three standard axioms of
+Lean's classical logic (`propext`, `Classical.choice`, `Quot.sound`), or on fewer.  None depends on the
 placeholder `sorryAx`, on `Lean.ofReduceBool` (which compiled evaluation would
 introduce) or on a postulate declared in this repository.  The helper lemmas in the
 lowercase directories are covered transitively: whatever they use, the theorems listed
@@ -222,5 +223,13 @@ namespace BorshSpec.Axioms
 /-- info: 'BorshSpec.hex_encode_decode' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms BorshSpec.hex_encode_decode
+
+/-- info: 'BorshSpec.spec_encode_eq' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms BorshSpec.spec_encode_eq
+
+/-- info: 'BorshSpec.spec_decode_eq' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms BorshSpec.spec_decode_eq
 
 end BorshSpec.Axioms

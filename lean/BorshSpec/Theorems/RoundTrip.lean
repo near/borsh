@@ -11,7 +11,7 @@ on every schema (DECISIONS.md, decisions 10 and 14).
 
 These theorems are internal-consistency properties of the definitions.  They would
 hold for a codec that agreed with itself on a wrong wire format (DECISIONS.md,
-decision 25); the format is fixed by the definitions, the vectors, `Examples.lean`
+decision 25); the format is fixed by the definitions, the vectors, `Tooling/Examples.lean`
 and differential testing, not by anything here.
 -/
 
@@ -174,7 +174,7 @@ theorem Value.cmp_trans (a b c : Value) :
   exact RT.cmp_trans a b c
 
 /-- The Boolean equality on values (`BEq Value`, defined from `Value.cmp` in
-`Order.lean`) agrees with propositional equality.  The executable compares values
+`Spec.lean`) agrees with propositional equality.  The executable compares values
 with `==` in its self-checks. -/
 theorem Value.beq_iff (a b : Value) : (a == b) = true ↔ a = b := by
   show (Value.cmp a b == .eq) = true ↔ a = b

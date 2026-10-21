@@ -72,15 +72,15 @@ jobs:
 
       # A module that is not imported by its library root is neither built by
       # default nor linted, so require every module to be imported: definitions
-      # by BorshSpec.lean, theorem modules by BorshSpec/Theorems.lean (or by
+      # and tooling by BorshSpec.lean, theorem modules by BorshSpec/Theorems.lean (or by
       # another theorem module), including the helper modules in the lowercase
       # directories under BorshSpec/Theorems/.
       - name: Every module is imported
         working-directory: lean
         run: |
           status=0
-          for f in BorshSpec/*.lean; do
-            m=$(basename "$f" .lean)
+          for f in BorshSpec/*.lean BorshSpec/Tooling/*.lean; do
+            m=$(echo "${f#BorshSpec/}" | sed -e 's/\.lean$//' -e 's#/#.#g')
             if [ "$m" = Theorems ]; then continue; fi
             if ! grep -q "^import BorshSpec\.$m\$" BorshSpec.lean; then
               echo "::error file=lean/BorshSpec.lean::BorshSpec.$m is not imported"
@@ -117,17 +117,17 @@ jobs:
           fi
           exit $status
 
-      # Axioms.lean must pin every theorem of the three statement files: compare
+      # Axioms.lean must pin every theorem of the four statement files: compare
       # the declared names with the names given to `#print axioms`.
       - name: Every theorem has an axiom pin
         working-directory: lean
         run: |
           stated=$(grep -hE '^theorem ' BorshSpec/Theorems/RoundTrip.lean BorshSpec/Theorems/Grammar.lean \
-            BorshSpec/Theorems/Resources.lean | sed -E 's/^theorem ([^[:space:]]+).*/BorshSpec.\1/' | sort)
+            BorshSpec/Theorems/Resources.lean BorshSpec/Theorems/SpecEquiv.lean | sed -E 's/^theorem ([^[:space:]]+).*/BorshSpec.\1/' | sort)
           pinned=$(grep -hE '^#print axioms ' BorshSpec/Theorems/Axioms.lean | sed 's/^#print axioms //' | sort)
           # every declaration form in the statement files must be one the check above sees
           other=$(grep -hE '^[[:space:]]*(protected |private )?(theorem|lemma)[[:space:]]' BorshSpec/Theorems/RoundTrip.lean \
-            BorshSpec/Theorems/Grammar.lean BorshSpec/Theorems/Resources.lean | grep -vcE '^theorem ' || true)
+            BorshSpec/Theorems/Grammar.lean BorshSpec/Theorems/Resources.lean BorshSpec/Theorems/SpecEquiv.lean | grep -vcE '^theorem ' || true)
           if [ "$other" != 0 ]; then
             echo "::error::a statement file declares a theorem or lemma that is not at the start of a line"
             exit 1
@@ -151,3 +151,34 @@ jobs:
           rustc -O -o "$RUNNER_TEMP/utf8_digest" tools/utf8_digest.rs
           "$RUNNER_TEMP/utf8_digest" > "$RUNNER_TEMP/utf8-rust.txt"
           diff <(grep '^length ' "$RUNNER_TEMP/utf8-lean.txt") "$RUNNER_TEMP/utf8-rust.txt"
+
+  # lean/doc renders BorshSpec/Spec.lean with Verso as one HTML page.  Rendering
+  # is not a gate on the spec, but a Verso or toolchain bump that breaks it should
+  # fail here rather than go unnoticed; the page is kept as a build artifact.
+  render:
+    name: Render the spec page
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the toolchain of lean/doc
+        uses: leanprover/lean-action@24581d74d674803a25a81b10b059c5c0cdd344c6 # v1.6.2
+        with:
+          lake-package-directory: lean/doc
+          auto-config: false
+          use-mathlib-cache: false
+
+      - name: Render
+        working-directory: lean/doc
+        run: ./render.sh
+
+      - name: Upload the page
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: borsh-spec-html
+          path: lean/out/spec.html
+          if-no-files-found: error

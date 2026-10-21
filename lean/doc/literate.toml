@@ -1,0 +1,10 @@
+# Render only the one-file specification.
+show_imports = false
+docstrings_as_text = false
+hide_commands = ["open", "set_option"]
+
+[[targets]]
+module = "BorshSpec.Spec"
+
+[metadata]
+title = "The Borsh format, in one file"

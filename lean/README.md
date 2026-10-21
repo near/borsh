@@ -4,13 +4,36 @@ This directory contains a formal specification of the [Borsh](https://borsh.io)
 binary format written in Lean 4, in the Lake package `BorshSpec`, with an executable
 front end `borsh-spec`.
 
+**Start with [`BorshSpec/Spec.lean`](BorshSpec/Spec.lean).**  It is the whole format
+in one file of about 540 lines, prose and the UTF-8 table included: the `Schema` and
+`Value` types, little-endian integers, the key order of maps and sets, the UTF-8 rule,
+and `Spec.encode` and `Spec.decode`, written in the order of the table in this
+README, one rule per match arm, with the list of everything that is rejected.  Everything else in this directory is checking
+or tooling around that file.
+
+`Spec.lean` is the normative definition of the format.  `Spec.encode` and `Spec.decode`
+are **theorem-proven equal** to the internal codec (`encode` and `decode` in
+`Encode.lean` and `Decode.lean`) that the theorems below are stated about:
+
+* `spec_encode_eq (s : Schema) (v : Value) : Spec.encode s v = encode s v`
+* `spec_decode_eq (s : Schema) (bs : List UInt8) : Spec.decode s bs = decode s bs`
+
+Both hold for every schema, value and input (`Theorems/SpecEquiv.lean`, proofs in
+`Theorems/specequiv/`), so every theorem below holds for the readable codec as well.
+Both proofs are by structural induction on the schema.  `Tooling/Examples.lean` also
+checks `Spec.*` against the internal codec on concrete inputs; those checks are now
+redundant with the theorems.
+
+To read the specification as a web page, see "Reading the specification in a browser".
+
 * The **spec** (`BorshSpec/`) is plain, total, structurally recursive Lean code:
-  schemas, values, key order, typing, canonicity, `encode`, `decode` (a prefix
-  decoder), the lenient decoder that models borsh-rs without `de_strict_order`, a
-  UTF-8 validator, a schema parser and printer, and hex.  Bytes are `List UInt8`.  The
-  format is defined by `Schema`, `Value`, `Order`, `Typing`, `Encode`, `Decode` and
-  `Lenient`; `Cost.lean` (a step-counting decoder and schema cost factor) is a resource
-  model for the executable's request guard and is not part of the format definition.
+  `Spec.lean` (readable codec, types, key order), the internal codec the theorems are
+  about (`Encode`, `Decode`, `Typing`, `Schema`), the UTF-8 validator and the relational
+  grammars the codec is checked against.  Bytes are `List UInt8`.  `BorshSpec/Tooling/`
+  holds what is not the format: the lenient decoder that models borsh-rs without
+  `de_strict_order`, the step-counting decoder and schema cost factor (a resource model
+  for the executable's request guard), the schema parser and printer, hex, and build-time
+  examples.
 * The **theorems** (`BorshSpec/Theorems/`) are statements about those definitions.
   They are a separate library, so the spec and the tool build whatever state the
   proofs are in.  See "What is proven".
@@ -39,13 +62,14 @@ A passing test is never described as a proof.
 ## What is proven
 
 The 51 theorems stated in `Theorems/RoundTrip.lean`, `Theorems/Grammar.lean` and
-`Theorems/Resources.lean` are theorem-proven: checked by the Lean kernel, with no
+`Theorems/Resources.lean`, and the two equivalence theorems of `Theorems/SpecEquiv.lean`
+(53 in all), are theorem-proven: checked by the Lean kernel, with no
 `sorry` and no `native_decide`.  These are the headline results; the lemmas they are
 proved from are in the lowercase directories `Theorems/roundtrip/`, `Theorems/grammar/`
 and `Theorems/resources/` and are covered transitively.  `Theorems/Axioms.lean` pins
-`#print axioms` for each of the 51, so the build fails if a footprint changes, and CI
-checks that every theorem of the three statement files has a pin.  The tables below
-list all 51.
+`#print axioms` for each of the 53, so the build fails if a footprint changes, and CI
+checks that every theorem of the four statement files has a pin.  The tables below
+list the 51, and "Readable codec" lists the other two.
 
 Axioms: every theorem depends on at most `propext`, `Classical.choice` and
 `Quot.sound`.  Exceptions, which need fewer: `toLE_length`, `toLE_eq_leBytes` and
@@ -57,7 +81,7 @@ means the strict decoder `decode`.
 What these theorems are: properties of the Lean definitions.  They show the
 definitions are self-consistent and agree with a separately written relational
 grammar.  They do not show that the format matches the prose specification or
-borsh-rs; that is what the vectors, `Examples.lean` and the differential tests under
+borsh-rs; that is what the vectors, `Tooling/Examples.lean` and the differential tests under
 "Evidence" are for (decision 25).
 
 ### Codec (`Theorems/RoundTrip.lean`)
@@ -114,18 +138,29 @@ the representation of values, so agreement says nothing about those three.
 | `parse_print` | Parsing the printed form of any schema gives the schema back |
 | `hex_decode_encode`, `hex_encode_decode` | Hex decoding inverts hex encoding; text accepted by `Hex.decode` is exactly what `Hex.encode` writes |
 
+### Readable codec (`Theorems/SpecEquiv.lean`)
+
+| Theorem | Plain-English statement |
+|---------|-------------------------|
+| `spec_encode_eq` | `Spec.encode` of `BorshSpec/Spec.lean` returns exactly what the internal `encode` returns, for every schema and value (failures included) |
+| `spec_decode_eq` | `Spec.decode` returns exactly what the internal `decode` returns, for every schema and input (failures and the unread rest included) |
+
+Both depend on `propext`, `Classical.choice` and `Quot.sound`.  A change to
+`Spec.encode` or `Spec.decode` means these proofs must be updated.
+
 ### Not covered by the theorems
 
 * That the definitions match borsh-rs: see "Evidence".  No theorem mentions Rust.
 * The wall-clock time or memory of the compiled executable.  The cost theorems count
-  steps of the model in `Cost.lean`; the lenient decoder's sort is outside that model.
+  steps of the model in `Tooling/Cost.lean`; the lenient decoder's sort is outside that model.
 * The CLI front end (`Main.lean`: argument parsing, line protocol, buffering).  It is
   tested by `lake test`, not proved.
 * The statement of `decode_iff_encodes` is only as good as the grammar `Encodes`,
   which is read against the prose by hand.
 * Divergences from borsh-rs listed in `DECISIONS.md` and `vectors/divergences.tsv`.
 
-CI runs `lake build --wfail`, so a `sorry` anywhere fails the build.  Separate steps
+CI runs `lake build --wfail`, so a `sorry` anywhere fails the build; no file sets
+`warn.sorry false`.  Separate steps
 of `.github/workflows/lean.yml` also reject `sorry`, `native_decide`, `axiom`,
 `partial`, `unsafe`, `opaque`, `implemented_by`, `extern` and `csimp` in the sources
 (the compiled executable then runs the definitions the theorems are about), and check
@@ -135,21 +170,20 @@ that every theorem has an axiom pin.
 
 | Path | Contents |
 |------|----------|
-| `BorshSpec/Schema.lean` | `Schema`, zero-size and float predicates, decidable `wellFormed`, `minSize` |
-| `BorshSpec/Bytes.lean` | little-endian codec, bounded `takeExact`, NaN tests on bit patterns |
+| `BorshSpec/Spec.lean` | **the format, readable**: `Schema`, `Value`, little-endian integers and NaN tests, `takeExact`, the key order `Value.cmp` and `strictAsc`, and `Spec.encode` / `Spec.decode` |
 | `BorshSpec/Utf8.lean` | `validUtf8`, intended to equal Rust `core::str::from_utf8` (RFC 3629 table) |
-| `BorshSpec/Value.lean` | `Value` (enum values carry the variant index) |
-| `BorshSpec/Order.lean` | `Value.cmp`, the key order, and `strictAsc` |
+| `BorshSpec/Utf8Grammar.lean`, `BorshSpec/Grammar.lean` | the UTF-8 grammar `WellFormedUtf8` and the relational grammar `Encodes`, written from the prose without a decoder |
+| `BorshSpec/Schema.lean` | float predicate, decidable `wellFormed`, `minSize` (the type and `zeroSized` are in `Spec.lean`) |
 | `BorshSpec/Typing.lean` | `hasType`, `canonical`, and the `HasType`/`Canonical`/`Valid` Props |
-| `BorshSpec/Encode.lean` | `encode : Schema → Value → Option (List UInt8)` |
-| `BorshSpec/Decode.lean` | `decode : Schema → List UInt8 → Option (Value × List UInt8)`, via `decodeWith` and `KeyPolicy` |
-| `BorshSpec/Lenient.lean` | `Lenient.decode`: borsh-rs without `de_strict_order` |
-| `BorshSpec/Cost.lean` | a resource model, not part of the format definition: `decodeC` (decode with a step counter), `Schema.factor`, `Value.elems`, the schema cap `maxFactor` and the request cap `maxSteps` |
-| `BorshSpec/Grammar.lean`, `BorshSpec/Utf8Grammar.lean` | the relational grammar `Encodes` and the UTF-8 grammar `WellFormedUtf8`, written from the prose without a decoder |
-| `BorshSpec/Hex.lean` | `Hex.encode`, `Hex.decode` |
-| `BorshSpec/Parse.lean` | `parseSchema : String → Except String Schema` and `Schema.print` |
-| `BorshSpec/Examples.lean` | `#guard` and `rfl` checks run at build time |
-| `BorshSpec/Theorems.lean`, `BorshSpec/Theorems/` | theorems (second library, `BorshSpecTheorems`): the statements in `RoundTrip.lean`, `Grammar.lean`, `Resources.lean`; their proofs in the lowercase directories `roundtrip/`, `grammar/`, `resources/`; the axiom pins in `Axioms.lean` |
+| `BorshSpec/Encode.lean` | the internal `encode : Schema → Value → Option (List UInt8)` that the theorems are about |
+| `BorshSpec/Decode.lean` | the internal `decode : Schema → List UInt8 → Option (Value × List UInt8)`, via `decodeWith` and `KeyPolicy` |
+| `BorshSpec/Tooling/Lenient.lean` | `Lenient.decode`: borsh-rs without `de_strict_order` |
+| `BorshSpec/Tooling/Cost.lean` | a resource model, not part of the format definition: `decodeC` (decode with a step counter), `Schema.factor`, `Value.elems`, the schema cap `maxFactor` and the request cap `maxSteps` |
+| `BorshSpec/Tooling/Hex.lean` | `Hex.encode`, `Hex.decode` |
+| `BorshSpec/Tooling/Parse.lean` | `parseSchema : String → Except String Schema` and `Schema.print` |
+| `BorshSpec/Tooling/Examples.lean` | `#guard` and `rfl` checks run at build time, including `Spec.*` against the internal codec |
+| `BorshSpec/Theorems.lean`, `BorshSpec/Theorems/` | theorems (second library, `BorshSpecTheorems`): the statements in `RoundTrip.lean`, `Grammar.lean`, `Resources.lean`, `SpecEquiv.lean`; their proofs in the lowercase directories `roundtrip/`, `grammar/`, `resources/`, `specequiv/`; the axiom pins in `Axioms.lean`; `SpecEquiv.lean` proves that the readable codec equals the internal one |
+| `doc/` | a separate Lake package (Verso) that renders `BorshSpec/Spec.lean` as one HTML page; not part of the main package |
 | `Main.lean` | the `borsh-spec` executable; imports the definitions only |
 | `vectors/core.tsv` | conformance corpus for the strict decoder |
 | `vectors/ordering.tsv` | key order: `Result`, explicit discriminants, signed integers, strings, nesting |
@@ -182,6 +216,30 @@ that every module, helpers included, is imported by its library root, scans the
 sources as described under "What is proven", and compares the UTF-8 enumeration with
 `tools/utf8_digest.rs` (needs `rustc`).
 
+## Reading the specification in a browser
+
+`BorshSpec/Spec.lean` can be rendered as a single literate HTML page: the module
+documentation becomes prose, each docstring sits next to the definition it
+documents, and the code shown is the real code, highlighted, with hover types.
+The page is generated from `Spec.lean` itself, never from a copy.
+
+```sh
+./doc/render.sh        # writes out/spec.html, one self-contained file
+```
+
+`doc/` is a separate Lake package that depends on [Verso](https://github.com/leanprover/verso)
+(pinned to the release matching this Lean toolchain).  The main package has no
+dependency on it, and `lake build`, `lake test` and `lake lint` never touch it.  The
+first run builds Verso, which takes about a minute; it needs network access to
+github.com, elan and python3 (standard library only).  To get the full multi-page Verso
+site instead, run `lake query :literateHtml` in `doc/`.  The output directory `out/` is
+git-ignored.  CI renders the page in a separate job and keeps it as the
+`borsh-spec-html` build artifact, so a Verso or toolchain bump that breaks rendering
+fails there.
+
+The page has no external assets and opens from disk.  A few hover tooltips link to
+lean-lang.org, which needs the network when followed.
+
 ## The `borsh-spec` executable
 
 ```
@@ -202,7 +260,7 @@ strictly back to the same value); a violation prints `err<TAB>internal: ...`.  S
 (schemas whose `factor` exceeds 2^20 are `bad`, and so are requests for which
 `(input length + 1) * factor` exceeds 2^26).
 
-Example (a default Rust `Result<u8, u8>` set, written in rank order, and its
+Example (a default Rust `Result<u8, u8>` set, written in key order, and its
 out-of-order input in lenient mode):
 
 ```sh
@@ -245,7 +303,7 @@ seeds.
   hand (or from small generators that are not part of this repository), not produced by
   the Lean code under test.  They cover every schema form, truncated input,
   `0xffffffff` length prefixes, NaN payloads, `-0.0`, invalid UTF-8, keys in numeric
-  versus byte order, `Result` and discriminant ranks, duplicate and unsorted keys in
+  versus byte order, `Result` and discriminant orders, duplicate and unsorted keys in
   strict and lenient mode, sparse enum tags, trailing bytes and ill-formed schemas.
 * **The vectors against borsh-rs** (differentially tested): the same files were run
   through borsh-rs by the harness, each line mapped to a Rust type with the same schema.
@@ -276,7 +334,7 @@ seeds.
   from no input where the specification rejects the schema, and is capped at 100,000
   elements (larger counts are not run).
 * **Sensitivity of the harness**: it was also run against 19 deliberately broken Lean
-  builds (a wrong NaN test, a wrong enum rank, a first-wins lenient decoder, unchecked
+  builds (a wrong NaN test, a wrong enum order, a first-wins lenient decoder, unchecked
   key order, ...): each is detected, and a strict-only or lenient-only break is seen in
   the matching build only.  The list is hand-picked, so this shows the harness can see
   these faults, not that it sees all faults.

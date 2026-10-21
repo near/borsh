@@ -21,9 +21,6 @@ namespace BorshSpec
 
 namespace Schema
 
-/-- The two's-complement unsigned residue of a signed integer on `w` bytes. -/
-def sintToNat (w : IntWidth) (i : Int) : Nat := (i % 2 ^ (8 * w.bytes)).toNat
-
 mutual
 
 /-- The canonical encoding; see the module docstring. -/

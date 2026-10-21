@@ -1,0 +1,18 @@
+name = "borsh-spec-doc"
+defaultTargets = ["BorshSpecDoc"]
+
+# Verso, pinned to the release that matches the Lean toolchain.
+[[require]]
+name = "verso"
+git = "https://github.com/leanprover/verso"
+rev = "v4.35.0"
+
+# The page is generated from the real source of the specification: this library
+# compiles the module straight out of the parent package, so there is no copy.
+# `BorshSpec.Spec` imports only `BorshSpec.Utf8`.
+[[lean_lib]]
+name = "BorshSpecDoc"
+srcDir = ".."
+roots = ["BorshSpec.Spec"]
+globs = ["BorshSpec.Spec", "BorshSpec.Utf8"]
+leanOptions = { autoImplicit = false, relaxedAutoImplicit = false }

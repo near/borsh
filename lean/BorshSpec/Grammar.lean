@@ -1,6 +1,4 @@
 import BorshSpec.Schema
-import BorshSpec.Value
-import BorshSpec.Order
 import BorshSpec.Utf8Grammar
 
 /-!
@@ -83,8 +81,8 @@ inductive Ascending : List Value → Prop where
       Value.cmp a b = .lt → Ascending (b :: rest) → Ascending (a :: b :: rest)
 
 /-- `VariantAt vs i tag s`: in the variant list `vs`, the first variant carrying the
-wire tag `tag` is at position `i` and has payload schema `s`.  Positions are the ranks
-of `Schema.enum` and the indices carried by `Value.enum`. -/
+wire tag `tag` is at position `i` and has payload schema `s`.  Positions are the variant
+indices of `Schema.enum`, the ones carried by `Value.enum`. -/
 inductive VariantAt : List (UInt8 × Schema) → Nat → UInt8 → Schema → Prop where
   /-- The head of the list is the variant. -/
   | here (tag : UInt8) (s : Schema) (rest : List (UInt8 × Schema)) :

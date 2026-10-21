@@ -21,7 +21,7 @@ value carries the *index* of the first variant with that tag.
 ## One decoder, two key policies
 
 Everything except what happens to the list of decoded set elements or map entries
-is shared with the lenient decoder (`BorshSpec.Lenient`).  That difference is
+is shared with the lenient decoder (`BorshSpec.Tooling.Lenient`).  That difference is
 isolated in a `KeyPolicy`; `decode` is `decodeWith KeyPolicy.strict`.
 
 ## Termination and resource use
@@ -35,7 +35,7 @@ fails to decode.  Because the element schema is not zero-sized, every element
 consumes at least one byte, so a prefix of `0xffffffff` followed by a short body
 fails after at most `bs.length + 1` iterations.  `takeExact` likewise looks at
 no more than the input.  The step-counting version of this argument is in
-`BorshSpec.Cost`; `array n s` with a zero-sized `s` is the one place where work is
+`BorshSpec.Tooling.Cost`; `array n s` with a zero-sized `s` is the one place where work is
 not bounded by the input (DECISIONS.md, decision 18).
 -/
 
@@ -76,14 +76,6 @@ def decodeMany {α : Type} (d : List UInt8 → Option (α × List UInt8)) :
     match d bs with
     | none => none
     | some (x, r) => decodeMany d n (x :: acc) r
-
-/-- Read a `u32` length prefix. -/
-def readU32 (bs : List UInt8) : Option (Nat × List UInt8) := readLE 4 bs
-
-/-- The signed integer denoted by an unsigned residue on `w` bytes
-(two's complement). -/
-def natToSint (w : IntWidth) (n : Nat) : Int :=
-  if n < 2 ^ (8 * w.bytes - 1) then (n : Int) else (n : Int) - 2 ^ (8 * w.bytes)
 
 mutual
 

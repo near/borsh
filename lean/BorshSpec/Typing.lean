@@ -1,8 +1,4 @@
 import BorshSpec.Schema
-import BorshSpec.Bytes
-import BorshSpec.Utf8
-import BorshSpec.Value
-import BorshSpec.Order
 
 /-!
 # Typing and canonicity
@@ -30,10 +26,6 @@ Prop-valued wrappers.
 namespace BorshSpec
 
 namespace Schema
-
-/-- The width-`w` signed range test. -/
-def sintInRange (w : IntWidth) (i : Int) : Bool :=
-  decide (-(2 ^ (8 * w.bytes - 1) : Int) ≤ i ∧ i < 2 ^ (8 * w.bytes - 1))
 
 mutual
 

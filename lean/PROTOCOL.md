@@ -33,7 +33,7 @@ well-formed.
 ### Enums
 
 Each variant has an explicit wire tag.  **The order of the variants in the list is
-their order as map keys and set elements** (the rank): a variant earlier in the list
+their order as map keys and set elements** (the variant index): a variant earlier in the list
 compares smaller than a later one, whatever the tags, and values of one variant
 compare by payload.  The tag is what is written to and read from the wire.
 
@@ -105,7 +105,7 @@ when the input had unsorted or repeated keys.  See "Lenient decoding" below.
 
 ### Resource guard
 
-Every schema has a factor `factor(s)` (`BorshSpec/Cost.lean`) such that decoding any
+Every schema has a factor `factor(s)` (`BorshSpec/Tooling/Cost.lean`) such that decoding any
 input of length `n` takes at most `(n + 1) * factor(s)` steps of the instrumented
 decoder.  The tool applies two limits, both answered `bad`:
 

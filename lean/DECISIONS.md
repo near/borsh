@@ -12,7 +12,7 @@ line protocol are in [`PROTOCOL.md`](PROTOCOL.md).
 order by key (in tie breaker case on value)."
 
 *Decision*: map keys and set elements are written in strictly ascending order of the
-key's `Ord` (`Value.cmp`, `BorshSpec/Order.lean`).
+key's `Ord` (`Value.cmp`, `BorshSpec/Spec.lean`).
 
 *Why*: keys are unique, so the value tie-breaker is unreachable.  borsh-rs sorts by
 the key type's `Ord`, not by the encoded bytes, and the two differ for signed
@@ -21,7 +21,7 @@ little-endian integers generally (`1` is `01 00 00 00`, `256` is `00 01 00 00`).
 `vectors/ordering.tsv` has the discriminating cases.  A user key type with a custom
 `Ord` is out of scope.
 
-### 2. Enum variants: the list order is the rank, the tag is explicit
+### 2. Enum variants: the list order is the key order, the tag is explicit
 
 *Prose*: "enums are serialized with using `u8` for the enum ordinal"; the table says
 "the number of the variant".
@@ -36,7 +36,7 @@ index.
 `BTreeSet<Result<u8, u8>> {Ok(5), Err(1)}` is serialised by borsh-rs as
 `02000000 0105 0001`.  An enum with explicit discriminants (`A = 5, B = 2`) and
 `use_discriminant = false` writes declaration indices as tags but orders by
-discriminant.  Making the rank part of the schema lets one definition cover all
+discriminant.  Making the variant index part of the schema lets one definition cover all
 cases, including default enums (`(enum (0 S0) (1 S1) ...)`), while `Value.cmp` stays
 structural and schema-independent (decision 19).  Ordering by wire tag, the obvious
 alternative, is wrong for the first two kinds.
@@ -214,7 +214,7 @@ the point of failure differs.
 
 ### 18. Cost model, schema factor and the resource guard
 
-`Cost.lean` has `decodeC`, the strict decoder instrumented with a step counter, and
+`Tooling/Cost.lean` has `decodeC`, the strict decoder instrumented with a step counter, and
 `Schema.factor`.  A step is a visit of a schema node, a byte validated as UTF-8, or the
 work of comparing two keys during the order check (charged `1 + min` of their sizes).
 The theorem `decode_steps_le` says `steps ≤ (input length + 1) * factor s`, for every
@@ -270,7 +270,7 @@ steps).  The bound is on the step-counting model `decodeC`, tied to `decode` by
 ### 19. Key order is schema-independent
 
 `Value.cmp` inspects only the value's constructors; values of different constructors are
-ordered by constructor rank (this never happens for well-typed values of one schema).
+ordered by `shapeIndex` (this never happens for well-typed values of one schema).
 Enum values compare by variant index, then payload.  Floats compare by raw bits to keep
 `cmp` total, though well-formed schemas never use them as keys.  Encode and decode use
 the same test (`strictAsc`), so their mutual consistency needs no order laws; the laws
@@ -311,11 +311,11 @@ Lean's `deriving DecidableEq` does not support these nested inductives (`List Sc
 `List (UInt8 × Schema)`), and `deriving BEq` on them produces a `partial` function,
 which is opaque to the kernel: not even `Value.uint 1 == Value.uint 1` can be proved
 by `rfl` or `decide`, and `Value.beq_iff` could never be proved.  So `Schema` and
-`Value` derive only `Repr`, and `BEq Value` is defined in `Order.lean` as
+`Value` derive only `Repr`, and `BEq Value` is defined in `Spec.lean` as
 `cmp a b == .eq`; `Value.beq_iff` then reduces to `Value.cmp_eq_iff`.  Theorem
 statements use propositional equality.  `Schema` has no `BEq` (nothing uses one).
 `#guard` checks that compare values with `==` evaluate the compiled `cmp`; the
-kernel-checked pins are the `example` lines in `Examples.lean`.
+kernel-checked pins are the `example` lines in `Tooling/Examples.lean`.
 
 ### 23. Build policy
 
@@ -324,9 +324,9 @@ and `autoImplicit = false` in `lakefile.toml`.  The definitions (`BorshSpec`), t
 theorems and the executable build and lint warning-free (`lake lint` covers all three).  The theorems are a separate library
 (`BorshSpecTheorems`, root `BorshSpec/Theorems.lean`) so that the executable does not
 depend on the proofs.  No `sorry` is allowed anywhere: `lake build --wfail` fails on
-one.  `BorshSpec/Theorems/Axioms.lean` pins the axioms of the 51 headline theorems with
+one.  `BorshSpec/Theorems/Axioms.lean` pins the axioms of the 53 headline theorems (the 51 of the three statement files and the two equivalence theorems of `SpecEquiv.lean`) with
 `#guard_msgs`, so a new dependency on `sorryAx` or `Lean.ofReduceBool` fails the build; the
-helper lemmas are covered transitively.  CI also checks that every theorem of the three
+helper lemmas are covered transitively.  CI also checks that every theorem of the four
 statement files has a pin, and rejects `partial`, `unsafe`, `opaque`, `implemented_by`,
 `extern` and `csimp` in the sources, since each of them lets the compiled executable
 differ from the definitions the theorems are about.
@@ -359,13 +359,13 @@ Round trip, canonical decoding, injectivity, progress and the order laws would h
 any self-consistent codec, including one that agreed on a wrong wire format (for example
 `true` written as `2`, or an always-true UTF-8 check): they fix no byte.  The format is
 fixed by the definitions, by the vectors, by the `#guard`/`rfl` examples in
-`Examples.lean` and by differential testing.  The relational grammar
+`Tooling/Examples.lean` and by differential testing.  The relational grammar
 (`decode_iff_encodes`) and `validUtf8_iff` tie the codec to a second statement of the
 format, written from the prose and `PROTOCOL.md` without a decoder in it.  That second
 statement is *not* independent in every respect: the grammar uses the same key order
 `Value.cmp`, the same integer widths (`IntWidth.bytes`) and the same value
 representation as the codec, so a consistently wrong key order (say, reversed) would
-satisfy it.  The key order is protected by the `cmp` pins in `Examples.lean`, the
+satisfy it.  The key order is protected by the `cmp` pins in `Tooling/Examples.lean`, the
 ordering vectors and the differential test; the NaN test is written differently
 (mask form in the grammar, field extraction in the codec) and the UTF-8 rules are
 stated twice, with `validUtf8_iff_validateUTF8` as a third statement through the

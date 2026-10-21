@@ -36,7 +36,7 @@ def Mode.decode : Mode → Schema → List UInt8 → Option (Value × List UInt8
 structure Config where
   /-- The decoder to use. -/
   mode : Mode := .strict
-  /-- Schemas with `factor` above this are answered `bad` (see `Cost.lean`). -/
+  /-- Schemas with `factor` above this are answered `bad` (see `BorshSpec/Tooling/Cost.lean`). -/
   maxFactor : Nat := BorshSpec.maxFactor
   /-- Requests with `(input length + 1) * factor` above this are answered `bad`. -/
   maxSteps : Nat := BorshSpec.maxSteps

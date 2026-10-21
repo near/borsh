@@ -70,73 +70,73 @@ theorem cmpBytes_trans : ∀ (as bs cs : List UInt8),
         · obtain rfl := Std.compare_eq_iff_eq.1 h1
           exact .inr ⟨h2, cmpBytes_trans as bs cs h1' h2'⟩
 
-/-- Equal-order values have equal rank, i.e. the same constructor. -/
-theorem rank_eq_of_cmp_eq (a b : Value) (h : cmp a b = .eq) : rank a = rank b := by
-  cases a <;> cases b <;> simp_all [cmp, rank]
+/-- Equal-order values have equal shape index, i.e. the same constructor. -/
+theorem shapeIndex_eq_of_cmp_eq (a b : Value) (h : cmp a b = .eq) : shapeIndex a = shapeIndex b := by
+  cases a <;> cases b <;> simp_all [cmp, shapeIndex]
 
-/-- `cmp a b = .lt` forces `rank a ≤ rank b`. -/
-theorem rank_le_of_cmp_lt (a b : Value) (h : cmp a b = .lt) : rank a ≤ rank b := by
-  cases a <;> cases b <;> simp_all [cmp, rank, Nat.compare_eq_lt]
+/-- `cmp a b = .lt` forces `shapeIndex a ≤ shapeIndex b`. -/
+theorem shapeIndex_le_of_cmp_lt (a b : Value) (h : cmp a b = .lt) : shapeIndex a ≤ shapeIndex b := by
+  cases a <;> cases b <;> simp_all [cmp, shapeIndex, Nat.compare_eq_lt]
 
-/-- A smaller rank is a smaller value. -/
-theorem cmp_lt_of_rank_lt (a b : Value) (h : rank a < rank b) : cmp a b = .lt := by
-  cases a <;> cases b <;> simp_all [cmp, rank, Nat.compare_eq_lt]
+/-- A smaller shape index is a smaller value. -/
+theorem cmp_lt_of_shapeIndex_lt (a b : Value) (h : shapeIndex a < shapeIndex b) : cmp a b = .lt := by
+  cases a <;> cases b <;> simp_all [cmp, shapeIndex, Nat.compare_eq_lt]
 
-/-- A value of the rank of `uint` is built with the `uint` constructor. -/
-theorem eq_uint_of_rank {b : Value} (h : rank b = 0) : ∃ n, b = .uint n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `uint` is built with the `uint` constructor. -/
+theorem eq_uint_of_shapeIndex {b : Value} (h : shapeIndex b = 0) : ∃ n, b = .uint n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `sint` is built with the `sint` constructor. -/
-theorem eq_sint_of_rank {b : Value} (h : rank b = 1) : ∃ n, b = .sint n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `sint` is built with the `sint` constructor. -/
+theorem eq_sint_of_shapeIndex {b : Value} (h : shapeIndex b = 1) : ∃ n, b = .sint n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `f32` is built with the `f32` constructor. -/
-theorem eq_f32_of_rank {b : Value} (h : rank b = 2) : ∃ n, b = .f32 n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `f32` is built with the `f32` constructor. -/
+theorem eq_f32_of_shapeIndex {b : Value} (h : shapeIndex b = 2) : ∃ n, b = .f32 n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `f64` is built with the `f64` constructor. -/
-theorem eq_f64_of_rank {b : Value} (h : rank b = 3) : ∃ n, b = .f64 n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `f64` is built with the `f64` constructor. -/
+theorem eq_f64_of_shapeIndex {b : Value} (h : shapeIndex b = 3) : ∃ n, b = .f64 n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `bool` is built with the `bool` constructor. -/
-theorem eq_bool_of_rank {b : Value} (h : rank b = 4) : ∃ n, b = .bool n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `bool` is built with the `bool` constructor. -/
+theorem eq_bool_of_shapeIndex {b : Value} (h : shapeIndex b = 4) : ∃ n, b = .bool n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `string` is built with the `string` constructor. -/
-theorem eq_string_of_rank {b : Value} (h : rank b = 5) : ∃ n, b = .string n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `string` is built with the `string` constructor. -/
+theorem eq_string_of_shapeIndex {b : Value} (h : shapeIndex b = 5) : ∃ n, b = .string n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- The only value of the rank of `optNone` is `optNone`. -/
-theorem eq_optNone_of_rank {b : Value} (h : rank b = 6) : b = .optNone := by
-  cases b <;> simp_all [rank]
+/-- The only value of the shape index of `optNone` is `optNone`. -/
+theorem eq_optNone_of_shapeIndex {b : Value} (h : shapeIndex b = 6) : b = .optNone := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `optSome` is built with the `optSome` constructor. -/
-theorem eq_optSome_of_rank {b : Value} (h : rank b = 7) : ∃ n, b = .optSome n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `optSome` is built with the `optSome` constructor. -/
+theorem eq_optSome_of_shapeIndex {b : Value} (h : shapeIndex b = 7) : ∃ n, b = .optSome n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `vec` is built with the `vec` constructor. -/
-theorem eq_vec_of_rank {b : Value} (h : rank b = 8) : ∃ n, b = .vec n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `vec` is built with the `vec` constructor. -/
+theorem eq_vec_of_shapeIndex {b : Value} (h : shapeIndex b = 8) : ∃ n, b = .vec n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `array` is built with the `array` constructor. -/
-theorem eq_array_of_rank {b : Value} (h : rank b = 9) : ∃ n, b = .array n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `array` is built with the `array` constructor. -/
+theorem eq_array_of_shapeIndex {b : Value} (h : shapeIndex b = 9) : ∃ n, b = .array n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `tuple` is built with the `tuple` constructor. -/
-theorem eq_tuple_of_rank {b : Value} (h : rank b = 10) : ∃ n, b = .tuple n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `tuple` is built with the `tuple` constructor. -/
+theorem eq_tuple_of_shapeIndex {b : Value} (h : shapeIndex b = 10) : ∃ n, b = .tuple n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `enum` is built with the `enum` constructor. -/
-theorem eq_enum_of_rank {b : Value} (h : rank b = 11) : ∃ t n, b = .enum t n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `enum` is built with the `enum` constructor. -/
+theorem eq_enum_of_shapeIndex {b : Value} (h : shapeIndex b = 11) : ∃ t n, b = .enum t n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `map` is built with the `map` constructor. -/
-theorem eq_map_of_rank {b : Value} (h : rank b = 12) : ∃ n, b = .map n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `map` is built with the `map` constructor. -/
+theorem eq_map_of_shapeIndex {b : Value} (h : shapeIndex b = 12) : ∃ n, b = .map n := by
+  cases b <;> simp_all [shapeIndex]
 
-/-- A value of the rank of `set` is built with the `set` constructor. -/
-theorem eq_set_of_rank {b : Value} (h : rank b = 13) : ∃ n, b = .set n := by
-  cases b <;> simp_all [rank]
+/-- A value of the shape index of `set` is built with the `set` constructor. -/
+theorem eq_set_of_shapeIndex {b : Value} (h : shapeIndex b = 13) : ∃ n, b = .set n := by
+  cases b <;> simp_all [shapeIndex]
 
 /-- `cmpList` on two non-empty lists: the head decides unless the heads are equal. -/
 theorem cmpList_cons_lt (a b : Value) (as bs : List Value) :
@@ -215,52 +215,52 @@ mutual
 /-- `cmp` is `.eq` only on equal values. -/
 theorem cmp_eq : ∀ (a b : Value), cmp a b = .eq → a = b
   | .uint n, b, h => by
-    obtain ⟨m, rfl⟩ := eq_uint_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨m, rfl⟩ := eq_uint_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simpa [cmp] using h
   | .sint n, b, h => by
-    obtain ⟨m, rfl⟩ := eq_sint_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨m, rfl⟩ := eq_sint_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simpa [cmp] using h
   | .f32 n, b, h => by
-    obtain ⟨m, rfl⟩ := eq_f32_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨m, rfl⟩ := eq_f32_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simpa [cmp] using h
   | .f64 n, b, h => by
-    obtain ⟨m, rfl⟩ := eq_f64_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨m, rfl⟩ := eq_f64_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simpa [cmp] using h
   | .bool n, b, h => by
-    obtain ⟨m, rfl⟩ := eq_bool_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨m, rfl⟩ := eq_bool_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simpa [cmp] using h
   | .string n, b, h => by
-    obtain ⟨m, rfl⟩ := eq_string_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨m, rfl⟩ := eq_string_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simp only [cmp] at h
     rw [cmpBytes_eq n m h]
   | .optNone, b, h => by
-    rw [eq_optNone_of_rank (rank_eq_of_cmp_eq _ _ h).symm]
+    rw [eq_optNone_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm]
   | .optSome a, b, h => by
-    obtain ⟨m, rfl⟩ := eq_optSome_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨m, rfl⟩ := eq_optSome_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simp only [cmp] at h
     rw [cmp_eq a m h]
   | .vec xs, b, h => by
-    obtain ⟨ys, rfl⟩ := eq_vec_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨ys, rfl⟩ := eq_vec_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simp only [cmp] at h
     rw [cmpList_eq xs ys h]
   | .array xs, b, h => by
-    obtain ⟨ys, rfl⟩ := eq_array_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨ys, rfl⟩ := eq_array_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simp only [cmp] at h
     rw [cmpList_eq xs ys h]
   | .tuple xs, b, h => by
-    obtain ⟨ys, rfl⟩ := eq_tuple_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨ys, rfl⟩ := eq_tuple_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simp only [cmp] at h
     rw [cmpList_eq xs ys h]
   | .enum t a, b, h => by
-    obtain ⟨u, m, rfl⟩ := eq_enum_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨u, m, rfl⟩ := eq_enum_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     obtain ⟨h1, h2⟩ := (cmp_enum_eq ..).1 h
     rw [Std.compare_eq_iff_eq.1 h1, cmp_eq a m h2]
   | .map kvs, b, h => by
-    obtain ⟨ys, rfl⟩ := eq_map_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨ys, rfl⟩ := eq_map_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simp only [cmp] at h
     rw [cmpPairs_eq kvs ys h]
   | .set xs, b, h => by
-    obtain ⟨ys, rfl⟩ := eq_set_of_rank (rank_eq_of_cmp_eq _ _ h).symm
+    obtain ⟨ys, rfl⟩ := eq_set_of_shapeIndex (shapeIndex_eq_of_cmp_eq _ _ h).symm
     simp only [cmp] at h
     rw [cmpList_eq xs ys h]
 
@@ -284,17 +284,17 @@ theorem cmpPairs_eq : ∀ (xs ys : List (Value × Value)), cmpPairs xs ys = .eq 
 
 end
 
-/-- Transitivity of `cmp` reduces to the case of equal ranks. -/
+/-- Transitivity of `cmp` reduces to the case of equal shape indices. -/
 theorem cmp_trans_dispatch (a b c : Value)
-    (h : rank a = rank b → rank b = rank c → cmp a b = .lt → cmp b c = .lt →
+    (h : shapeIndex a = shapeIndex b → shapeIndex b = shapeIndex c → cmp a b = .lt → cmp b c = .lt →
       cmp a c = .lt)
     (h1 : cmp a b = .lt) (h2 : cmp b c = .lt) : cmp a c = .lt := by
-  have r1 := rank_le_of_cmp_lt a b h1
-  have r2 := rank_le_of_cmp_lt b c h2
-  by_cases hab : rank a < rank b
-  · exact cmp_lt_of_rank_lt a c (by omega)
-  · by_cases hbc : rank b < rank c
-    · exact cmp_lt_of_rank_lt a c (by omega)
+  have r1 := shapeIndex_le_of_cmp_lt a b h1
+  have r2 := shapeIndex_le_of_cmp_lt b c h2
+  by_cases hab : shapeIndex a < shapeIndex b
+  · exact cmp_lt_of_shapeIndex_lt a c (by omega)
+  · by_cases hbc : shapeIndex b < shapeIndex c
+    · exact cmp_lt_of_shapeIndex_lt a c (by omega)
     · exact h (by omega) (by omega) h1 h2
 
 mutual
@@ -302,61 +302,61 @@ mutual
 /-- **Transitivity.**  `cmp a b = .lt` is a transitive relation. -/
 theorem cmp_trans : ∀ (a b c : Value), cmp a b = .lt → cmp b c = .lt → cmp a c = .lt
   | .uint n, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨m, rfl⟩ := eq_uint_of_rank hab.symm
-      obtain ⟨k, rfl⟩ := eq_uint_of_rank hbc.symm
+      obtain ⟨m, rfl⟩ := eq_uint_of_shapeIndex hab.symm
+      obtain ⟨k, rfl⟩ := eq_uint_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact Std.TransCmp.lt_trans h1 h2) h1 h2
   | .sint n, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨m, rfl⟩ := eq_sint_of_rank hab.symm
-      obtain ⟨k, rfl⟩ := eq_sint_of_rank hbc.symm
+      obtain ⟨m, rfl⟩ := eq_sint_of_shapeIndex hab.symm
+      obtain ⟨k, rfl⟩ := eq_sint_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact Std.TransCmp.lt_trans h1 h2) h1 h2
   | .f32 n, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨m, rfl⟩ := eq_f32_of_rank hab.symm
-      obtain ⟨k, rfl⟩ := eq_f32_of_rank hbc.symm
+      obtain ⟨m, rfl⟩ := eq_f32_of_shapeIndex hab.symm
+      obtain ⟨k, rfl⟩ := eq_f32_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact Std.TransCmp.lt_trans h1 h2) h1 h2
   | .f64 n, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨m, rfl⟩ := eq_f64_of_rank hab.symm
-      obtain ⟨k, rfl⟩ := eq_f64_of_rank hbc.symm
+      obtain ⟨m, rfl⟩ := eq_f64_of_shapeIndex hab.symm
+      obtain ⟨k, rfl⟩ := eq_f64_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact Std.TransCmp.lt_trans h1 h2) h1 h2
   | .bool n, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨m, rfl⟩ := eq_bool_of_rank hab.symm
-      obtain ⟨k, rfl⟩ := eq_bool_of_rank hbc.symm
+      obtain ⟨m, rfl⟩ := eq_bool_of_shapeIndex hab.symm
+      obtain ⟨k, rfl⟩ := eq_bool_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact Std.TransCmp.lt_trans h1 h2) h1 h2
   | .string n, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨m, rfl⟩ := eq_string_of_rank hab.symm
-      obtain ⟨k, rfl⟩ := eq_string_of_rank hbc.symm
+      obtain ⟨m, rfl⟩ := eq_string_of_shapeIndex hab.symm
+      obtain ⟨k, rfl⟩ := eq_string_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact cmpBytes_trans _ _ _ h1 h2) h1 h2
   | .optNone, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab _hbc h1 h2 => by
-      rw [eq_optNone_of_rank hab.symm] at h1
+      rw [eq_optNone_of_shapeIndex hab.symm] at h1
       simp [cmp] at h1) h1 h2
   | .optSome a, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨m, rfl⟩ := eq_optSome_of_rank hab.symm
-      obtain ⟨k, rfl⟩ := eq_optSome_of_rank hbc.symm
+      obtain ⟨m, rfl⟩ := eq_optSome_of_shapeIndex hab.symm
+      obtain ⟨k, rfl⟩ := eq_optSome_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact cmp_trans a m k h1 h2) h1 h2
   | .vec xs, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨ys, rfl⟩ := eq_vec_of_rank hab.symm
-      obtain ⟨zs, rfl⟩ := eq_vec_of_rank hbc.symm
+      obtain ⟨ys, rfl⟩ := eq_vec_of_shapeIndex hab.symm
+      obtain ⟨zs, rfl⟩ := eq_vec_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact cmpList_trans xs ys zs h1 h2) h1 h2
   | .array xs, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨ys, rfl⟩ := eq_array_of_rank hab.symm
-      obtain ⟨zs, rfl⟩ := eq_array_of_rank hbc.symm
+      obtain ⟨ys, rfl⟩ := eq_array_of_shapeIndex hab.symm
+      obtain ⟨zs, rfl⟩ := eq_array_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact cmpList_trans xs ys zs h1 h2) h1 h2
   | .tuple xs, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨ys, rfl⟩ := eq_tuple_of_rank hab.symm
-      obtain ⟨zs, rfl⟩ := eq_tuple_of_rank hbc.symm
+      obtain ⟨ys, rfl⟩ := eq_tuple_of_shapeIndex hab.symm
+      obtain ⟨zs, rfl⟩ := eq_tuple_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact cmpList_trans xs ys zs h1 h2) h1 h2
   | .enum t a, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨u, m, rfl⟩ := eq_enum_of_rank hab.symm
-      obtain ⟨p, k, rfl⟩ := eq_enum_of_rank hbc.symm
+      obtain ⟨u, m, rfl⟩ := eq_enum_of_shapeIndex hab.symm
+      obtain ⟨p, k, rfl⟩ := eq_enum_of_shapeIndex hbc.symm
       rw [cmp_enum_lt] at h1 h2 ⊢
       rcases h1 with h1 | ⟨h1, h1'⟩ <;> rcases h2 with h2 | ⟨h2, h2'⟩
       · exact .inl (Std.TransCmp.lt_trans h1 h2)
@@ -367,13 +367,13 @@ theorem cmp_trans : ∀ (a b c : Value), cmp a b = .lt → cmp b c = .lt → cmp
       · obtain rfl := Std.compare_eq_iff_eq.1 h1
         exact .inr ⟨h2, cmp_trans a m k h1' h2'⟩) h1 h2
   | .map kvs, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨ys, rfl⟩ := eq_map_of_rank hab.symm
-      obtain ⟨zs, rfl⟩ := eq_map_of_rank hbc.symm
+      obtain ⟨ys, rfl⟩ := eq_map_of_shapeIndex hab.symm
+      obtain ⟨zs, rfl⟩ := eq_map_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact cmpPairs_trans kvs ys zs h1 h2) h1 h2
   | .set xs, b, c => fun h1 h2 => cmp_trans_dispatch _ b c (fun hab hbc h1 h2 => by
-      obtain ⟨ys, rfl⟩ := eq_set_of_rank hab.symm
-      obtain ⟨zs, rfl⟩ := eq_set_of_rank hbc.symm
+      obtain ⟨ys, rfl⟩ := eq_set_of_shapeIndex hab.symm
+      obtain ⟨zs, rfl⟩ := eq_set_of_shapeIndex hbc.symm
       simp only [cmp] at h1 h2 ⊢
       exact cmpList_trans xs ys zs h1 h2) h1 h2
 

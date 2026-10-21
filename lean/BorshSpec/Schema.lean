@@ -1,20 +1,12 @@
+import BorshSpec.Spec
+
 /-!
-# Borsh schemas
+# Schema predicates
 
-A `Schema` describes the shape of a Borsh-serialisable type, in the form that the
-schema text syntax of `PROTOCOL.md` denotes it.  Rust structs, tuples and the unit
-type all become `Schema.tuple`; Rust enums become `Schema.enum`.
-
-An enum lists its variants as `(wire tag, payload schema)` pairs, and **the order
-of the list is the key order of the variants**: the variant at position `i` has
-rank `i`, and values of the enum compare by rank before payload (`Value.cmp`).
-The wire tag is independent of the rank.  A default derived enum is
-`(enum (0 S0) (1 S1) ...)`; Rust's `Result<T, E>` is `(enum (1 T) (0 E))`, since
-`Ok < Err` in Rust's `Ord` but `Ok` is written with tag `1`.
-
-This module also contains the decidable well-formedness check that the protocol
-imposes on schemas (`Schema.wellFormed`) and the least encoded size of a schema
-(`Schema.minSize`).
+The `Schema` type is defined in `Spec.lean`, together with `zeroSized`.  This module
+has the decidable well-formedness check that the protocol imposes on schemas
+(`Schema.wellFormed`), the float test it uses (`hasFloat`), and the least encoded
+size of a schema (`Schema.minSize`).
 
 Recursive types are not expressible (decision 5 in `DECISIONS.md`).  All mutual
 definitions below are structurally recursive on `Schema`.
@@ -22,96 +14,7 @@ definitions below are structurally recursive on `Schema`.
 
 namespace BorshSpec
 
-/-- The five integer widths of Borsh. -/
-inductive IntWidth where
-  /-- One byte. -/
-  | w8
-  /-- Two bytes. -/
-  | w16
-  /-- Four bytes. -/
-  | w32
-  /-- Eight bytes. -/
-  | w64
-  /-- Sixteen bytes. -/
-  | w128
-  deriving DecidableEq, Repr, Inhabited
-
-/-- The number of bytes occupied by an integer of the given width. -/
-def IntWidth.bytes : IntWidth → Nat
-  | .w8 => 1
-  | .w16 => 2
-  | .w32 => 4
-  | .w64 => 8
-  | .w128 => 16
-
-/-- A Borsh schema.
-
-`uint w` is `u8`..`u128`, `sint w` is `i8`..`i128`.  `unit` is `tuple []`.
-`enum` carries `(wire tag, payload schema)` pairs in key-order rank order; a unit
-variant has payload `tuple []`.  `map k v` has key schema `k` and value schema `v`.
-`array n s` has no length prefix on the wire. -/
-inductive Schema where
-  /-- Unsigned integer `u8` to `u128`. -/
-  | uint (w : IntWidth)
-  /-- Signed (two's complement) integer `i8` to `i128`. -/
-  | sint (w : IntWidth)
-  /-- IEEE-754 binary32; NaN is rejected. -/
-  | f32
-  /-- IEEE-754 binary64; NaN is rejected. -/
-  | f64
-  /-- One byte, `0` or `1`. -/
-  | bool
-  /-- A `u32` byte length followed by valid UTF-8. -/
-  | string
-  /-- A one-byte tag (`0` None, `1` Some), then the payload if Some. -/
-  | option (s : Schema)
-  /-- A `u32` element count, then the elements. -/
-  | vec (s : Schema)
-  /-- `n` elements, no length prefix. -/
-  | array (n : Nat) (s : Schema)
-  /-- Fields in order; `tuple []` is the unit type. -/
-  | tuple (fs : List Schema)
-  /-- A one-byte wire tag, then the payload of the variant carrying that tag.
-  The list order is the key order (rank) of the variants. -/
-  | enum (vs : List (UInt8 × Schema))
-  /-- A `u32` entry count, then key/value pairs with strictly ascending keys. -/
-  | map (k v : Schema)
-  /-- A `u32` element count, then strictly ascending elements. -/
-  | set (s : Schema)
-  deriving Repr
-
 namespace Schema
-
-/-- The `unit` schema: a tuple with no fields. -/
-def unit : Schema := .tuple []
-
-mutual
-
-/-- Whether every value of the schema encodes to the empty byte string.
-
-This is the spec's notion of Borsh's zero-sized-type ban (decision 3): borsh-rs
-tests `size_of::<T>() == 0`, the spec tests *encoded* size 0. -/
-def zeroSized : Schema → Bool
-  | .uint _ => false
-  | .sint _ => false
-  | .f32 => false
-  | .f64 => false
-  | .bool => false
-  | .string => false
-  | .option _ => false
-  | .vec _ => false
-  | .array n s => n == 0 || zeroSized s
-  | .tuple fs => zeroSizedAll fs
-  | .enum _ => false
-  | .map _ _ => false
-  | .set _ => false
-
-/-- `zeroSized` holds for every schema of a list (vacuously for `[]`). -/
-def zeroSizedAll : List Schema → Bool
-  | [] => true
-  | s :: fs => zeroSized s && zeroSizedAll fs
-
-end
 
 mutual
 

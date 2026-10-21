@@ -14,7 +14,7 @@ import BorshSpec.Theorems.resources.ParseBuild
 * the schema printer and parser are inverse;
 * hex encoding and decoding are inverse.
 
-The cost model is in `Cost.lean`; read its module docstring for what a step is.
+The cost model is in `Tooling/Cost.lean`; read its module docstring for what a step is.
 -/
 
 namespace BorshSpec

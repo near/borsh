@@ -39,7 +39,7 @@ a schema whose factor exceeds `maxFactor`, and a request for which
 `Value.elems` counts the elements of every collection in a value, array slots
 included, and is bounded by the same factor (theorem `decode_elems_le`).
 
-Only the strict decoder is modelled.  The lenient decoder (`BorshSpec.Lenient`)
+Only the strict decoder is modelled.  The lenient decoder (`BorshSpec.Tooling.Lenient`)
 does the same decoding work and then sorts the decoded keys, which costs
 `O(n log n)` comparisons in the number `n` of keys and is not covered by a theorem.
 -/
