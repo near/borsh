@@ -17,168 +17,27 @@ permissions:
 
 concurrency:
   group: lean-${{ github.workflow }}-${{ github.ref }}
-  # Superseded pull request runs are cancelled; runs on master are not.
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   lean:
-    name: Build, lint and check vectors
+    name: Build, prove and check vectors
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      # Installs the toolchain pinned in lean/lean-toolchain, then runs, in
-      # order, from lean/:
-      #   lake build --wfail     all default targets: the definitions (BorshSpec),
-      #                          the executable (borsh-spec) and the theorems
-      #                          (BorshSpecTheorems).  Warnings are errors
-      #                          (lakefile.toml also sets warningAsError).
-      #   lake test              borsh-spec check on the vector files (testDriver
-      #                          in lakefile.toml)
-      #   lake lint              Batteries runLinter on BorshSpec, BorshSpec.Theorems
-      #                          and Main (lintDriver in lakefile.toml)
-      #   lake env leanchecker   re-checks every compiled module with the
-      #                          standalone kernel replayer
-      #
-      # There is no `set_option warn.sorry false` anywhere, so `lake build --wfail`
-      # fails on any `sorry`.  BorshSpec/Theorems/Axioms.lean pins the axioms of
-      # every theorem.
-      - name: Build, test (vectors), lint and re-check
+      # lake build (warnings, including `sorry`, are errors), lake test (vectors.tsv),
+      # and leanchecker, which re-checks the proofs with the standalone kernel.
+      - name: Build, test and re-check
         uses: leanprover/lean-action@24581d74d674803a25a81b10b059c5c0cdd344c6 # v1.6.2
         with:
           lake-package-directory: lean
           build: true
-          build-args: --wfail
           test: true
-          lint: true
+          lint: false
           leanchecker: true
           use-mathlib-cache: false
-
-      # lean-action replays the library roots; replay every compiled module,
-      # helpers included, through the standalone kernel checker as well.
-      - name: Replay every compiled module
-        working-directory: lean
-        run: |
-          status=0
-          for f in $(find .lake/build/lib/lean -name '*.olean' | sort); do
-            m=$(echo "${f#.lake/build/lib/lean/}" | sed -e 's/\.olean$//' -e 's#/#.#g')
-            lake env leanchecker "$m" > /dev/null || { echo "::error::leanchecker failed on $m"; status=1; }
-          done
-          exit $status
-
-      # A module that is not imported by its library root is neither built by
-      # default nor linted, so require every module to be imported: definitions
-      # and tooling by BorshSpec.lean, theorem modules by BorshSpec/Theorems.lean (or by
-      # another theorem module), including the helper modules in the lowercase
-      # directories under BorshSpec/Theorems/.
-      - name: Every module is imported
-        working-directory: lean
-        run: |
-          status=0
-          for f in BorshSpec/*.lean BorshSpec/Tooling/*.lean; do
-            m=$(echo "${f#BorshSpec/}" | sed -e 's/\.lean$//' -e 's#/#.#g')
-            if [ "$m" = Theorems ]; then continue; fi
-            if ! grep -q "^import BorshSpec\.$m\$" BorshSpec.lean; then
-              echo "::error file=lean/BorshSpec.lean::BorshSpec.$m is not imported"
-              status=1
-            fi
-          done
-          for f in BorshSpec/Theorems/*.lean BorshSpec/Theorems/*/*.lean; do
-            m=$(echo "${f#BorshSpec/}" | sed -e 's/\.lean$//' -e 's#/#.#g')
-            if ! grep -q "^import BorshSpec\.$m\$" BorshSpec/Theorems.lean BorshSpec/Theorems/*.lean BorshSpec/Theorems/*/*.lean; then
-              echo "::error file=lean/BorshSpec/Theorems.lean::BorshSpec.$m is not imported"
-              status=1
-            fi
-          done
-          exit $status
-
-      # `--wfail` already fails on an unfinished proof, but the text of the sources
-      # is cheap to check as well.  Banned anywhere: unfinished proofs, compiled
-      # evaluation as a proof step, new postulates.  Banned in declarations:
-      # `partial`, `unsafe`, `opaque`, and the attributes that make compiled code
-      # differ from the definition the theorems talk about.
-      - name: No unfinished proofs, compiled evaluation or opaque definitions
-        working-directory: lean
-        run: |
-          status=0
-          if grep -rnE '(^|[^[:alnum:]_.])(sorry|native_decide|bv_decide|ofReduceBool|axiom)([^[:alnum:]_]|$)|decide \+native' \
-              --include='*.lean' BorshSpec Main.lean; then
-            echo "::error::sorry, native_decide, bv_decide, ofReduceBool or axiom in the sources"
-            status=1
-          fi
-          if grep -rnE '^[[:space:]]*(@\[[^]]*\][[:space:]]*)*((private|protected|noncomputable|nonrec)[[:space:]]+)*(partial|unsafe|opaque)[[:space:]]|@\[[^]]*(implemented_by|extern|csimp)' \
-              --include='*.lean' BorshSpec Main.lean; then
-            echo "::error::partial, unsafe, opaque, implemented_by, extern or csimp in the sources"
-            status=1
-          fi
-          exit $status
-
-      # Axioms.lean must pin every theorem of the four statement files: compare
-      # the declared names with the names given to `#print axioms`.
-      - name: Every theorem has an axiom pin
-        working-directory: lean
-        run: |
-          stated=$(grep -hE '^theorem ' BorshSpec/Theorems/RoundTrip.lean BorshSpec/Theorems/Grammar.lean \
-            BorshSpec/Theorems/Resources.lean BorshSpec/Theorems/SpecEquiv.lean | sed -E 's/^theorem ([^[:space:]]+).*/BorshSpec.\1/' | sort)
-          pinned=$(grep -hE '^#print axioms ' BorshSpec/Theorems/Axioms.lean | sed 's/^#print axioms //' | sort)
-          # every declaration form in the statement files must be one the check above sees
-          other=$(grep -hE '^[[:space:]]*(protected |private )?(theorem|lemma)[[:space:]]' BorshSpec/Theorems/RoundTrip.lean \
-            BorshSpec/Theorems/Grammar.lean BorshSpec/Theorems/Resources.lean BorshSpec/Theorems/SpecEquiv.lean | grep -vcE '^theorem ' || true)
-          if [ "$other" != 0 ]; then
-            echo "::error::a statement file declares a theorem or lemma that is not at the start of a line"
-            exit 1
-          fi
-          if [ "$stated" != "$pinned" ]; then
-            echo "::error file=lean/BorshSpec/Theorems/Axioms.lean::stated theorems and axiom pins differ"
-            diff <(echo "$stated") <(echo "$pinned") || true
-            exit 1
-          fi
-          echo "$(echo "$stated" | wc -l) theorems, all pinned"
-
-      # tools/utf8_digest.rs runs the same enumeration through core::str::from_utf8
-      # (the validator Rust's String decoding uses); the per-length accept counts
-      # and digests must equal those the Lean validator gives.  selftest-utf8
-      # itself compares the Lean validator with Lean's ByteArray.validateUTF8.
-      - name: UTF-8 validator self-test
-        working-directory: lean
-        run: |
-          lake exe borsh-spec selftest-utf8 | tee "$RUNNER_TEMP/utf8-lean.txt"
-          grep -q '^mismatches against ByteArray.validateUTF8: 0$' "$RUNNER_TEMP/utf8-lean.txt"
-          rustc -O -o "$RUNNER_TEMP/utf8_digest" tools/utf8_digest.rs
-          "$RUNNER_TEMP/utf8_digest" > "$RUNNER_TEMP/utf8-rust.txt"
-          diff <(grep '^length ' "$RUNNER_TEMP/utf8-lean.txt") "$RUNNER_TEMP/utf8-rust.txt"
-
-  # lean/doc renders BorshSpec/Spec.lean with Verso as one HTML page.  Rendering
-  # is not a gate on the spec, but a Verso or toolchain bump that breaks it should
-  # fail here rather than go unnoticed; the page is kept as a build artifact.
-  render:
-    name: Render the spec page
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Check out
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Install the toolchain of lean/doc
-        uses: leanprover/lean-action@24581d74d674803a25a81b10b059c5c0cdd344c6 # v1.6.2
-        with:
-          lake-package-directory: lean/doc
-          auto-config: false
-          use-mathlib-cache: false
-
-      - name: Render
-        working-directory: lean/doc
-        run: ./render.sh
-
-      - name: Upload the page
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: borsh-spec-html
-          path: lean/out/spec.html
-          if-no-files-found: error

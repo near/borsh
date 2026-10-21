@@ -152,8 +152,8 @@ string	03000000e28200	err
 (array 2 bool)	0001	ok	2	0001
 (array 3 unit)		ok	0	
 (array 2 (tuple u8 u8))	01020304	ok	4	01020304
-(array 4294967295 u8)	00	err
-(array 4294967295 u8)		err
+(array 4294967295 u8)	00	bad
+(array 4294967295 u8)		bad
 (array 2 (array 2 u8))	01020304	ok	4	01020304
 # vec: u32 count then elements; a huge count with a short body must fail
 (vec u8)	00000000	ok	4	00000000
@@ -384,3 +384,156 @@ u8 u8	00	bad
 (set u128)	050000000000000000000000000000000000000001000000000000000000000000000000ffffffffffffffffffffffffffffff7f00000000000000000000000000000080ffffffffffffffffffffffffffffffff	ok	84	050000000000000000000000000000000000000001000000000000000000000000000000ffffffffffffffffffffffffffffff7f00000000000000000000000000000080ffffffffffffffffffffffffffffffff
 (set u128)	0200000000000000000000000000000000000080ffffffffffffffffffffffffffffff7f	err
 (set u128)	02000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff	err
+
+# Key order vectors: sets and maps must be strictly ascending in the key order
+# of the key type (Rust's Ord), which is the schema order of enum variants and not
+# the byte order of the encodings.  Strict mode.
+#
+# Result<T, E> is written (enum (1 T) (0 E)): Ok has tag 1 but sorts before Err (tag 0).
+# BTreeSet<Result<u8,u8>> {Ok(5), Err(1)} is written Ok first (borsh-rs: 02000000 0105 0001)
+(set (enum (1 u8) (0 u8)))	0200000001050001	ok	8	0200000001050001
+# Err before Ok is out of order
+(set (enum (1 u8) (0 u8)))	0200000000010105	err
+(set (enum (1 u8) (0 u8)))	0200000001010105	ok	8	0200000001010105
+(set (enum (1 u8) (0 u8)))	0200000001050101	err
+(set (enum (1 u8) (0 u8)))	0200000000010002	ok	8	0200000000010002
+(set (enum (1 u8) (0 u8)))	03000000010101020000	ok	10	03000000010101020000
+(set (enum (1 u8) (0 u8)))	03000000000001010102	err
+# duplicate
+(set (enum (1 u8) (0 u8)))	0200000001010101	err
+(map (enum (1 u8) (0 u8)) u8)	020000000105aa0001bb	ok	10	020000000105aa0001bb
+(map (enum (1 u8) (0 u8)) u8)	020000000001bb0105aa	err
+# Result<String, ()>
+(set (enum (1 string) (0 unit)))	0200000001010000007a00	ok	11	0200000001010000007a00
+(set (enum (1 string) (0 unit)))	020000000001010000007a	err
+# Option<Result<u8,u8>>: None < Some(Ok) < Some(Err)
+(set (option (enum (1 u8) (0 u8))))	0300000000010105010001	ok	11	0300000000010105010001
+(set (option (enum (1 u8) (0 u8))))	02000000010001010105	err
+(set (tuple (enum (1 u8) (0 u8)) u8))	02000000010501000100	ok	10	02000000010501000100
+(set (tuple (enum (1 u8) (0 u8)) u8))	02000000000100010501	err
+# Result<Result<u8,u8>,u8>
+(set (enum (1 (enum (1 u8) (0 u8))) (0 u8)))	030000000101050100010002	ok	12	030000000101050100010002
+(set (enum (1 (enum (1 u8) (0 u8))) (0 u8)))	02000000010001010105	err
+#
+# Enums with explicit Rust discriminants but without use_discriminant: wire tags are the declaration indices, the derived Ord follows the discriminants.
+# enum E { A = 5, B = 2 }: A is tag 0, B is tag 1, and B < A
+(set (enum (1 unit) (0 unit)))	020000000100	ok	6	020000000100
+(set (enum (1 unit) (0 unit)))	020000000001	err
+#
+# With use_discriminant the wire tags are the discriminants and the order agrees.
+# enum E { A = 5, B = 2 } with use_discriminant = true
+(set (enum (2 unit) (5 unit)))	020000000205	ok	6	020000000205
+(set (enum (2 unit) (5 unit)))	020000000502	err
+(map (enum (2 u8) (5 u8)) u8)	020000000207aa0508bb	ok	10	020000000207aa0508bb
+(map (enum (2 u8) (5 u8)) u8)	020000000508bb0207aa	err
+#
+# Default derived enums: tag order equals declaration order.
+(set (enum (0 unit) (1 u8) (2 string)))	03000000000105020100000061	ok	13	03000000000105020100000061
+(set (enum (0 unit) (1 u8) (2 string)))	03000000000201000000610105	err
+# same variant: by payload
+(set (enum (0 unit) (1 u8) (2 string)))	0200000001050106	ok	8	0200000001050106
+(set (enum (0 unit) (1 u8) (2 string)))	0200000001060105	err
+(set (enum (0 unit) (1 u8) (2 string)))	02000000010500	err
+#
+# Signed integers order numerically, not by their two-complement bytes.
+(set i8)	0400000080ff007f	ok	8	0400000080ff007f
+# byte order
+(set i8)	04000000007f80ff	err
+(set i16)	030000000080ffff0100	ok	10	030000000080ffff0100
+(set i64)	030000000000000000000080ffffffffffffffff0100000000000000	ok	28	030000000000000000000080ffffffffffffffff0100000000000000
+(set i64)	020000000100000000000000ffffffffffffffff	err
+# BTreeMap<i32,u8> {-1: 0, 0: 1}: -1 first (borsh-rs: 02000000 ffffffff 00 00000000 01)
+(map i32 u8)	02000000ffffffff000000000001	ok	14	02000000ffffffff000000000001
+(map i32 u8)	020000000000000001ffffffff00	err
+#
+# Unsigned integers order by value (little-endian bytes would put 256 before 1).
+(set u32)	020000000100000000010000	ok	12	020000000100000000010000
+(set u32)	020000000001000001000000	err
+# 1 < 255 < 256
+(set u16)	030000000100ff000001	ok	10	030000000100ff000001
+(set u16)	0300000001000001ff00	err
+(set u16)	0200000000010100	err
+#
+# Strings: lexicographic on the UTF-8 bytes (equal to code point order).
+(set string)	040000000000000001000000610200000061620100000062	ok	24	040000000000000001000000610200000061620100000062
+# a proper prefix is smaller
+(set string)	020000000200000061620100000061	err
+# z (7a) < e-acute (c3 a9)
+(set string)	02000000010000007a02000000c3a9	ok	15	02000000010000007a02000000c3a9
+(set string)	0200000002000000c3a9010000007a	err
+# U+FFFF (ef bf bf) < U+1F600 (f0 9f 98 80)
+(set string)	0200000003000000efbfbf04000000f09f9880	ok	19	0200000003000000efbfbf04000000f09f9880
+(set string)	0200000004000000f09f988003000000efbfbf	err
+#
+# Vectors, arrays and sets: lexicographic, a proper prefix first.
+(set (vec u8))	040000000000000001000000000200000000000100000001	ok	24	040000000000000001000000000200000000000100000001
+(set (vec u8))	020000000200000000000100000000	err
+(set (vec u8))	020000000100000001020000000009	err
+(set (vec u8))	020000000200000000090100000001	ok	15	020000000200000000090100000001
+(set (array 2 u8))	03000000000000010100	ok	10	03000000000000010100
+(set (array 2 u8))	0200000001000001	err
+(set (set u8))	03000000000000000100000000020000000001	ok	19	03000000000000000100000000020000000001
+(set (set u8))	020000000200000000010100000000	err
+#
+# Options: None < Some, then the payload.
+(set (option u8))	030000000001000101	ok	9	030000000001000101
+(set (option u8))	02000000010000	err
+(set (option (option u8)))	04000000000100010100010101	ok	13	04000000000100010100010101
+#
+# Booleans: false < true.
+(set bool)	020000000001	ok	6	020000000001
+(set bool)	020000000100	err
+#
+# Tuples: lexicographic over the fields.
+(set (tuple u8 u8))	03000000010201030200	ok	10	03000000010201030200
+(set (tuple u8 u8))	0200000002000103	err
+(set (tuple u8 u8))	0200000001020102	err
+(set (tuple (option u8) string))	0200000000010000007a01000100000061	ok	17	0200000000010000007a01000100000061
+#
+# Maps as keys: lexicographic over the (key, value) pairs.
+(set (map u8 u8))	0400000000000000010000000101010000000102010000000200	ok	26	0400000000000000010000000101010000000102010000000200
+(set (map u8 u8))	02000000010000000102010000000101	err
+# {1:5} is a proper prefix of {1:5, 2:0}
+(set (map u8 u8))	020000000100000001050200000001050200	ok	18	020000000100000001050200000001050200
+(set (map u8 u8))	020000000200000001050200010000000105	err
+#
+# Mixed: the order applies at every depth.
+(map (tuple i8 (vec u8)) u8)	02000000ff010000000901000000000002	ok	17	02000000ff010000000901000000000002
+(map (tuple i8 (vec u8)) u8)	02000000000000000002ff010000000901	err
+(map string (set i16))	02000000010000006101000000ffff010000006200000000	ok	24	02000000010000006101000000ffff010000006200000000
+
+# Known divergences between this specification and borsh-rs (with de_strict_order).
+# The EXPECTED column is what THIS SPECIFICATION answers; each block says what
+# borsh-rs does instead, so that a change on either side shows up as a deliberate
+# edit rather than a silent drift.
+
+# Decision 3: a single-variant fieldless enum is a Rust zero-sized type (borsh-rs
+# rejects Vec<One> before reading a count) but it encodes one tag byte, so the
+# specification accepts.
+(vec (enum (0 unit)))	0100000000	ok	5	0100000000
+(vec (enum (0 unit)))	00000000	ok	4	00000000
+(vec (tuple (enum (0 unit)) unit))	00000000	ok	4	00000000
+(set (enum (0 unit)))	0100000000	ok	5	0100000000
+
+# Decision 15: the zero-size ban is static.  borsh-rs decodes Option<Vec<()>>
+# None fine and only fails when the Vec<()> is actually read; the specification
+# calls the schema ill-formed.
+(option (vec unit))	00	bad
+
+# Decision 27: borsh-rs tests size_of::<T>() == 0, so Vec<Box<()>> is not rejected
+# (Box<()> has size 8) although every element encodes to zero bytes.  The
+# specification rejects the schema.
+(vec unit)	00000001	bad
+
+# Protocol: hex must be lowercase and of even length.
+u8	0A	bad
+u8	0	bad
+u8	zz	bad
+u8	 01	bad
+u8	05	ok	1	05
+# Schemas over 2^20 nodes are refused: an array is expanded into a tuple of its elements.
+(array 1048575 unit)		ok	0	
+(array 1048576 unit)		bad
+(array 4294967295 unit)		bad
+(tuple u8 (array 1023 (array 1023 unit)))	01	ok	1	01
+(tuple u8 (array 1024 (array 1024 unit)))	01	bad
