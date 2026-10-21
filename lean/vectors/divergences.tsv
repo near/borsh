@@ -1,0 +1,22 @@
+# Known divergences between this specification and borsh-rs (with de_strict_order).
+# The EXPECTED column is what THIS SPECIFICATION answers; each block says what
+# borsh-rs does instead, so that a change on either side shows up as a deliberate
+# edit rather than a silent drift.  See DECISIONS.md, decisions 3, 15 and 27.
+
+# Decision 3: a single-variant fieldless enum is a Rust zero-sized type (borsh-rs
+# rejects Vec<One> before reading a count) but it encodes one tag byte, so the
+# specification accepts.
+(vec (enum (0 unit)))	0100000000	ok	5	0100000000
+(vec (enum (0 unit)))	00000000	ok	4	00000000
+(vec (tuple (enum (0 unit)) unit))	00000000	ok	4	00000000
+(set (enum (0 unit)))	0100000000	ok	5	0100000000
+
+# Decision 15: the zero-size ban is static.  borsh-rs decodes Option<Vec<()>>
+# None fine and only fails when the Vec<()> is actually read; the specification
+# calls the schema ill-formed.
+(option (vec unit))	00	bad
+
+# Decision 27: borsh-rs tests size_of::<T>() == 0, so Vec<Box<()>> is not rejected
+# (Box<()> has size 8) although every element encodes to zero bytes.  The
+# specification rejects the schema.
+(vec unit)	00000001	bad

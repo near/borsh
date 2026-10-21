@@ -1,0 +1,95 @@
+# Lenient mode: borsh-rs without de_strict_order.
+#
+# Entries are read in input order, then stably sorted by key and collapsed so that
+# the last entry of a repeated key wins.  The consumed count is the same as in
+# strict mode and the re-encoding is the canonical encoding of the normalised
+# value.  Everything that is not map/set ordering is rejected exactly as in
+# strict mode.  The last section switches back to strict mode and shows that the
+# strict decoder rejects the non-canonical inputs used above.
+@mode lenient
+#
+# Maps: unsorted entries are sorted.
+(map u8 u8)	0200000002010102	ok	8	0200000001020201
+(map u8 u8)	03000000030a010b020c	ok	10	03000000010b020c030a
+#
+# Maps: the last entry of a repeated key wins, whatever the order of the input.
+# BTreeMap and HashMap: {1: 7} then {1: 9} gives {1: 9} (checked against borsh-rs)
+(map u8 u8)	0200000001070109	ok	8	010000000109
+(map u8 u8)	0200000001090107	ok	8	010000000107
+# duplicate key 2 with another key between the copies
+(map u8 u8)	03000000020101020203	ok	10	0200000001020203
+(map u8 u8)	040000000501050205030504	ok	12	010000000504
+(map u8 u8)	040000000201010102020102	ok	12	0200000001020202
+(map u8 u8)	00000000	ok	4	00000000
+# a canonical input is returned unchanged
+(map u8 u8)	010000000105	ok	6	010000000105
+# trailing bytes are not consumed
+(map u8 u8)	0200000001070109ff	ok	8	010000000109
+#
+# Maps with other key and value types.
+(map string u8)	02000000010000006201010000006102	ok	16	02000000010000006102010000006201
+# the whole value of the last entry replaces the earlier one
+(map string (vec u8))	02000000010000006b01000000aa010000006b02000000bbcc	ok	25	01000000010000006b02000000bbcc
+# signed keys sort numerically
+(map i32 u8)	020000000000000001ffffffff00	ok	14	02000000ffffffff000000000001
+(map (vec u8) u8)	030000000100000002090000000008010000000207	ok	21	020000000000000008010000000207
+(map (option u8) u8)	020000000100010002	ok	9	020000000002010001
+(map (tuple u8 u8) u8)	0300000002010a01020b02010c	ok	13	0200000001020b02010c
+# Result keys: Ok sorts before Err although its tag is larger
+(map (enum (1 u8) (0 u8)) u8)	020000000001aa0102bb	ok	10	020000000102bb0001aa
+(map (enum (1 u8) (0 u8)) u8)	020000000001aa0001bb	ok	10	010000000001bb
+#
+# Sets: unsorted elements are sorted, repeated elements collapse.
+(set u8)	03000000030102	ok	7	03000000010203
+# BTreeSet and HashSet: {5, 5, 5} gives {5} (checked against borsh-rs)
+(set u8)	03000000050505	ok	7	0100000005
+(set u8)	050000000302030201	ok	9	03000000010203
+(set u8)	00000000	ok	4	00000000
+(set u8)	020000000102ff	ok	6	020000000102
+(set i16)	030000000100ffff0080	ok	10	030000000080ffff0100
+(set string)	03000000010000006201000000610100000062	ok	19	0200000001000000610100000062
+# Err before Ok in the input; Ok first in the output (borsh-rs: 0200000001050001)
+(set (enum (1 u8) (0 u8)))	0200000000010105	ok	8	0200000001050001
+(set (vec u8))	030000000100000002000000000100000002	ok	18	02000000000000000100000002
+#
+# Normalisation applies at every depth, and inside every element.
+(vec (set u8))	02000000020000000201020000000505	ok	16	020000000200000001020100000005
+# the inner sets are normalised first, then the equal outer elements collapse
+(set (set u8))	02000000020000000201020000000102	ok	16	01000000020000000102
+(set (set u8))	020000000200000002010100000001	ok	15	020000000100000001020000000102
+(tuple (map u8 u8) (set u8))	0200000002010102020000000201	ok	14	0200000001020201020000000102
+(option (map u8 u8))	010200000001070109	ok	9	01010000000109
+(array 2 (set u8))	0200000002010100000005	ok	11	0200000001020100000005
+(map u8 (set u8))	0200000001020000000302010100000009	ok	17	01000000010100000009
+#
+# Not lenient: everything else is rejected as in strict mode.
+(map u8 u8)	020000000107	err
+(map u8 u8)	ffffffff	err
+(set u8)	030000000102	err
+(set u8)	ffffffff00	err
+# a bad bool value
+(map u8 bool)	010000000102	err
+# a bad option tag
+(set (option u8))	020000000200	err
+# an unknown enum tag
+(set (enum (0 u8) (1 u8)))	010000000200	err
+# invalid UTF-8 in a key
+(map string u8)	0100000001000000ff00	err
+# NaN in a value
+(map u8 f32)	01000000010000c07f	err
+# the second entry is truncated
+(map u8 u8)	02000000010701	err
+(map unit u8)	00000000	bad
+(set unit)	00000000	bad
+(vec unit)	00000000	bad
+(map f32 u8)	00000000	bad
+(set f64)	00000000	bad
+# the schema checks are the same in lenient mode
+#
+# Strict mode afterwards: the same inputs are rejected.
+@mode strict
+(map u8 u8)	0200000002010102	err
+(map u8 u8)	0200000001070109	err
+(set u8)	03000000050505	err
+(set u8)	03000000030102	err
+(set (enum (1 u8) (0 u8)))	0200000000010105	err

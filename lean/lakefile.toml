@@ -1,0 +1,35 @@
+name = "BorshSpec"
+version = "0.2.0"
+defaultTargets = ["BorshSpec", "borsh-spec", "BorshSpecTheorems"]
+testDriver = "«borsh-spec»"
+testDriverArgs = ["check", "vectors/core.tsv", "vectors/ordering.tsv", "vectors/lenient.tsv", "vectors/cli.tsv", "vectors/divergences.tsv"]
+lintDriver = "batteries/runLinter"
+lintDriverArgs = ["BorshSpec", "BorshSpec.Theorems", "Main"]
+
+[leanOptions]
+autoImplicit = false
+relaxedAutoImplicit = false
+warningAsError = true
+linter.missingDocs = true
+linter.unusedVariables.analyzeTactics = true
+
+[[require]]
+name = "batteries"
+git = "https://github.com/leanprover-community/batteries"
+rev = "v4.35.0"
+
+# The specification: definitions only, no theorems.  The executable imports
+# nothing else.
+[[lean_lib]]
+name = "BorshSpec"
+
+# The theorem statements and proofs, built separately from the definitions so
+# that the executable builds whatever state they are in.
+[[lean_lib]]
+name = "BorshSpecTheorems"
+roots = ["BorshSpec.Theorems"]
+globs = ["BorshSpec.Theorems", "BorshSpec.Theorems.+"]
+
+[[lean_exe]]
+name = "borsh-spec"
+root = "Main"
