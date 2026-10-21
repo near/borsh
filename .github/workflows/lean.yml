@@ -40,4 +40,5 @@ jobs:
           test: true
           lint: false
           leanchecker: true
+          leanchecker-args: Spec Theorems
           use-mathlib-cache: false
